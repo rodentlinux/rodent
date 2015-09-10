@@ -1,0 +1,52 @@
+version=0.3.2
+release=1
+sources=("http://downloads.sourceforge.net/project/libtirpc/libtirpc/$version/libtirpc-${version}.tar.bz2")
+sha1sum=('af9b74d0c4d1499a7b1a43e396e5b7d62180ea65')
+makedepends=('glibc-devel')
+
+config-libtirpc() {
+  description='Transport Independent RPC library (SunRPC replacement)'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libtirpc=$version-$release")
+  files=('usr/lib/libtirpc.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libtirpc.so'
+    'usr/lib/libtirpc.a'
+    'usr/lib/pkgconfig/libtirpc.pc'
+  )
+  manfiles=('usr/share/man/man3')
+}
+
+prepare() {
+  cd "libtirpc-$version"
+  patch -Np1 -i ../fix_missing_rpc_get_default_domain.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libtirpc-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --disable-gssapi \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

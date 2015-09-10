@@ -1,0 +1,3 @@
+if [ -z "$TERM" ]; then
+  export TERM=xterm
+fi

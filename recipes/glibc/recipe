@@ -1,0 +1,141 @@
+parts=(glibc libcrypt libutil libnsl libanl libcidn glibc-ldd glibc-getent glibc-locales)
+version=2.22
+release=1
+sources=("http://ftp.gnu.org/gnu/glibc/glibc-${version}.tar.xz")
+sha1sum=('5be95334f197121d8b351059a1c6518305d88e2a')
+makedepends=('linux-api-headers')
+
+config-glibc() {
+  description='The GNU C library'
+  provides=('libc')
+  depends=('filesystem')
+  devdepends=('linux-api-headers' "glibc=$version-$release")
+  files=(
+    'usr/lib/ld-*.so' 'usr/lib/ld-*.so.*'
+    'usr/lib/libc-*.so' 'usr/lib/libc.so.*'
+    'usr/lib/libdl-*.so' 'usr/lib/libdl.so.*'
+    'usr/lib/libm-*.so' 'usr/lib/libm.so.*'
+    'usr/lib/libpthread-*.so' 'usr/lib/libpthread.so.*'
+    'usr/lib/libresolv-*.so' 'usr/lib/libresolv.so.*'
+    'usr/lib/librt-*.so' 'usr/lib/librt.so.*'
+    'usr/lib/libnss_dns-*.so' 'usr/lib/libnss_dns.so.*'
+    'usr/lib/libnss_files-*.so' 'usr/lib/libnss_files.so.*'
+  )
+  devfiles=(
+    'usr/include'
+    'usr/lib/*.o'
+    'usr/lib/libc_nonshared.a'
+    'usr/lib/libpthread_nonshared.a'
+    'usr/lib/libc.so' 'usr/lib/libc.a'
+    'usr/lib/libdl.so' 'usr/lib/libdl.a'
+    'usr/lib/libm.so' 'usr/lib/libm.a'
+    'usr/lib/libpthread.so' 'usr/lib/libpthread.a'
+    'usr/lib/libresolv.so' 'usr/lib/libresolv.a'
+    'usr/lib/librt.so' 'usr/lib/librt.a'
+  )
+}
+
+config-libcrypt() {
+  description='Crypto library from glibc'
+  depends=("glibc=$version-$release")
+  devdepends=("glibc-devel=$version-$release" "libcrypt=$version-$release")
+  files=('usr/lib/libcrypt-*.so' 'usr/lib/libcrypt.so.*')
+  devfiles=('usr/lib/libcrypt.so' 'usr/lib/libcrypt.a')
+}
+
+config-libutil() {
+  description='Utility library from glibc'
+  depends=("glibc=$version-$release")
+  devdepends=("glibc-devel=$version-$release" "libutil=$version-$release")
+  files=('usr/lib/libutil-*.so' 'usr/lib/libutil.so.*')
+  devfiles=('usr/lib/libutil.so' 'usr/lib/libutil.a')
+}
+
+config-libnsl() {
+  description='NSL library from glibc'
+  depends=("glibc=$version-$release")
+  devdepends=("glibc-devel=$version-$release" "libnsl=$version-$release")
+  files=('usr/lib/libnsl-*.so' 'usr/lib/libnsl.so.*')
+  devfiles=('usr/lib/libnsl.so' 'usr/lib/libnsl.a')
+}
+
+config-libanl() {
+  description='Asynchronous name lookup library'
+  depends=("glibc=$version-$release")
+  devdepends=("glibc-devel=$version-$release" "libanl=$version-$release")
+  files=('usr/lib/libanl-*.so' 'usr/lib/libanl.so.*')
+  devfiles=('usr/lib/libanl.so' 'usr/lib/libanl.a')
+}
+
+config-libcidn() {
+  description='IDN library from glibc'
+  depends=("glibc=$version-$release")
+  devdepends=("glibc-devel=$version-$release" "libcidn=$version-$release")
+  files=('usr/lib/libcidn-*.so' 'usr/lib/libcidn.so.*')
+  devfiles=('usr/lib/libcidn.so')
+}
+
+config-glibc-getent() {
+  description='Get entries from Name Service Switch libraries'
+  provides=('getent')
+  depends=("glibc=$version-$release")
+  files=('usr/bin/getent')
+}
+
+config-glibc-ldd() {
+  description='Script to list shared object dependencies'
+  provides=('ldd')
+  depends=("glibc=$version-$release" 'bash')
+  files=('usr/bin/ldd')
+}
+
+config-glibc-locales() {
+  description='Locales from the GNU C library'
+  depends=("glibc=$version-$release")
+  files=(
+    'usr/bin/locale'
+    'usr/share/locale'
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  {
+    echo "slibdir=/usr/lib"
+    echo "rtlddir=/usr/lib"
+    echo "sbindir=/usr/bin"
+    echo "rootsbindir=/usr/bin"
+  } > configparms
+
+  "../glibc-${version}/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --libdir=/usr/lib \
+    --libexecdir=/usr/lib \
+    --with-headers="$SYSROOT/usr/include" \
+    --enable-kernel=3.10.0 \
+    --enable-obsolete-rpc \
+    --enable-bind-now \
+    --enable-add-ons \
+    --disable-build-nscd \
+    --disable-nscd \
+
+  make
+}
+
+package() {
+  cd build
+  unset MAKEFLAGS
+
+  make install_root="$pkgdir" install
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+  rm -r "$pkgdir/usr/share/info"
+  rm -r "$pkgdir/var"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

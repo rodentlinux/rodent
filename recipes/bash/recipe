@@ -1,0 +1,110 @@
+parts=(bash bashbug bash-default)
+_basever=4.3
+_patchlevel=42
+version=$_basever.$_patchlevel
+release=1
+sources=("http://ftp.gnu.org/gnu/bash/bash-${_basever}.tar.gz")
+sha1sum=('45ac3c5727e7262334f4dfadecdf601b39434e84')
+for (( i=1; i <= $_patchlevel; i++ )); do
+  sources+=("noextract:http://ftp.gnu.org/gnu/bash/bash-$_basever-patches/bash${_basever//./}-$(printf "%03d" $i)")
+  sha1sum+=('SKIP')
+done
+makedepends=('libncurses-devel' 'libhistory-devel' 'libreadline-devel')
+
+config-bash() {
+  description='GNU Bourne Again shell'
+  depends=('libreadline')
+  files=('/usr/bin/bash')
+  manfiles=('usr/share/man/man1/bash.1')
+}
+
+config-bashbug() {
+  description='Bash bug reporting tool'
+  depends=("bash=$version-$release")
+  files=('/usr/bin/bashbug')
+  manfiles=('usr/share/man/man1/bashbug.1')
+}
+
+config-bash-default() {
+  description='Use Bash as default /bin/sh'
+  provides=('sh')
+  depends=("bash=$version-$release")
+  files=('/usr/bin/sh')
+}
+
+prepare() {
+  cd "bash-$_basever"
+  set +x
+  for (( i=1; i <= $_patchlevel; i++ )); do
+    echo "Applying level $i:"
+    patch -Np0 -i "../bash${_basever//./}-$(printf "%03d" $i)"
+  done
+
+  # http://hmarco.org/bugs/bash_4.3-setuid-bug.html (FS#40663)
+  patch -Np0 -i ../bash_4.3-fix-setuid.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  local bashconfig=(
+    -DDEFAULT_PATH_VALUE=\'\"/usr/local/sbin:/usr/local/bin:/usr/bin\"\'
+    -DSTANDARD_UTILS_PATH=\'\"/usr/bin\"\'
+    -DSYS_BASHRC=\'\"/etc/bash.bashrc\"\'
+    -DSYS_BASH_LOGOUT=\'\"/etc/bash.bash_logout\"\'
+  )
+  export CFLAGS="$CFLAGS ${bashconfig[@]}"
+
+  "../bash-$_basever/configure" \
+    ac_cv_rl_version=6.3 \
+    ac_cv_func_mmap_fixed_mapped=yes \
+    gt_cv_int_divbyzero_sigfpe=yes \
+    ac_cv_func_strcoll_works=yes \
+    ac_cv_func_working_mktime=yes \
+    bash_cv_wcwidth_broken=no \
+    ac_cv_type_getgroups=gid_t \
+    bash_cv_func_ctype_nonascii=no \
+    bash_cv_dup2_broken=no \
+    bash_cv_pgrp_pipe=no \
+    bash_cv_sys_siglist=yes \
+    bash_cv_under_sys_siglist=yes \
+    bash_cv_type_rlimit=rlim_t \
+    bash_cv_wexitstatus_offset=8 \
+    bash_cv_opendir_not_robust=no \
+    bash_cv_ulimit_maxfds=yes \
+    bash_cv_getenv_redef=yes \
+    bash_cv_getcwd_malloc=yes \
+    bash_cv_func_sigsetjmp=present \
+    bash_cv_func_strcoll_broken=no \
+    bash_cv_func_snprintf=yes \
+    bash_cv_func_vsnprintf=yes \
+    bash_cv_printf_a_format=yes \
+    bash_cv_must_reinstall_sighandlers=no \
+    bash_cv_job_control_missing=present \
+    bash_cv_sys_named_pipes=present \
+    bash_cv_wcontinued_broken=no \
+    bash_cv_unusable_rtsigs=no \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-readline \
+    --disable-nls \
+    --disable-rpath \
+    --with-curses \
+    --with-installed-readline==/usr \
+    --with-gnu-ld \
+    --without-afs \
+    --without-bash-malloc
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+  ln -s bash "$pkgdir/usr/bin/sh"
+
+  rm -r "$pkgdir"/usr/share/{doc,info}
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

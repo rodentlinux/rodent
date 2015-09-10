@@ -1,0 +1,56 @@
+base="$ARCH-binutils"
+version=2.25.1
+release=1
+sources=("http://ftp.gnu.org/gnu/binutils/binutils-${version}.tar.bz2")
+sha1sum=('1d597ae063e3947a5f61e23ceda8aebf78405fcd')
+
+description="GNU binutils for cross-compiling to $HOST"
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../binutils-$version/configure" \
+    --target=$HOST \
+    --prefix=/tools \
+    --libexecdir=/tools/lib \
+    --enable-threads \
+    --enable-ld=default \
+    --enable-plugins \
+    --enable-deterministic-archives \
+    --enable-poison-system-directories \
+    --disable-multilib \
+    --disable-nls \
+    --disable-rpath \
+    --with-lib-path==/usr/lib \
+    --with-sysroot=/not/exist \
+    --with-gnu-ld
+
+  make configure-host
+  make
+}
+
+host-package() {
+  make -C build prefix="$srcdir/tools" install
+
+  # Create wrappers to set sysroot from environment
+  mv tools/bin/$HOST-ld{,.orig}
+  cat > tools/bin/$HOST-ld <<EOF
+#!/bin/sh
+exec -a "\$0" $HOST-ld.orig "--sysroot=\$SYSROOT" "\$@"
+EOF
+  chmod 0755 tools/bin/$HOST-ld
+  for i in tools/bin/$HOST-ld.bfd \
+           tools/$HOST/bin/ld \
+           tools/$HOST/bin/ld.bfd; do
+    rm "$i"
+    ln tools/bin/$HOST-ld "$i"
+  done
+
+  # Remove unwanted files
+  rm -r tools/share/info
+  rm tools/share/man/man1/*-{dlltool,nlmconv,windres,windmc}.1
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

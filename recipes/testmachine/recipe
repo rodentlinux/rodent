@@ -1,0 +1,43 @@
+version=0.1
+release=1
+sources=()
+sha1sum=()
+makedepends=()
+
+config-testmachine() {
+  description='A test configuration'
+  depends=(
+    'systemd' 'bash-default'
+    'util-linux-kill'
+    'cat' 'ls' 'mkdir' 'rmdir' 'rm' 'mv' 'cp'
+    'ldd' 'getent'
+    'ncurses-utils'
+    'less'
+    'ip' 'ss'
+    'htop'
+    'terminfo-xterm'
+    'systemd-hostname'
+    'systemd-coredump'
+    'systemd-networkd'
+    'systemd-resolved'
+    'systemd-timesyncd'
+    'systemd-logind'
+    'systemd-cgls'
+    'openssh-server'
+    'openssh-client'
+    'pam_unix' 'pam_nologin'
+    'avahi-browse'
+  )
+  files=('*')
+}
+
+#build() {
+#  :
+#}
+
+package() {
+  cp -a "$srcdir/etc" "$pkgdir"
+  cp -a "$srcdir/root" "$pkgdir"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

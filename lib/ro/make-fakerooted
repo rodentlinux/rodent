@@ -1,0 +1,58 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+export USER=root
+
+RECIPE="$1"
+
+srcdir="$(dirname "$RECIPE")"
+pkgdir="$srcdir/pkg"
+base="$(basename "$srcdir")"
+
+. "$RECIPE"
+BASE_VERSION="$version"
+BASE_RELEASE="$release"
+if [[ "${#parts}" = 0 ]]; then
+  parts=($base)
+fi
+
+cd "$srcdir"
+echo 'Packaging..'
+set -x
+package
+set +x
+
+cd "$pkgdir"
+echo -n 'Recording metadata.. '
+find -P . -mindepth 1 -printf '%P\n' | sort -u | while read -r path; do
+  if [[ -L "$path" ]]; then
+    stat --printf "$path\tl\t%a\t%u\t%g\t" "$path"
+    readlink "$path"
+  elif [[ -f "$path" ]]; then
+    stat --printf "$path\tf\t%a\t%u\t%g\t" "$path"
+    sha1sum "$path" | head -c40
+    TYPE="$(file -b "$path")"
+    TYPE="${TYPE#setuid }"
+    TYPE="${TYPE#setuid, }"
+    TYPE="${TYPE#setgid }"
+    if [[ "${TYPE%% *}" = 'ELF' ]]; then
+      echo -e '\tstrip'
+    else
+      echo
+    fi
+  elif [[ -d "$path" ]]; then
+    stat --printf "$path\td\t%a\t%u\t%g\n" "$path"
+  elif [[ -c "$path" ]]; then
+    stat --printf "$path\tc\t%a\t%u\t%g\t%t\t%T\n" "$path"
+  elif [[ -b "$path" ]]; then
+    stat --printf "$path\tb\t%a\t%u\t%g\t%t\t%T\n" "$path"
+  else
+    echo "What is '$path'?"
+    exit 1
+  fi
+done > "$srcdir/files"
+echo 'done.'
+
+# vim: set ts=2 sw=2 et:

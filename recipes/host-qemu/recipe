@@ -1,0 +1,52 @@
+base="$ARCH-qemu"
+version=2.4.0
+release=1
+sources=("http://wiki.qemu-project.org/download/qemu-${version}.tar.bz2")
+sha1sum=('27c4651243ad885a2a3b35fe6d2532e6a7f0711e')
+
+description="Qemu for running $ARCH"
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  case "$ARCH" in
+  armv7hl) target=arm-softmmu;;
+  *)
+    echo "Unknown architecture '$ARCH'."
+    exit 1;;
+  esac
+
+  PYTHON=python2 \
+  "../qemu-${version}/configure" \
+    --prefix=/tools \
+    --libexecdir=/tools/lib/qemu \
+    --target-list=$target \
+    --audio-drv-list='' \
+    --disable-stack-protector \
+    --disable-docs \
+    --disable-gnutls \
+    --disable-vnc \
+    --disable-gtk \
+    --disable-xen \
+    --disable-kvm \
+    --disable-tpm \
+    --disable-libiscsi \
+    --disable-libnfs \
+    --disable-rbd \
+    --disable-vhdx
+
+  make
+}
+
+host-package() {
+  case "$ARCH" in
+  armv7hl)
+    install -Dm755 build/arm-softmmu/qemu-system-arm tools/bin/qemu-system-arm
+    strip --strip-unneeded tools/bin/qemu-system-arm
+    ;;
+  esac
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

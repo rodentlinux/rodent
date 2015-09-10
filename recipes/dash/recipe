@@ -1,0 +1,45 @@
+parts=(dash dash-default)
+version=0.5.8
+release=1
+sources=("http://gondor.apana.org.au/~herbert/dash/files/dash-${version}.tar.gz")
+sha1sum=('cd058935bba545427caa375337afe8a6309477d2')
+makedepends=('glibc-devel')
+devdepends=('glibc-devel')
+
+config-dash() {
+  description='A POSIX compliant shell that aims to be as small as possible'
+  depends=('glibc')
+  files=('usr/bin/dash')
+  manfiles=('usr/share/man/man1/dash.1')
+}
+
+config-dash-default() {
+  description='Use dash as default /bin/sh'
+  provides=('sh')
+  depends=("dash=$version-$release")
+  files=('usr/bin/sh')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../dash-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --bindir=/usr/bin \
+    --mandir=/usr/share/man \
+    --exec-prefix=""
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  ln -s dash "$pkgdir/usr/bin/sh"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

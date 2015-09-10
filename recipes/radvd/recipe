@@ -1,0 +1,46 @@
+parts=(radvd radvdump)
+version=2.11
+release=1
+sources=("http://www.litech.org/radvd/dist/radvd-${version}.tar.xz")
+sha1sum=('6935f3bb92a9c1aaf7f57225fbeb6cb07191104e')
+makedepends=('glibc-devel')
+
+config-radvd() {
+  description='IPv6 Router Advertisement Daemon'
+  depends=('glibc')
+  files=('usr/bin/radvd' 'usr/lib/systemd/system/radvd.service')
+  manfiles=('usr/share/man/man5/radvd.conf.5' 'usr/share/man/man8/radvd.8')
+}
+
+config-radvdump() {
+  description='Dump router advertisements'
+  depends=('glibc')
+  files=('usr/bin/radvdump')
+  manfiles=('usr/share/man/man8/radvdump.8')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../radvd-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --sysconfdir=/etc \
+    --with-pidfile=/run/radvd.pid \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  install -Dm644 "../radvd-$version/radvd.conf.example" "$pkgdir/usr/share/factory/etc/radvd.conf"
+  install -Dm644 ../radvd.service "$pkgdir/usr/lib/systemd/system/radvd.service"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

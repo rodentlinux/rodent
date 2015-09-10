@@ -1,0 +1,202 @@
+parts=(
+  libavahi-common
+  libavahi-core
+  libavahi-client
+  avahi-daemon
+  avahi-autoipd
+  avahi-dnsconfd
+  avahi-browse
+  avahi-publish
+  avahi-resolve
+  avahi-set-host-name
+)
+version=0.6.31
+release=1
+sources=("http://www.avahi.org/download/avahi-${version}.tar.gz")
+sha1sum=('7e05bd78572c9088b03b1207a0ad5aba38490684')
+makedepends=('libexpat-devel' 'libdaemon-devel' 'libdbus-1-devel')
+
+config-libavahi-common() {
+  description='Multicast DNS-SD / Zeroconf common library'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libavahi-common=$version-$release")
+  files=('usr/lib/libavahi-common.so.*')
+  devfiles=(
+    'usr/include/avahi-common'
+    'usr/lib/libavahi-common.a'
+    'usr/lib/libavahi-common.so'
+  )
+}
+
+config-libavahi-core() {
+  description='Multicast DNS-SD / Zeroconf core library'
+  depends=("libavahi-common=$version-$release")
+  devdepends=('glibc-devel' "libavahi-core=$version-$release")
+  files=('usr/lib/libavahi-core.so.*')
+  devfiles=(
+    'usr/include/avahi-core'
+    'usr/lib/libavahi-core.a'
+    'usr/lib/libavahi-core.so'
+    'usr/lib/pkgconfig/avahi-core.pc'
+  )
+}
+
+config-libavahi-client() {
+  description='Multicast DNS-SD / Zeroconf client library'
+  depends=("libavahi-common=$version-$release" 'libdbus-1')
+  devdepends=('glibc-devel' "libavahi-client=$version-$release")
+  files=('usr/lib/libavahi-client.so.*')
+  devfiles=(
+    'usr/include/avahi-client'
+    'usr/lib/libavahi-client.a'
+    'usr/lib/libavahi-client.so'
+    'usr/lib/pkgconfig/avahi-client.pc'
+  )
+}
+
+config-avahi-daemon() {
+  description='Multicast DNS-SD / Zeroconf daemon'
+  depends=('libexpat' 'libdaemon' "libavahi-core=$version-$release" 'libdbus-1')
+  files=(
+    'usr/bin/avahi-daemon'
+    'usr/lib/systemd/system/avahi-daemon.service'
+    'usr/lib/systemd/system/avahi-daemon.socket'
+    'usr/lib/systemd/system/dbus-org.freedesktop.Avahi.service'
+    'usr/share/dbus-1/system-services/org.freedesktop.Avahi.service'
+    'usr/share/dbus-1/system.d/avahi-dbus.conf'
+  )
+  manfiles=(
+    'usr/share/man/man5/avahi-daemon.conf.5'
+    'usr/share/man/man5/avahi.hosts.5'
+    'usr/share/man/man5/avahi.service.5'
+    'usr/share/man/man8/avahi-daemon.8'
+  )
+}
+
+config-avahi-autoipd() {
+  description='IPv4LL network address configuration daemon'
+  depends=('libdaemon')
+  files=('usr/bin/avahi-autoipd')
+  manfiles=(
+    'usr/share/man/man8/avahi-autoipd.8'
+    'usr/share/man/man8/avahi-autoipd.action.8'
+  )
+}
+
+config-avahi-dnsconfd() {
+  description='Avahi unicast DNS server'
+  depends=('libdaemon' "libavahi-common=$version-$release" "avahi-daemon=$version-$release")
+  files=(
+    'usr/bin/avahi-dnsconfd'
+    'usr/lib/systemd/system/avahi-dnsconfd.service'
+  )
+  manfiles=(
+    'usr/share/man/man8/avahi-dnsconfd.8'
+    'usr/share/man/man8/avahi-dnsconfd.action.8'
+  )
+}
+
+config-avahi-browse() {
+  description='Browse for mDNS/DNS-SD services using the Avahi daemon'
+  depends=("libavahi-client=$version-$release" "avahi-daemon=$version-$release")
+  files=('usr/bin/avahi-browse' 'usr/bin/avahi-browse-domains')
+  manfiles=('usr/share/man/man1/avahi-browse.1' 'usr/share/man/man1/avahi-browse-domains.1')
+}
+
+config-avahi-publish() {
+  description='Register  an mDNS/DNS-SD service, host name or address mapping'
+  depends=("libavahi-client=$version-$release" "avahi-daemon=$version-$release")
+  files=(
+    'usr/bin/avahi-publish'
+    'usr/bin/avahi-publish-address'
+    'usr/bin/avahi-publish-service'
+  )
+  manfiles=(
+    'usr/share/man/man1/avahi-publish-address.1'
+    'usr/share/man/man1/avahi-publish-service.1'
+    'usr/share/man/man1/avahi-publish.1'
+  )
+}
+
+config-avahi-resolve() {
+  description='Resolve  mDNS/DNS host names to IP addresses'
+  depends=("libavahi-client=$version-$release" "avahi-daemon=$version-$release")
+  files=(
+    'usr/bin/avahi-resolve'
+    'usr/bin/avahi-resolve-address'
+    'usr/bin/avahi-resolve-host-name'
+  )
+  manfiles=(
+    'usr/share/man/man1/avahi-resolve-address.1'
+    'usr/share/man/man1/avahi-resolve-host-name.1'
+    'usr/share/man/man1/avahi-resolve.1'
+  )
+}
+
+config-avahi-set-host-name() {
+  description='Change mDNS host name'
+  depends=("libavahi-client=$version-$release" "avahi-daemon=$version-$release")
+  files=('usr/bin/avahi-set-host-name')
+  manfiles=('usr/share/man/man1/avahi-set-host-name.1')
+}
+
+prepare() {
+  cd "avahi-$version"
+  #patch -Np1 -i ../avahi-v0.6.31-8-g147cdce.patch
+  patch -Np1 -i ../libtool.patch
+  patch -Np1 -i ../runtime_dir.patch
+  patch -Np1 -i ../no-nls.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../avahi-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --disable-stack-protector \
+    --disable-glib \
+    --disable-gobject \
+    --disable-qt3 \
+    --disable-qt4 \
+    --disable-gtk \
+    --disable-gtk3 \
+    --disable-gdbm \
+    --disable-python \
+    --disable-mono \
+    --disable-monodoc \
+    --disable-nls \
+    --with-distro=archlinux \
+    --with-dbus-sys=/usr/share/dbus-1/system.d \
+    --with-dbus-system-address=unix:path=/run/dbus/system_bus_socket \
+    --with-autoipd-user=avahi \
+    --with-autoipd-group=avahi \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  ln -s avahi-daemon.service "$pkgdir/usr/lib/systemd/system/dbus-org.freedesktop.Avahi.service"
+  rm -r "$pkgdir/etc/rc.d"
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+
+  rmdir "$pkgdir/usr/lib/avahi"
+  rmdir "$pkgdir/usr/share/applications"
+  rm -r "$pkgdir/var"
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

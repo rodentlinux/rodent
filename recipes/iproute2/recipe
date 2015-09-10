@@ -1,0 +1,107 @@
+parts=(iproute2-ip iproute2-tc iproute2-ss arpd libnetlink iproute2-docs)
+version=4.2.0
+release=1
+sources=("http://www.kernel.org/pub/linux/utils/net/iproute2/iproute2-${version}.tar.xz")
+sha1sum=('2585177e94fddb59418db149692d0726cde30774')
+makedepends=('libdb-devel')
+
+config-iproute2-ip() {
+  description='The ip tool from iproute2'
+  provides=("ip=$version-$release")
+  depends=('glibc')
+  files=('usr/bin/ip')
+  manfiles=('usr/share/man/man8/ip.8' 'usr/share/man/man8/ip-*.8')
+}
+
+config-iproute2-tc() {
+  description='The tc tool from iproute2'
+  provides=("tc=$version-$release")
+  depends=('glibc')
+  files=('usr/bin/tc' 'usr/lib/tc')
+  manfiles=(
+    'usr/share/man/man7/tc-hfsc.7'
+    'usr/share/man/man8/tc.8'
+    'usr/share/man/man8/tc-*.8'
+  )
+}
+
+config-iproute2-ss() {
+  description='The ss tool from iproute2'
+  provides=("ss=$version-$release")
+  depends=('glibc')
+  files=('usr/bin/ss')
+  manfiles=('usr/share/man/man8/ss.8')
+}
+
+config-arpd() {
+  description='The arpd daemon from iproute2'
+  depends=('libdb')
+  files=('usr/bin/arpd')
+  manfiles=('usr/share/man/man8/arpd.8')
+}
+
+config-libnetlink() {
+  description='The netlink library from iproute2'
+  depends=('glibc-devel')
+  files=('usr/include/libnetlink.h' '/usr/lib/libnetlink.a')
+  manfiles=('usr/share/man/man3/libnetlink.3')
+}
+
+config-iproute2-docs() {
+  description='iproute2 extra documentation'
+  files=('usr/share/doc')
+}
+
+prepare() {
+  cd "iproute2-$version"
+
+  # set correct fhs structure
+  patch -Np1 -i ../iproute2-fhs.patch
+
+  # allow operations on links called "h", "he", "hel", "help"
+  #patch -Np1 -i ../unwanted-link-help.patch
+
+  # do not treat warnings as errors
+  #sed -i 's/-Werror//' Makefile
+}
+
+build() {
+  cd "iproute2-$version"
+
+  # the configure script doesn't really work with cross-compiling
+  # so just write the Config ourselves
+  cat > Config <<EOF
+PKG_CONFIG:=pkg-config
+AR:=$HOST-ar
+CC:=$HOST-gcc
+TC_CONFIG_IPSET:=y
+IPT_LIB_DIR:=/usr/lib/iptables
+IP_CONFIG_SETNS:=y
+EOF
+
+  # DESTDIR here looks weird, but is needed to set
+  # DBM_INCLUDE to correctly point at $SYSROOT/usr/include
+  make \
+    CC=$HOST-gcc \
+    AR=$HOST-ar \
+    KERNEL_INCLUDE="$SYSROOT/usr/include" \
+    DESTDIR="$SYSROOT" \
+    SBINDIR=/usr/bin
+}
+
+package() {
+  cd "iproute2-$version"
+
+  make DESTDIR="$pkgdir" SBINDIR=/usr/bin install
+
+  # libnetlink isn't installed, install it FS#19385
+  install -Dm644 include/libnetlink.h "${pkgdir}/usr/include/libnetlink.h"
+  install -Dm644 lib/libnetlink.a "${pkgdir}/usr/lib/libnetlink.a"
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+
+  rm -r "$pkgdir/var"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

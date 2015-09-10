@@ -1,0 +1,67 @@
+parts=(libgmp libgmpxx)
+version=6.0.0
+release=1
+sources=("https://gmplib.org/download/gmp/gmp-${version}a.tar.xz")
+sha1sum=('1aaf78358ab9e34aeb61f3ae08174ee9118ece98')
+makedepends=('libncurses-devel')
+
+config-libgmp() {
+  description='A free library for arbitrary precision arithmetic'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libgmp=$version-$release")
+  files=('usr/lib/libgmp.so.*')
+  devfiles=(
+    'usr/include/gmp.h'
+    'usr/lib/libgmp.a'
+    'usr/lib/libgmp.so'
+  )
+}
+
+config-libgmpxx() {
+  description='A free library for arbitrary precision arithmetic - C++ bindings'
+  depends=('libstdc++' "libgmp=$versios-$release")
+  devdepends=("libgmp-devel=$version-$release" "libgmpxx=$version-$release")
+  files=('usr/lib/libgmpxx.so.*')
+  devfiles=(
+    'usr/include/gmpxx.h'
+    'usr/lib/libgmpxx.a'
+    'usr/lib/libgmpxx.so'
+  )
+}
+
+prepare() {
+  cd "gmp-$version"
+  patch -Np1 -i ../libtool.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  if [[ "$ARCH" = armv7hl ]]; then
+    CFLAGS="$CFLAGS -marm"
+    CXXFLAGS="$CXXFLAGS -marm"
+  fi
+
+  "../gmp-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-cxx \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  # remove info files
+  rm -r "$pkgdir/usr/share"
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

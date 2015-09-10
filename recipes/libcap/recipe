@@ -1,0 +1,57 @@
+parts=(libcap libcap-utils)
+version=2.24
+release=1
+sources=("https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${version}.tar.xz")
+sha1sum=('b2754cddb614567de445ffdaac7a00b9671b858a')
+makedepends=('glibc-devel')
+
+config-libcap() {
+  description='POSIX 1003.1e capability library'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libcap=$version-$release")
+  files=('usr/lib/libcap.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libcap.a'
+    'usr/lib/libcap.so'
+    'usr/lib/pkgconfig/libcap.pc'
+  )
+  manfiles=('usr/share/man/man3')
+}
+
+config-libcap-utils() {
+  description='POSIX 1003.1e capability utilities'
+  depends=("libcap=$version-$release")
+  files=('usr/bin/*')
+  manfiles=('usr/share/man/man1/capsh.1')
+}
+
+build() {
+  cd "libcap-$version"
+  sed -i '/SBINDIR/s#sbin#bin#' Make.Rules
+
+  make LIBATTR=no PAM_CAP=no \
+    KERNEL_HEADERS="$SYSROOT/usr/include" \
+    BUILD_CC=gcc \
+    BUILD_CFLAGS='-O2' \
+    CC="$HOST-gcc" \
+    AR="$HOST-ar" \
+    RANLIB="$HOST-ranlib"
+}
+
+package() {
+  cd "libcap-$version"
+
+  make LIBATTR=no PAM_CAP=no \
+    DESTDIR="$pkgdir" \
+    prefix=/usr lib=/lib \
+    RAISE_SETFCAP=no \
+    install
+
+  # set library executable for consistency
+  chmod 755 "$pkgdir"/usr/lib/libcap.so.2.*
+
+  rm -r "$pkgdir/usr/share/man/man8"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

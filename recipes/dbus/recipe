@@ -1,0 +1,108 @@
+parts=(libdbus-1 dbus-daemon dbus-utils dbus-test-tool dbus)
+version=1.10.0
+release=1
+sources=("http://dbus.freedesktop.org/releases/dbus/dbus-${version}.tar.gz")
+sha1sum=('eec3c798633f623e960eb1d9f93b47648f389443')
+makedepends=('libexpat-devel' 'libsystemd-devel')
+
+config-libdbus-1() {
+  description='Freedesktop.org DBus library'
+  depends=('libsystemd')
+  devdepends=('glibc-devel' "libdbus-1=$version-$release")
+  files=('usr/lib/libdbus-1.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/dbus-1.0/include'
+    'usr/lib/libdbus-1.so'
+    'usr/lib/libdbus-1.a'
+    'usr/lib/pkgconfig/dbus-1.pc'
+  )
+}
+
+config-dbus-daemon() {
+  description='Freedesktop.org DBus daemon'
+  depends=('libexpat' "libdbus-1=$version-$release")
+  files=(
+    'usr/bin/dbus-daemon'
+    'usr/lib/dbus-1.0/dbus-daemon-launch-helper'
+    'usr/lib/systemd'
+    'usr/share/dbus-1'
+  )
+}
+
+config-dbus-utils() {
+  description='Freedesktop.org DBus utilities'
+  depends=("libdbus-1=$version-$release" 'libsystemd')
+  files=(
+    usr/bin/dbus-cleanup-sockets
+    usr/bin/dbus-launch
+    usr/bin/dbus-run-session
+    usr/bin/dbus-uuidgen
+    usr/bin/dbus-update-activation-environment
+    usr/bin/dbus-monitor
+    usr/bin/dbus-send
+  )
+}
+
+config-dbus-test-tool() {
+  description='Freedesktop.org DBus test tool'
+  depends=("libdbus-1=$version-$release" 'libsystemd')
+  files=(usr/bin/dbus-test-tool)
+}
+
+config-dbus() {
+  description='Freedesktop.org DBus metapackage'
+  depends=(
+    "dbus-daemon=$version-$release"
+    "dbus-utils=$version-$release"
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../dbus-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --libexecdir=/usr/lib/dbus-1.0 \
+    --with-system-pid-file=/run/dbus.pid \
+    --with-system-socket=/run/dbus/system_bus_socket \
+    --with-console-auth-dir=/run/console \
+    --with-dbus-user=dbus \
+    --with-systemdsystemunitdir=/usr/lib/systemd/system \
+    --with-systemduserunitdir=/usr/lib/systemd/user \
+    --enable-inotify \
+    --enable-epoll \
+    --enable-user-session \
+    --disable-verbose-mode \
+    --disable-tests \
+    --disable-asserts \
+    --disable-selinux \
+    --disable-apparmor \
+    --disable-libaudit \
+    --disable-x11-autolaunch \
+    --without-x \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+
+  rm -r "$pkgdir/usr/share/doc"
+  rm -r "$pkgdir/var"
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,34 @@
+parts=(libz)
+version=1.2.8
+release=1
+sources=("http://zlib.net/current/zlib-${version}.tar.gz")
+sha1sum=('a4d316c404ff54ca545ea71a27af7dbc29817088')
+makedepends=('glibc-devel')
+
+config-libz() {
+  description='Compression library implementing the deflate compression method found in gzip and PKZIP'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libz=$version-$release")
+  files=('usr/lib/libz.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libz.so'
+    'usr/lib/libz.a'
+    'usr/lib/pkgconfig/zlib.pc'
+    'usr/share/man/man3'
+  )
+}
+
+build() {
+  cd "zlib-$version"
+  CHOST="$HOST" \
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd "zlib-$version"
+  make DESTDIR="$pkgdir" install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

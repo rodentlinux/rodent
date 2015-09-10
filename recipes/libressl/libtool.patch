@@ -1,0 +1,11 @@
+--- ltmain.sh.orig	2015-10-03 09:22:32.911479854 +0200
++++ ltmain.sh	2015-10-03 09:22:54.326939867 +0200
+@@ -6879,7 +6879,7 @@
+ 	      fi
+ 	    else
+ 	      # We cannot seem to hardcode it, guess we'll fake it.
+-	      add_dir="-L$libdir"
++	      add_dir="-L=$libdir"
+ 	      # Try looking first in the location we're being installed to.
+ 	      if test -n "$inst_prefix_dir"; then
+ 		case $libdir in

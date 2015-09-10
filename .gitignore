@@ -1,0 +1,11 @@
+/pseudofile
+/image.files
+/image.sqfs
+/settings
+/cache
+/tools
+/recipes/*/files
+/recipes/*/pkg
+/recipes/*/build
+/recipes/*/tools
+/recipes/*/sysroot.*

@@ -1,0 +1,7 @@
+ARCH=armv7hl
+MAKEFLAGS=-j4
+
+REPOS=(
+  'esmil:http://esmil.dk/rodent'
+  'local:local'
+)

@@ -1,0 +1,48 @@
+diff -Naur coreutils-8.24.orig/Makefile.in coreutils-8.24/Makefile.in
+--- coreutils-8.24.orig/Makefile.in	2015-07-03 23:23:13.000000000 +0200
++++ coreutils-8.24/Makefile.in	2015-09-24 23:28:52.201035752 +0200
+@@ -3853,7 +3853,7 @@
+ lispdir = @lispdir@
+ localedir = @localedir@
+ localstatedir = @localstatedir@
+-man1_MANS = @man1_MANS@
++man1_MANS =
+ mandir = @mandir@
+ mkdir_p = @mkdir_p@
+ oldincludedir = @oldincludedir@
+@@ -4994,7 +4994,7 @@
+ 
+ @HAVE_PERL_FALSE@run_help2man = $(SHELL) $(srcdir)/man/dummy-man
+ @HAVE_PERL_TRUE@run_help2man = $(PERL) -- $(srcdir)/man/help2man
+-ALL_MANS = $(man1_MANS) $(EXTRA_MANS)
++ALL_MANS =
+ 
+ # Dependencies common to all man pages.  Updated below.
+ 
+@@ -14248,25 +14248,7 @@
+ 	     test) prog='['; argv='[';;					\
+ 		*) prog=$$name; argv=$$prog;;				\
+ 	esac;								\
+-	rm -f $@ $@-t							\
+-	  && t=$*.td							\
+-	  && rm -rf $$t							\
+-	  && $(MKDIR_P) $$t						\
+-	  && (cd $$t && $(LN_S) '$(abs_top_builddir)/src/'$$prog$(EXEEXT) \
+-				$$argv$(EXEEXT))			\
+-	  && $(run_help2man)						\
+-		     --source='$(PACKAGE_STRING)'			\
+-		     --include=$(srcdir)/man/$$name.x			\
+-		     --output=$$t/$$name.1				\
+-		     --info-page='\(aq(coreutils) '$$name' invocation\(aq' \
+-		     $$t/$$argv$(EXEEXT)				\
+-	  && sed \
+-	       -e 's|$*\.td/||g' \
+-	       -e '/For complete documentation/d' \
+-	       $$t/$$name.1 > $@-t			\
+-	  && rm -rf $$t							\
+-	  && chmod a-w $@-t						\
+-	  && mv $@-t $@
++
+ .PHONY: check-root
+ check-root:
+ 	$(MAKE) check TESTS='$(root_tests)' SUBDIRS=.

@@ -1,0 +1,44 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+usage() {
+  echo 'halp!'
+}
+
+if [[ "$1" == help ]]; then
+  usage
+  exit 0
+fi
+
+[[ -z "$1" ]] || IMAGE="$1"
+[[ -n "$IMAGE" ]] || IMAGE="$ROOT/image.sqfs"
+
+case "$ARCH" in
+armv7hl)
+  cmd=(qemu-system-arm
+    -machine vexpress-a9
+    -smp 4 -m 512
+    -kernel "$ROOT/lib/kernel.$ARCH"
+    -append 'console=ttyAMA0 root=/dev/sda ro'
+    -dtb "$ROOT/lib/vexpress-v2p-ca9.dtb"
+    -nographic
+    -device virtio-scsi-device,id=scsi
+    -device scsi-hd,drive=root
+    -drive if=none,id=root,format=raw,readonly,file="$IMAGE"
+    -net nic,model=lan9118
+    -net user,net=192.168.7.0/24,dhcpstart=192.168.7.16,hostname=guest,hostfwd=tcp::2222-:22
+  );;
+*)
+  echo "Unknown architecture '$ARCH'."
+  exit 1;;
+esac
+
+#    -append 'console=ttyAMA0 root=/dev/sda ro init=/usr/bin/stracepid1'
+export QEMU_AUDIO_DRV=none
+
+exec "${cmd[@]}"
+
+# vim: set ft=sh ts=2 sw=2 et:

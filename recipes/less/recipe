@@ -1,0 +1,58 @@
+parts=(less less-utils)
+version=481
+release=1
+sources=("http://www.greenwoodsoftware.com/less/less-${version}.tar.gz")
+sha1sum=('58e7e62a760a9ca3636349de8e3357f7102aea1d')
+makedepends=('libncurses-devel') # 'libpcre-devel')
+
+config-less() {
+  description='A terminal based program for viewing text files'
+  depends=('libncurses')
+  files=('usr/bin/less')
+  manfiles=('usr/share/man/man1/less.1')
+}
+
+config-less-utils() {
+  description='Utilities for the less pager'
+  depends=('glibc')
+  files=('usr/bin/lessecho' 'usr/bin/lesskey')
+  manfiles=(
+    'usr/share/man/man1/lessecho.1'
+    'usr/share/man/man1/lesskey.1'
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../less-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --with-regex=pcre
+
+  make
+
+  #rm -rf build-pcre
+  #mkdir build-pcre
+  #cd build-pcre
+
+  #"../less-$version/configure" \
+  #  --host=$HOST \
+  #  --prefix=/usr \
+  #  --sysconfdir=/etc \
+  #  --with-regex=pcre
+
+  #make less
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  #install -m744 ../build-pcre/less "$pkgdir/usr/bin/less-pcre"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

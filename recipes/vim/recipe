@@ -1,0 +1,153 @@
+parts=(
+  vim
+  vim-links
+  vimtutor
+  xxd
+  vim-docs
+  vim-print
+  vim-spell
+  vim-tools
+  vim-extra
+)
+version=7.4.889
+release=1
+sources=("https://github.com/vim/vim/archive/v${version}.tar.gz")
+sha1sum=('7cb53007a49279c5627db90137dac1af4d4972d1')
+makedepends=('libncurses-devel')
+
+config-vim() {
+  description='Vi Improved, a highly configurable, improved version of the vi text editor'
+  depends=( 'libncurses')
+  files=('usr/bin/vim')
+  manfiles=('usr/share/man/man1/vim.1')
+}
+
+config-vim-links() {
+  description='Vim alternative names'
+  provides=('ex' 'rview' 'rvim' 'view' 'vimdiff')
+  depends=("vim=$version-$release")
+  mandepends=("vim-man=$version-$release")
+  files=(
+    'usr/bin/ex'
+    'usr/bin/rview'
+    'usr/bin/rvim'
+    'usr/bin/view'
+    'usr/bin/vimdiff'
+  )
+  manfiles=(
+    'usr/share/man/man1/ex.1'
+    'usr/share/man/man1/rview.1'
+    'usr/share/man/man1/rvim.1'
+    'usr/share/man/man1/view.1'
+    'usr/share/man/man1/vimdiff.1'
+  )
+}
+
+config-vimtutor() {
+  description='Vim tutor'
+  depends=('sh' "vim=$version-$release")
+  files=('usr/bin/vimtutor' 'usr/share/vim/vim74/tutor')
+  manfiles=('usr/share/man/man1/vimtutor.1')
+}
+
+config-xxd() {
+  description='Vim hex tool'
+  depends=('glibc')
+  files=('usr/bin/xxd')
+  manfiles=('usr/share/man/man1/xxd.1')
+}
+
+config-vim-docs() {
+  description='Vim documentation'
+  depends=("vim=$version-$release")
+  files=('usr/share/vim/vim74/doc')
+}
+
+config-vim-print() {
+  description='Vim ps files'
+  depends=("vim=$version-$release")
+  files=('usr/share/vim/vim74/print')
+}
+
+config-vim-spell() {
+  description='Vim spell files'
+  depends=("vim=$version-$release")
+  files=('usr/share/vim/vim74/spell')
+}
+
+config-vim-tools() {
+  description='Vim extra tools'
+  depends=("vim=$version-$release")
+  files=('usr/share/vim/vim74/tools')
+}
+
+config-vim-extra() {
+  description='Vim syntax, colors and macros'
+  depends=("vim=$version-$release")
+  files=(
+    'usr/share/vim/vim74/autoload'
+    'usr/share/vim/vim74/bugreport.vim'
+    'usr/share/vim/vim74/colors'
+    'usr/share/vim/vim74/compiler'
+    'usr/share/vim/vim74/delmenu.vim'
+    'usr/share/vim/vim74/filetype.vim'
+    'usr/share/vim/vim74/ftoff.vim'
+    'usr/share/vim/vim74/ftplugin.vim'
+    'usr/share/vim/vim74/ftplugin/*'
+    'usr/share/vim/vim74/ftplugof.vim'
+    'usr/share/vim/vim74/indent.vim'
+    'usr/share/vim/vim74/indent/*'
+    'usr/share/vim/vim74/indoff.vim'
+    'usr/share/vim/vim74/macros'
+    'usr/share/vim/vim74/menu.vim'
+    'usr/share/vim/vim74/mswin.vim'
+    'usr/share/vim/vim74/optwin.vim'
+    'usr/share/vim/vim74/plugin'
+    'usr/share/vim/vim74/scripts.vim'
+    'usr/share/vim/vim74/synmenu.vim'
+    'usr/share/vim/vim74/syntax'
+  )
+}
+
+build() {
+  cd "vim-$version"
+
+  STRIP=true \
+  ./configure \
+    vim_cv_toupper_broken=no \
+    vim_cv_terminfo=yes \
+    vim_cv_tty_group=world \
+    vim_cv_getcwd_broken=no \
+    vim_cv_stat_ignores_slash=no \
+    vim_cv_memmove_handles_overlap=yes \
+    --host=$HOST \
+    --prefix=/usr \
+    --disable-smack \
+    --disable-selinux \
+    --disable-xsmp \
+    --disable-netbeans \
+    --disable-gtktest \
+    --disable-acl \
+    --disable-gpm \
+    --disable-sysmouse \
+    --disable-nls \
+    --with-tlib=ncurses
+
+  make
+}
+
+package() {
+  cd "vim-$version"
+  unset MAKEFLAGS
+  make DESTDIR="$pkgdir" VIMRCLOC=/etc install
+
+  # we don't need this
+  rm "$pkgdir/usr/share/vim/vim74/gvimrc_example.vim"
+  rm "$pkgdir/usr/share/vim/vim74/vimrc_example.vim"
+
+  # evim doesn't make sense without X
+  rm "$pkgdir/usr/share/vim/vim74/evim.vim"
+  rm "$pkgdir/usr/share/man/man1/evim.1"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,50 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+if [[ "$1" = 'help' ]]; then
+  echo 'halp!'
+  exit 0
+fi
+
+while true; do
+  case "$1" in
+  -s) SYSROOT="$2"; shift 2;;
+  *) break;;
+  esac
+done
+[[ -z "$1" ]]       || SYSROOT="$1"
+[[ -n "$SYSROOT" ]] || SYSROOT="$ROOT/sysroot.$ARCH"
+
+if [[ ! -d "$SYSROOT" ]]; then
+  echo "Sysroot '$SYSROOT' not found."
+  exit 1
+fi
+
+cd "$SYSROOT"
+echo "Checking dependencies"
+awk -f "$ROOT/lib/ro/graphlib.awk" -f "$ROOT/lib/ro/verify-deps.awk" \#/installed
+
+echo "Checking new/removed files"
+find . -mindepth 1 -printf '%P\n' \
+  | awk -f "$ROOT/lib/ro/verify-files.awk" - \#/*.files
+
+echo "Checking symlinks"
+awk -F'\t' '$2=="l"{print $1;print $6}' \#/*.files \
+  | while read -r file; do
+  read -r target
+  if [[ "$(readlink "$file")" = "$target" ]]; then
+    continue
+  fi
+
+  echo "- $file -> $target"
+  echo "+ $file -> $(readlink "$file")"
+done
+
+echo "Checking file content"
+awk -F'\t' '$2=="f"{print $6 "  " $1}' \#/*.files \
+  | sha1sum -c --strict --quiet
+
+# vim: set ft=sh ts=2 sw=2 et:

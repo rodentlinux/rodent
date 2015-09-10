@@ -1,0 +1,143 @@
+parts=(libpcre libpcre-devel libpcre16 libpcre32 libpcreposix libpcrecpp pcregrep)
+version=8.37
+release=1
+sources=("ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${version}.tar.bz2")
+sha1sum=('4c629b3f582366fae4e8912f0d9fa3140347d6e7')
+makedepends=('libhistory-devel')
+
+config-libpcre() {
+  description='A library that implements Perl 5-style regular expressions'
+  depends=('glibc')
+  files=('usr/lib/libpcre.so.*')
+  manfiles=(
+    'usr/share/man/man3/pcre.3'
+    'usr/share/man/man3/pcre_*.3'
+    'usr/share/man/man3/pcreapi.3'
+    'usr/share/man/man3/pcrebuild.3'
+    'usr/share/man/man3/pcrecallout.3'
+    'usr/share/man/man3/pcrecompat.3'
+    'usr/share/man/man3/pcredemo.3'
+    'usr/share/man/man3/pcrejit.3'
+    'usr/share/man/man3/pcrelimits.3'
+    'usr/share/man/man3/pcrematching.3'
+    'usr/share/man/man3/pcrepartial.3'
+    'usr/share/man/man3/pcrepattern.3'
+    'usr/share/man/man3/pcreperform.3'
+    'usr/share/man/man3/pcreprecompile.3'
+    'usr/share/man/man3/pcresample.3'
+    'usr/share/man/man3/pcrestack.3'
+    'usr/share/man/man3/pcresyntax.3'
+    'usr/share/man/man3/pcreunicode.3'
+  )
+}
+
+config-libpcre-devel() {
+  description='Development files for libpcre'
+  depends=('glibc-devel' "libpcre=$version-$release")
+  files=(
+    'usr/bin/pcre-config'
+    'usr/include/pcre.h'
+    'usr/lib/libpcre.a'
+    'usr/lib/libpcre.so'
+    'usr/lib/pkgconfig/libpcre.pc'
+  )
+  manfiles=('usr/share/man/man1/pcre-config.1')
+}
+
+config-libpcre16() {
+  description='A library that implements Perl 5-style regular expressions - 16bit version'
+  depends=('glibc')
+  devdepends=("libpcre-devel=$version-$release" "libpcre16=$version-$release")
+  files=('usr/lib/libpcre16.so.*')
+  devfiles=(
+    'usr/lib/libpcre16.a'
+    'usr/lib/libpcre16.so'
+    'usr/lib/pkgconfig/libpcre16.pc'
+  )
+  manfiles=('usr/share/man/man3/pcre16.3' 'usr/share/man/man3/pcre16_*.3')
+}
+
+config-libpcre32() {
+  description='A library that implements Perl 5-style regular expressions - 32bit version'
+  depends=('glibc')
+  devdepends=("libpcre-devel=$version-$release" "libpcre32=$version-$release")
+  files=('usr/lib/libpcre32.so.*')
+  devfiles=(
+    'usr/lib/libpcre32.a'
+    'usr/lib/libpcre32.so'
+    'usr/lib/pkgconfig/libpcre32.pc'
+  )
+  manfiles=('usr/share/man/man3/pcre32.3' 'usr/share/man/man3/pcre32_*.3')
+}
+
+config-libpcreposix() {
+  description='A library that implements Perl 5-style regular expressions - posix wrapper'
+  depends=("libpcre=$version-$release")
+  devdepends=('glibc-devel' "libpcreposix=$version-$release")
+  files=('usr/lib/libpcreposix.so.*')
+  devfiles=(
+    'usr/include/pcreposix.h'
+    'usr/lib/libpcreposix.a'
+    'usr/lib/libpcreposix.so'
+    'usr/lib/pkgconfig/libpcreposix.pc'
+  )
+  manfiles=('usr/share/man/man3/pcreposix.3')
+}
+
+config-libpcrecpp() {
+  description='A library that implements Perl 5-style regular expressions - C++ bindings'
+  depends=("libpcre=$version-$release" 'libstdc++')
+  devdepends=("libpcre-devel=$version-$release" "libpcrecpp=$version-$release")
+  files=('usr/lib/libpcrecpp.so.*')
+  devfiles=(
+    'usr/include/pcre_scanner.h'
+    'usr/include/pcre_stringpiece.h'
+    'usr/include/pcrecpp.h'
+    'usr/include/pcrecpparg.h'
+    'usr/lib/libpcrecpp.a'
+    'usr/lib/libpcrecpp.so'
+    'usr/lib/pkgconfig/libpcrecpp.pc'
+  )
+  manfiles=('usr/share/man/man3/pcrecpp.3')
+}
+
+config-pcregrep() {
+  description='Grep using the PCRE library'
+  depends=("libpcre=$version-$release")
+  files=('usr/bin/pcregrep')
+  manfiles=('usr/share/man/man1/pcregrep.1')
+}
+
+prepare() {
+  cd "pcre-$version"
+  patch -Np0 -i ../01-svn-snapshot.patch
+  patch -Np1 -i ../libtool.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../pcre-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-unicode-properties \
+    --enable-pcre16 \
+    --enable-pcre32 \
+    --enable-jit \
+    --with-sysroot="$SYSROOT" \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share/doc"
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

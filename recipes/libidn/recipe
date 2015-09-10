@@ -1,0 +1,53 @@
+parts=(libidn idn)
+version=1.32
+release=1
+sources=("http://ftp.gnu.org/gnu/libidn/libidn-${version}.tar.gz")
+sha1sum=('ddd018611b98af7c67d434aa42d15d39f45129f5')
+makedepends=('glibc-devel')
+
+config-libidn() {
+  description='Implementation of the Stringprep, Punycode and IDNA specifications'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libidn=$version-$release")
+  files=('usr/lib/libidn.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libidn.so'
+    'usr/lib/libidn.a'
+    'usr/lib/pkgconfig/libidn.pc'
+  )
+  manfiles=('usr/share/man/man3')
+}
+
+config-idn() {
+  description='Internationalized Domain Names command line tool'
+  depends=("libidn=$version-$release")
+  files=('usr/bin/idn')
+  manfiles=('usr/share/man/man1/idn.1')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libidn-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --disable-nls \
+    --disable-rpath \
+    --with-threads=posix \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir"/usr/share/{emacs,info}
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

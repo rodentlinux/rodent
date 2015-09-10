@@ -1,0 +1,24 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+if [[ "$1" = 'help' ]]; then
+  echo 'halp!'
+  exit 0
+fi
+
+while true; do
+  case "$1" in
+  -s) SYSROOT="$2"; shift 2;;
+  *)  break;;
+  esac
+done
+[[ -n "$SYSROOT" ]] || SYSROOT="$ROOT/sysroot.$ARCH"
+
+. "$ROOT/lib/ro/deps_install.sh"
+
+deps_install "$@"
+
+# vim: set ft=sh ts=2 sw=2 et:

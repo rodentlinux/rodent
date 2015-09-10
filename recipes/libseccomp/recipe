@@ -1,0 +1,48 @@
+parts=(libseccomp scmp_sys_resolver)
+version=2.2.3
+release=1
+sources=("https://github.com/seccomp/libseccomp/releases/download/v${version}/libseccomp-${version}.tar.gz")
+sha1sum=('a2abb98d506d6a2b8a5fadc35496905e98d999ee')
+makedepends=('glibc-devel')
+
+config-libseccomp() {
+  description='Enhanced seccomp library'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libseccomp=$version-$release")
+  files=('usr/lib/libseccomp.so.*')
+  devfiles=(
+    'usr/include/seccomp.h'
+    'usr/lib/libseccomp.so'
+    'usr/lib/libseccomp.a'
+    'usr/lib/pkgconfig/libseccomp.pc'
+  )
+  manfiles=('usr/share/man/man3')
+}
+
+config-scmp_sys_resolver() {
+  description='Tool to resolve system calls from libseccomp'
+  depends=("libseccomp=${version}-${release}")
+  files=('usr/bin/scmp_sys_resolver')
+  manfiles=('usr/share/man/man1/scmp_sys_resolver.1')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libseccomp-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

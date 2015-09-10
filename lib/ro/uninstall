@@ -1,0 +1,23 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+if [[ "$1" = 'help' ]]; then
+  echo 'halp!'
+  exit 0
+fi
+
+if [[ ! -f "$SYSROOT/$1" ]]; then
+  echo "Package '$1' not found."
+  exit 1
+fi
+
+if [[ ! -d "$SYSROOT" ]]; then
+  install -dm755 "$SYSROOT"
+fi
+
+tar -x -v -C "$SYSROOT" -f "$1"
+
+# vim: set ft=sh ts=2 sw=2 et:

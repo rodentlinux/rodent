@@ -1,0 +1,505 @@
+parts=(
+  libudev
+  libsystemd
+  systemd
+  systemd-hostname
+  systemd-coredump
+  systemd-networkd
+  systemd-resolved
+  systemd-timesyncd
+  systemd-timedated
+  systemd-localed
+  systemd-backlight
+  systemd-ask-password
+  systemd-vconsole-setup
+  systemd-logind
+  systemd-cgls
+  systemd-bash-completion
+  systemd-zsh-completion
+)
+version=226
+release=1
+sources=("https://github.com/systemd/systemd/archive/v${version}.tar.gz")
+sha1sum=('ac2024c0e708c4f6a9ac4849e808bdfeba2aec19')
+makedepends=(
+  'libcrypt-devel'
+  'libcap-devel'
+  'libz-devel'
+  'libseccomp-devel'
+  'libkmod-devel'
+  'libpam_misc-devel'
+  'libmount-devel'
+  'libidn-devel'
+  'libcurl-devel'
+  'libdbus-1-devel'
+)
+
+config-libudev() {
+  description='The udev library'
+  depends=('libcap')
+  devdepends=('glibc-devel' "libudev=$version-$release")
+  files=('usr/lib/libudev.so.*')
+  devfiles=(
+    'usr/include/libudev.h'
+    'usr/lib/libudev.so'
+    'usr/lib/pkgconfig/libudev.pc'
+  )
+}
+
+config-libsystemd() {
+  description='The systemd library'
+  depends=('libcap')
+  devdepends=('glibc-devel' "libsystemd=$version-$release")
+  files=('usr/lib/libsystemd.so.*')
+  devfiles=(
+    'usr/include/systemd'
+    'usr/lib/libsystemd.so'
+    'usr/lib/pkgconfig/libsystemd.pc'
+  )
+}
+
+config-systemd() {
+  description='System and service manager'
+  provides=("udev=$version-$release")
+  depends=(
+    'libseccomp'
+    'libpam'
+    'libkmod'
+    'libmount'
+    'libcap'
+    'mount'
+    'dbus-daemon'
+  )
+  files=(
+    'usr/lib/sysctl.d/50-default.conf'
+    'usr/lib/systemd/system-shutdown'
+    'usr/lib/systemd/system-sleep'
+    'usr/lib/systemd/system/-.slice'
+    'usr/lib/systemd/system/basic.target'
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.systemd1.busname'
+    'usr/lib/systemd/system/ctrl-alt-del.target'
+    'usr/lib/systemd/system/default.target'
+    'usr/lib/systemd/system/dev-hugepages.mount'
+    'usr/lib/systemd/system/dev-mqueue.mount'
+    'usr/lib/systemd/system/emergency.service'
+    'usr/lib/systemd/system/emergency.target'
+    'usr/lib/systemd/system/final.target'
+    'usr/lib/systemd/system/graphical.target'
+    'usr/lib/systemd/system/halt.target'
+    'usr/lib/systemd/system/hybrid-sleep.target'
+    'usr/lib/systemd/system/local-fs-pre.target'
+    'usr/lib/systemd/system/local-fs.target'
+    'usr/lib/systemd/system/local-fs.target.wants/tmp.mount'
+    'usr/lib/systemd/system/local-fs.target.wants/var.mount'
+    'usr/lib/systemd/system/multi-user.target'
+    'usr/lib/systemd/system/nss-lookup.target'
+    'usr/lib/systemd/system/nss-user-lookup.target'
+    'usr/lib/systemd/system/org.freedesktop.systemd1.busname'
+    'usr/lib/systemd/system/paths.target'
+    'usr/lib/systemd/system/poweroff.target'
+    'usr/lib/systemd/system/proc-sys-fs-binfmt_misc.automount'
+    'usr/lib/systemd/system/proc-sys-fs-binfmt_misc.mount'
+    'usr/lib/systemd/system/reboot.target'
+    'usr/lib/systemd/system/rescue.service'
+    'usr/lib/systemd/system/rescue.target'
+    'usr/lib/systemd/system/shutdown.target'
+    'usr/lib/systemd/system/sigpwr.target'
+    'usr/lib/systemd/system/sleep.target'
+    'usr/lib/systemd/system/slices.target'
+    'usr/lib/systemd/system/sockets.target'
+    'usr/lib/systemd/system/sockets.target.wants/systemd-journald-audit.socket'
+    'usr/lib/systemd/system/sockets.target.wants/systemd-journald-dev-log.socket'
+    'usr/lib/systemd/system/sockets.target.wants/systemd-journald.socket'
+    'usr/lib/systemd/system/sockets.target.wants/systemd-udevd-control.socket'
+    'usr/lib/systemd/system/sockets.target.wants/systemd-udevd-kernel.socket'
+    'usr/lib/systemd/system/sound.target'
+    'usr/lib/systemd/system/suspend.target'
+    'usr/lib/systemd/system/swap.target'
+    'usr/lib/systemd/system/sys-kernel-config.mount'
+    'usr/lib/systemd/system/sys-kernel-debug.mount'
+    'usr/lib/systemd/system/sysinit.target'
+    'usr/lib/systemd/system/sysinit.target.wants/dev-hugepages.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/dev-mqueue.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/proc-sys-fs-binfmt_misc.automount'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-binfmt.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-journald.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-machine-id-commit.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-sysctl.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup-dev.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-udev-trigger.service'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-udevd.service'
+    'usr/lib/systemd/system/syslog.socket'
+    'usr/lib/systemd/system/system.slice'
+    'usr/lib/systemd/system/systemd-binfmt.service'
+    'usr/lib/systemd/system/systemd-halt.service'
+    'usr/lib/systemd/system/systemd-hybrid-sleep.service'
+    'usr/lib/systemd/system/systemd-journal-flush.service'
+    'usr/lib/systemd/system/systemd-journald-audit.socket'
+    'usr/lib/systemd/system/systemd-journald-dev-log.socket'
+    'usr/lib/systemd/system/systemd-journald.service'
+    'usr/lib/systemd/system/systemd-journald.socket'
+    'usr/lib/systemd/system/systemd-machine-id-commit.service'
+    'usr/lib/systemd/system/systemd-poweroff.service'
+    'usr/lib/systemd/system/systemd-reboot.service'
+    'usr/lib/systemd/system/systemd-suspend.service'
+    'usr/lib/systemd/system/systemd-sysctl.service'
+    'usr/lib/systemd/system/systemd-tmpfiles-clean.service'
+    'usr/lib/systemd/system/systemd-tmpfiles-clean.timer'
+    'usr/lib/systemd/system/systemd-tmpfiles-setup-dev.service'
+    'usr/lib/systemd/system/systemd-tmpfiles-setup.service'
+    'usr/lib/systemd/system/systemd-udev-settle.service'
+    'usr/lib/systemd/system/systemd-udev-trigger.service'
+    'usr/lib/systemd/system/systemd-udevd-control.socket'
+    'usr/lib/systemd/system/systemd-udevd-kernel.socket'
+    'usr/lib/systemd/system/systemd-udevd.service'
+    'usr/lib/systemd/system/time-sync.target'
+    'usr/lib/systemd/system/timers.target'
+    'usr/lib/systemd/system/timers.target.wants/systemd-tmpfiles-clean.timer'
+    'usr/lib/systemd/system/tmp.mount'
+    'usr/lib/systemd/system/umount.target'
+    'usr/lib/systemd/system/var.mount'
+    'usr/lib/systemd/systemd'
+    'usr/lib/systemd/systemd-ac-power'
+    'usr/lib/systemd/systemd-activate'
+    'usr/lib/systemd/systemd-binfmt'
+    'usr/lib/systemd/systemd-cgroups-agent'
+    'usr/lib/systemd/systemd-journald'
+    'usr/lib/systemd/systemd-machine-id-commit'
+    'usr/lib/systemd/systemd-shutdown'
+    'usr/lib/systemd/systemd-sleep'
+    'usr/lib/systemd/systemd-sysctl'
+    'usr/lib/systemd/systemd-udevd'
+    'usr/lib/tmpfiles.d/systemd-nologin.conf'
+    'usr/lib/tmpfiles.d/systemd.conf'
+    'usr/lib/tmpfiles.d/tmp.conf'
+    'usr/lib/tmpfiles.d/var.conf'
+    'usr/lib/udev/ata_id'
+    'usr/lib/udev/cdrom_id'
+    'usr/lib/udev/collect'
+    'usr/lib/udev/hwdb.d'
+    'usr/lib/udev/mtd_probe'
+    'usr/lib/udev/rules.d/50-udev-default.rules'
+    'usr/lib/udev/rules.d/60-block.rules'
+    'usr/lib/udev/rules.d/60-cdrom_id.rules'
+    'usr/lib/udev/rules.d/60-drm.rules'
+    'usr/lib/udev/rules.d/60-evdev.rules'
+    'usr/lib/udev/rules.d/60-persistent-alsa.rules'
+    'usr/lib/udev/rules.d/60-persistent-input.rules'
+    'usr/lib/udev/rules.d/60-persistent-storage-tape.rules'
+    'usr/lib/udev/rules.d/60-persistent-storage.rules'
+    'usr/lib/udev/rules.d/60-persistent-v4l.rules'
+    'usr/lib/udev/rules.d/60-serial.rules'
+    'usr/lib/udev/rules.d/70-mouse.rules'
+    'usr/lib/udev/rules.d/70-power-switch.rules'
+    'usr/lib/udev/rules.d/70-uaccess.rules'
+    'usr/lib/udev/rules.d/75-net-description.rules'
+    'usr/lib/udev/rules.d/75-probe_mtd.rules'
+    'usr/lib/udev/rules.d/78-sound-card.rules'
+    'usr/lib/udev/rules.d/80-net-setup-link.rules'
+    'usr/lib/udev/rules.d/99-systemd.rules'
+    'usr/lib/udev/scsi_id'
+    'usr/lib/udev/v4l_id'
+    'usr/share/dbus-1/services/org.freedesktop.systemd1.service'
+    'usr/share/dbus-1/system-services/org.freedesktop.systemd1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.systemd1.conf'
+    'usr/bin/init'
+    'usr/bin/journalctl'
+    'usr/bin/systemctl'
+    'usr/bin/udevadm'
+    'usr/bin/systemd-tmpfiles'
+  )
+}
+
+config-systemd-hostname() {
+  description='Systemd hostname utilities'
+  depends=("systemd=$version-$release")
+  files=(
+    'usr/bin/hostnamectl'
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.hostname1.busname'
+    'usr/lib/systemd/system/dbus-org.freedesktop.hostname1.service'
+    'usr/lib/systemd/system/org.freedesktop.hostname1.busname'
+    'usr/lib/systemd/system/systemd-hostnamed.service'
+    'usr/lib/systemd/systemd-hostnamed'
+    'usr/share/dbus-1/system-services/org.freedesktop.hostname1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.hostname1.conf'
+  )
+}
+
+config-systemd-coredump() {
+  description='Systemd coredump utility'
+  depends=("systemd=$version-$release")
+  files=(
+    'usr/bin/coredumpctl'
+    'usr/lib/sysctl.d/50-coredump.conf'
+    'usr/lib/systemd/systemd-coredump'
+  )
+}
+
+config-systemd-networkd() {
+  description='Systemd network daemon'
+  depends=('libidn' 'libcap' "systemd=$version-$release")
+  files=(
+    'usr/bin/networkctl'
+    'usr/lib/systemd/network'
+    'usr/lib/systemd/network/80-container-host0.network'
+    'usr/lib/systemd/network/80-container-ve.network'
+    'usr/lib/systemd/network/99-default.link'
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.network1.busname'
+    'usr/lib/systemd/system/dbus-org.freedesktop.network1.service'
+    'usr/lib/systemd/system/network-online.target'
+    'usr/lib/systemd/system/network-pre.target'
+    'usr/lib/systemd/system/network.target'
+    'usr/lib/systemd/system/org.freedesktop.network1.busname'
+    'usr/lib/systemd/system/systemd-networkd-wait-online.service'
+    'usr/lib/systemd/system/systemd-networkd.service'
+    'usr/lib/systemd/system/systemd-networkd.socket'
+    'usr/lib/systemd/systemd-networkd'
+    'usr/lib/systemd/systemd-networkd-wait-online'
+    'usr/share/dbus-1/system-services/org.freedesktop.network1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.network1.conf'
+  )
+}
+
+config-systemd-resolved() {
+  description='Systemd resolver daemon'
+  depends=('libidn' 'libcap' "systemd=$version-$release")
+  files=(
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.resolve1.busname'
+    'usr/lib/systemd/system/dbus-org.freedesktop.resolve1.service'
+    'usr/lib/systemd/system/org.freedesktop.resolve1.busname'
+    'usr/lib/systemd/system/systemd-resolved.service'
+    'usr/lib/systemd/systemd-resolve-host'
+    'usr/lib/systemd/systemd-resolved'
+    'usr/lib/libnss_resolve.so.2'
+    'usr/share/dbus-1/system-services/org.freedesktop.resolve1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.resolve1.conf'
+  )
+}
+
+config-systemd-timesyncd() {
+  description='Systemd ntp client'
+  depends=('libcap' "systemd=$version-$release")
+  files=(
+    'usr/lib/systemd/system/systemd-timesyncd.service'
+    'usr/lib/systemd/systemd-timesyncd'
+  )
+}
+
+config-systemd-timedated() {
+  description='Systemd date/time daemon'
+  depends=("systemd=$version-$release")
+  files=(
+    'usr/bin/timedatectl'
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.timedate1.busname'
+    'usr/lib/systemd/system/dbus-org.freedesktop.timedate1.service'
+    'usr/lib/systemd/system/org.freedesktop.timedate1.busname'
+    'usr/lib/systemd/system/systemd-timedated.service'
+    'usr/lib/systemd/systemd-timedated'
+    'usr/share/dbus-1/system-services/org.freedesktop.timedate1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.timedate1.conf'
+  )
+}
+
+config-systemd-localed() {
+  description='Systemd locale daemon'
+  depends=("systemd=$version-$release")
+  files=(
+    'usr/bin/localectl'
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.locale1.busname'
+    'usr/lib/systemd/system/dbus-org.freedesktop.locale1.service'
+    'usr/lib/systemd/system/org.freedesktop.locale1.busname'
+    'usr/lib/systemd/system/systemd-localed.service'
+    'usr/lib/systemd/systemd-localed'
+    'usr/share/dbus-1/system-services/org.freedesktop.locale1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.locale1.conf'
+  )
+}
+
+config-systemd-backlight() {
+  description='Systemd backlight handling service'
+  depends=("systemd=$version-$release")
+  files=(
+    'usr/lib/systemd/system/systemd-backlight@.service'
+    'usr/lib/systemd/systemd-backlight'
+  )
+}
+
+config-systemd-ask-password() {
+  description='Systemd password asking tools'
+  depends=("systemd=$version-$release")
+  files=(
+    'usr/bin/systemd-ask-password'
+    'usr/bin/systemd-tty-ask-password-agent'
+    'usr/lib/systemd/system/systemd-ask-password-console.path'
+    'usr/lib/systemd/system/systemd-ask-password-console.service'
+    'usr/lib/systemd/system/systemd-ask-password-wall.path'
+    'usr/lib/systemd/system/systemd-ask-password-wall.service'
+    'usr/lib/systemd/systemd-reply-password'
+  )
+}
+
+config-systemd-vconsole-setup() {
+  description='Systemd virtual console setup daemon'
+  depends=("systemd=$version-$release" 'loadkeys' 'setfont')
+  files=(
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-vconsole-setup.service'
+    'usr/lib/systemd/system/systemd-vconsole-setup.service'
+    'usr/lib/systemd/systemd-vconsole-setup'
+    'usr/lib/udev/rules.d/90-vconsole.rules'
+  )
+}
+
+config-systemd-logind() {
+  description='Systemd login daemon'
+  depends=("systemd=$version-$release" 'agetty' 'kill')
+  files=(
+    'usr/bin/loginctl'
+    'usr/lib/security/pam_systemd.so'
+    'usr/lib/systemd/system-generators/systemd-getty-generator'
+    'usr/lib/systemd/system/autovt@.service'
+    'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.login1.busname'
+    'usr/lib/systemd/system/console-getty.service'
+    'usr/lib/systemd/system/container-getty@.service'
+    'usr/lib/systemd/system/dbus-org.freedesktop.login1.service'
+    'usr/lib/systemd/system/getty.target'
+    'usr/lib/systemd/system/getty@.service'
+    'usr/lib/systemd/system/multi-user.target.wants/systemd-logind.service'
+    'usr/lib/systemd/system/multi-user.target.wants/getty.target'
+    'usr/lib/systemd/system/multi-user.target.wants/systemd-user-sessions.service'
+    'usr/lib/systemd/system/org.freedesktop.login1.busname'
+    'usr/lib/systemd/system/serial-getty@.service'
+    'usr/lib/systemd/system/systemd-logind.service'
+    'usr/lib/systemd/system/systemd-user-sessions.service'
+    'usr/lib/systemd/system/user.slice'
+    'usr/lib/systemd/system/user@.service'
+    'usr/lib/systemd/systemd-logind'
+    'usr/lib/systemd/systemd-user-sessions'
+    'usr/lib/systemd/user/basic.target'
+    'usr/lib/systemd/user/busnames.target'
+    'usr/lib/systemd/user/default.target'
+    'usr/lib/systemd/user/exit.target'
+    'usr/lib/systemd/user/paths.target'
+    'usr/lib/systemd/user/shutdown.target'
+    'usr/lib/systemd/user/sockets.target'
+    'usr/lib/systemd/user/sound.target'
+    'usr/lib/systemd/user/systemd-exit.service'
+    'usr/lib/systemd/user/timers.target'
+    'usr/lib/udev/rules.d/71-seat.rules'
+    'usr/lib/udev/rules.d/73-seat-late.rules'
+    'usr/share/dbus-1/system-services/org.freedesktop.login1.service'
+    'usr/share/dbus-1/system.d/org.freedesktop.login1.conf'
+  )
+}
+
+config-systemd-cgls() {
+  description='Recursively show control group contents'
+  depends=('glibc')
+  files=('/usr/bin/systemd-cgls')
+}
+
+config-systemd-bash-completion() {
+  description='Bash completion for systemd'
+  files=('/usr/share/bash-completion')
+}
+
+config-systemd-zsh-completion() {
+  description='Zsh completion for systemd'
+  files=('/usr/share/zsh')
+}
+
+prepare() {
+  cd "systemd-$version"
+  patch -Np1 -i ../malloc.patch
+  patch -Np1 -i ../stack-protection.patch
+  patch -Np1 -i ../no-sbin-path.patch
+  ./autogen.sh
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  case $ARCH in
+  armv7hl) archopts=(--disable-efi --disable-gnuefi);;
+  *)
+    echo "Unknown architecture '$ARCH'."
+    exit 1;;
+  esac
+
+  "../systemd-${version}/configure" \
+    --host="$HOST" \
+    --prefix=/usr \
+    --libexecdir=/usr/lib \
+    --sysconfdir=/etc \
+    --disable-tests \
+    --disable-manpages \
+    --disable-audit \
+    --disable-ima \
+    --disable-kdbus \
+    --disable-utmp \
+    --disable-smack \
+    --disable-gnutls \
+    --disable-acl \
+    --disable-xz \
+    --disable-gcrypt \
+    --disable-libcryptsetup \
+    --disable-microhttpd \
+    --disable-libiptc \
+    --disable-xkbcommon \
+    --disable-polkit \
+    --disable-nls \
+    --with-tty-gid=5 \
+    --with-rc-local-script-path-start=/etc/start.local \
+    --with-rc-local-script-path-stop=/etc/stop.local \
+    --with-sysvinit-path= \
+    --with-sysvrcnd-path= \
+    --with-dbuspolicydir=/usr/share/dbus-1/system.d \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT" \
+    "${archopts[@]}"
+
+  make
+}
+
+package() {
+  cd build
+
+  make DESTDIR="$pkgdir" install
+
+  ln -sf 'multi-user.target' "$pkgdir/usr/lib/systemd/system/default.target"
+  #install -dm755 "$pkgdir/usr/lib/systemd/system.conf.d"
+  cat > "$pkgdir/usr/lib/systemd/system/var.mount" <<EOF
+[Unit]
+Description=Variable State Directory
+Documentation=man:hier(7)
+ConditionPathIsReadWrite=!/var
+DefaultDependencies=no
+Conflicts=umount.target
+Before=local-fs.target umount.target
+
+[Mount]
+What=tmpfs
+Where=/var
+Type=tmpfs
+Options=mode=755,size=50%
+EOF
+  ln -s '../var.mount' "$pkgdir/usr/lib/systemd/system/local-fs.target.wants/var.mount"
+
+  # move the default configuration to /usr/share/factory
+  mv "$pkgdir"/etc/pam.d/* "$pkgdir/usr/share/factory/etc/pam.d"
+  rmdir "$pkgdir/etc/pam.d"
+  mv "$pkgdir"/etc/* "$pkgdir/usr/share/factory/etc"
+  rmdir "$pkgdir/etc"
+
+  rm "$pkgdir"/usr/lib/{,security/}*.la
+  rm -r "$pkgdir/usr/lib/rpm"
+  rm -r "$pkgdir/usr/share/doc"
+  rm -r "$pkgdir/usr/var"
+  rm -r "$pkgdir/var"
+
+  ln -s '../lib/systemd/systemd' "$pkgdir/usr/bin/init"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

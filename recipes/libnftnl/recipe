@@ -1,0 +1,42 @@
+version=1.0.5
+release=1
+sources=("http://netfilter.org/projects/libnftnl/files/libnftnl-${version}.tar.bz2")
+sha1sum=('2ae3172251574ee36077af760933ec0369960a17')
+makedepends=('libmnl-devel')
+
+config-libnftnl() {
+  description='Netfilter library providing interface to the nf_tables subsystem'
+  depends=('libmnl')
+  devdepends=('glibc-devel' "libnftnl=$version-$release")
+  files=('usr/lib/libnftnl.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libnftnl.so'
+    'usr/lib/libnftnl.a'
+    'usr/lib/pkgconfig/libnftnl.pc'
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libnftnl-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-static \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

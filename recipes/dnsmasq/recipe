@@ -1,0 +1,52 @@
+version=2.75
+release=1
+sources=("http://www.thekelleys.org.uk/dnsmasq/dnsmasq-${version}.tar.xz")
+sha1sum=('e3312377f2ce75ebae1408fee41414a6fc03458f')
+makedepends=('libdbus-1-devel')
+
+config-dnsmasq() {
+  description='Lightweight, easy to configure DNS forwarder and DHCP server'
+  depends=('libdbus-1')
+  files=(
+    'usr/bin/dnsmasq'
+    'usr/lib/systemd/system/dnsmasq.service'
+    'usr/share/dbus-1/system.d/dnsmasq.conf'
+  )
+  manfiles=('usr/share/man/man8/dnsmasq.8')
+}
+
+build_options='-DHAVE_DBUS'
+
+build() {
+  cd "dnsmasq-$version"
+
+  make \
+    CC=$HOST-gcc \
+    LD=$HOST-ld \
+    AR=$HOST-ar \
+    CFLAGS="$CPPFLAGS $CFLAGS" \
+    LDFLAGS="$LDFLAGS" \
+    COPTS="$build_options"
+}
+
+package() {
+  cd "dnsmasq-$version"
+
+  make \
+    DESTDIR="$pkgdir" \
+    CC=$HOST-gcc \
+    LD=$HOST-ld \
+    AR=$HOST-ar \
+    CFLAGS="$CPPFLAGS $CFLAGS" \
+    LDFLAGS="$LDFLAGS" \
+    COPTS="$build_options" \
+    PREFIX=/usr \
+    BINDIR=/usr/bin \
+    install
+
+  install -Dm644 dbus/dnsmasq.conf "$pkgdir/usr/share/dbus-1/system.d/dnsmasq.conf"
+  install -Dm644 dnsmasq.conf.example "$pkgdir/usr/share/factory/etc/dnsmasq.conf"
+  install -Dm644 ../dnsmasq.service "$pkgdir/usr/lib/systemd/system/dnsmasq.service"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

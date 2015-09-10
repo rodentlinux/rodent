@@ -1,0 +1,44 @@
+version=0.14
+release=1
+sources=("http://0pointer.de/lennart/projects/libdaemon/libdaemon-${version}.tar.gz")
+sha1sum=('78a4db58cf3a7a8906c35592434e37680ca83b8f')
+makedepends=('glibc-devel')
+
+config-libdaemon() {
+  description='Lightweight C library that eases the writing of UNIX daemons'
+  depends=('libgcc' 'glibc')
+  devdepends=('glibc-devel' "libdaemon=$version-$release")
+  files=('usr/lib/libdaemon.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libdaemon.so'
+    'usr/lib/libdaemon.a'
+    'usr/lib/pkgconfig/libdaemon.pc'
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libdaemon-$version/configure" \
+    ac_cv_func_setpgrp_void=yes \
+    --host=$HOST \
+    --prefix=/usr \
+    --disable-lynx \
+    --disable-examples \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share"
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

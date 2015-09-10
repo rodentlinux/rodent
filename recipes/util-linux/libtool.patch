@@ -1,0 +1,11 @@
+--- libtool.orig	2015-09-28 11:02:24.574406696 +0200
++++ libtool	2015-09-28 11:02:47.513706954 +0200
+@@ -7340,7 +7340,7 @@
+ 	      fi
+ 	    else
+ 	      # We cannot seem to hardcode it, guess we'll fake it.
+-	      add_dir="-L$libdir"
++	      add_dir="-L=$libdir"
+ 	      # Try looking first in the location we're being installed to.
+ 	      if test -n "$inst_prefix_dir"; then
+ 		case $libdir in

@@ -1,0 +1,140 @@
+parts=(
+  openssh-client
+  openssh-server
+  openssh-scp
+  openssh-sftp
+  openssh-sftp-server
+  openssh-agent
+  openssh-keygen
+)
+version=7.1p1
+release=1
+sources=("http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${version}.tar.gz")
+sha1sum=('ed22af19f962262c493fcc6ed8c8826b2761d9b6')
+makedepends=(
+  'libutil-devel'
+  'libnsl-devel'
+  'libcrypt-devel'
+  'libz-devel'
+  'libcap-devel'
+  'libpam-devel'
+  'libncurses-devel'
+  'libcrypto-devel'
+)
+
+config-openssh-client() {
+  description='OpenSSH Client'
+  provides=('ssh-server')
+  depends=('libz' 'libcrypto')
+  files=('usr/bin/ssh' 'usr/bin/slogin')
+  manfiles=(
+    'usr/share/man/man1/ssh.1'
+    'usr/share/man/man1/slogin.1'
+    'usr/share/man/man5/ssh_config.5'
+  )
+}
+
+config-openssh-server() {
+  description='OpenSSH Server'
+  provides=('ssh-server')
+  depends=('libutil' 'libz' 'libpam' 'libcrypto')
+  files=(
+    'usr/bin/sshd'
+    'usr/lib/systemd/system/sshd.service'
+    'usr/lib/tmpfiles.d/sshd.conf'
+  )
+  manfiles=(
+    'usr/share/man/man5/moduli.5'
+    'usr/share/man/man5/sshd_config.5'
+    'usr/share/man/man8/sshd.8'
+  )
+}
+
+config-openssh-scp() {
+  description='OpenSSH Secure Copy'
+  provides=('scp')
+  depends=('ssh-client')
+  files=('usr/bin/scp')
+  manfiles=('usr/share/man/man1/scp.1')
+}
+
+config-openssh-sftp() {
+  description='OpenSSH Secure FTP Client'
+  depends=('libncurses' 'ssh-client')
+  files=('usr/bin/sftp')
+  manfiles=('usr/share/man/man1/sftp.1')
+}
+
+config-openssh-sftp-server() {
+  description='OpenSSH Secure FTP Server'
+  depends=('ssh-server')
+  files=('usr/lib/ssh/sftp-server')
+  manfiles=('usr/share/man/man8/sftp-server.8')
+}
+
+config-openssh-agent() {
+  description='OpenSSH Key Agent'
+  provides=('ssh-agent')
+  depends=('libz' 'libcrypto')
+  files=('usr/bin/ssh-add' 'usr/bin/ssh-agent')
+  manfiles=('usr/share/man/man1/ssh-add.1' 'usr/share/man/man1/ssh-agent.1')
+}
+
+config-openssh-keygen() {
+  description='OpenSSH Key Generation Tool'
+  provides=('ssh-keygen')
+  depends=('libz' 'libcrypto')
+  files=('usr/bin/ssh-keygen')
+  manfiles=('usr/share/man/man1/ssh-keygen.1')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../openssh-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --libexecdir=/usr/lib/ssh \
+    --sysconfdir=/etc/ssh \
+    --disable-strip \
+    --disable-utmp \
+    --disable-utmpx \
+    --disable-wtmp \
+    --disable-wtmpx \
+    --disable-lastlog \
+    --with-ssl-engine \
+    --with-pam \
+    --with-privsep-user=nobody \
+    --with-pid-dir=/run \
+    --with-default-path=/usr/local/bin:/usr/bin \
+    --with-superuser-path=/usr/local/sbin:/usr/local/bin:/usr/bin \
+    --with-gnu-ld \
+    --without-ssh1 \
+    --without-stackprotect \
+    --without-hardening \
+    --without-rpath
+
+  patch -Np1 -i ../config.patch config.h
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  install -dm755 "$pkgdir/usr/lib/systemd/system"
+  install -m644 ../sshd.service "$pkgdir/usr/lib/systemd/system/sshd.service"
+
+  install -dm755 "$pkgdir/usr/lib/tmpfiles.d"
+  install -m644 ../sshd.conf "$pkgdir/usr/lib/tmpfiles.d/sshd.conf"
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+
+  rm -r "$pkgdir/var"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

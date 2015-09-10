@@ -1,0 +1,42 @@
+version=1.1
+release=1
+sources=("http://download.savannah.gnu.org/releases/libunwind/libunwind-${version}.tar.gz")
+sha1sum=('aa04e6a7164aef754415b3b5e9453985741dd99e')
+makedepends=('glibc-devel')
+
+config-libunwind() {
+  description='C API to determine the call-chain of a program'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libunwind=$version-$release")
+  files=('usr/lib/libunwind*.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libunwind*.so' 'usr/lib/libunwind*.a'
+    'usr/lib/pkgconfig'
+  )
+  manfiles=('usr/share/man/man3')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libunwind-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+
+  patch -Np1 -i ../libtool.patch libtool
+
+  make
+}
+
+package() {
+  cd build
+  unset MAKEFLAGS
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

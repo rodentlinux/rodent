@@ -1,0 +1,20 @@
+--- config.h.orig	2015-10-03 10:33:25.797212936 +0200
++++ config.h	2015-10-03 10:41:17.500935851 +0200
+@@ -40,7 +40,7 @@
+ 
+ /* Define if your struct dirent expects you to allocate extra space for d_name
+    */
+-#define BROKEN_ONE_BYTE_DIRENT_D_NAME 1
++/* #undef BROKEN_ONE_BYTE_DIRENT_D_NAME */
+ 
+ /* Can't do comparisons on readv */
+ /* #undef BROKEN_READV_COMPARISON */
+@@ -50,7 +50,7 @@
+ /* #undef BROKEN_READ_COMPARISON */
+ 
+ /* realpath does not work with nonexistent files */
+-/* #undef BROKEN_REALPATH */
++#define BROKEN_REALPATH 1
+ 
+ /* Needed for NeXT */
+ /* #undef BROKEN_SAVED_UIDS */

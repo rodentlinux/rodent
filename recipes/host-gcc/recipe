@@ -1,0 +1,156 @@
+base="$ARCH-gcc"
+parts=(libgcc libstdc++ libatomic libitm)
+version=4.9.3
+_rversion=4.9.4
+release=1
+sources=("ftp://gcc.gnu.org/pub/gcc/releases/gcc-$version/gcc-${version}.tar.bz2")
+sha1sum=('2e6490a908eac8b2b56b73679bd7c2a5237df1f8')
+hostdepends=("$ARCH-binutils")
+makedepends=('glibc-devel')
+
+description="GNU Compiler Collection for cross-compiling to $HOST"
+
+config-libgcc() {
+  description='Shared C library from GCC'
+  depends=('glibc')
+  files=('usr/lib/libgcc_s.so.*')
+}
+
+config-libstdc++() {
+  description='libstdc++ from GCC'
+  depends=("libgcc=$version-$release")
+  files=(
+    'usr/lib/libstdc++.so.6'
+    'usr/lib/libstdc++.so.6.0.20'
+  )
+}
+
+config-libatomic() {
+  description='libatomic from GCC'
+  depends=('glibc')
+  files=('usr/lib/libatomic.so.*')
+}
+
+config-libitm() {
+  description='libitm from GCC'
+  depends=("libgcc=$version-$release")
+  files=('usr/lib/libitm.so.*')
+}
+
+prepare() {
+  cd "gcc-$version"
+
+  patch -Np1 -i ../trunk-${version}.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  case "$ARCH" in
+  armv7hl)
+    archflags=(
+      --with-arch=armv7-a
+      --with-fpu=neon
+      --with-float=hard
+      --with-mode=thumb
+    );;
+  *)
+    echo "Unkown architecture '$ARCH'"
+    exit 1
+    ;;
+  esac
+
+  CFLAGS_FOR_TARGET="$TARGET_CFLAGS" \
+  CXXFLAGS_FOR_TARGET="$TARGET_CXXFLAGS" \
+  AR_FOR_TARGET="${HOST}-ar" \
+  AS_FOR_TARGET="${HOST}-as" \
+  LD_FOR_TARGET="${HOST}-ld" \
+  NM_FOR_TARGET="${HOST}-nm" \
+  OBJDUMP_FOR_TARGET="${HOST}-objdump" \
+  RANLIB_FOR_TARGET="${HOST}-ranlib" \
+  READELF_FOR_TARGET="${HOST}-readelf" \
+  STRIP_FOR_TARGET="${HOST}-strip" \
+  LDFLAGS='-Wl,-z,relro ' \
+  "../gcc-$version/configure" \
+    --target=$HOST \
+    --prefix=/tools \
+    --libexecdir=/tools/lib \
+    --enable-languages=c,c++,lto \
+    --enable-lto \
+    --enable-shared \
+    --enable-threads=posix \
+    --enable-__cxa_atexit \
+    --enable-gnu-indirect-function \
+    --enable-checking=release \
+    --disable-multilib \
+    --disable-libgomp \
+    --disable-libsanitizer \
+    --disable-libssp \
+    --disable-libvtv \
+    --disable-nls \
+    --with-system-zlib \
+    --with-linker-hash-style=gnu \
+    --with-sysroot=/not/exist \
+    --with-build-sysroot="$SYSROOT" \
+    --with-gnu-as \
+    --with-gnu-ld \
+    "${archflags[@]}"
+
+  AR_FOR_TARGET="${HOST}-ar" \
+  AS_FOR_TARGET="${HOST}-as" \
+  LD_FOR_TARGET="${HOST}-ld" \
+  NM_FOR_TARGET="${HOST}-nm" \
+  OBJDUMP_FOR_TARGET="${HOST}-objdump" \
+  RANLIB_FOR_TARGET="${HOST}-ranlib" \
+  READELF_FOR_TARGET="${HOST}-readelf" \
+  STRIP_FOR_TARGET="${HOST}-strip" \
+  make
+}
+
+host-package() {
+  make -C build DESTDIR="$srcdir" install
+
+  # Create wrappers to set sysroot from environment
+  mv tools/bin/$HOST-cpp{,.orig}
+  cat > tools/bin/$HOST-cpp <<EOF
+#!/bin/sh
+exec -a "\$0" $HOST-cpp.orig --sysroot "\$SYSROOT" "\$@"
+EOF
+  chmod 0755 tools/bin/$HOST-cpp
+
+  mv tools/bin/$HOST-gcc{,.orig}
+  cat > tools/bin/$HOST-gcc <<EOF
+#!/bin/sh
+exec -a "\$0" $HOST-gcc.orig --sysroot "\$SYSROOT" "\$@"
+EOF
+  chmod 0755 tools/bin/$HOST-gcc
+  rm tools/bin/$HOST-gcc-$_rversion
+  ln tools/bin/$HOST-{gcc,gcc-$_rversion}
+
+  mv tools/bin/$HOST-g++{,.orig}
+  cat > tools/bin/$HOST-g++ <<EOF
+#!/bin/sh
+exec -a "\$0" $HOST-g++.orig --sysroot "\$SYSROOT" "\$@"
+EOF
+  chmod 0755 tools/bin/$HOST-g++
+  rm tools/bin/$HOST-c++
+  ln tools/bin/$HOST-{g++,c++}
+
+  # Move python gdb files so we can have several toolchains installed
+  mv tools/share/gcc-$_rversion tools/share/${HOST}-gcc-$_rversion
+
+  # Remove unwanted files
+  rmdir tools/include
+  rm -rf tools/share/info
+  rm -rf tools/share/man/man7
+}
+
+package() {
+  install -dm755 "$pkgdir/usr/lib"
+  cp -a tools/$HOST/lib/*.so.* "$pkgdir/usr/lib"
+  rm "$pkgdir"/usr/lib/*.py
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

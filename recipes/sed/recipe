@@ -1,0 +1,38 @@
+version=4.2.2
+release=1
+sources=("ftp://ftp.gnu.org/pub/gnu/sed/sed-${version}.tar.gz")
+sha1sum=('2f24b4624d1a3080626b11610053996ec30ba0f1')
+makedepends=('glibc-devel')
+
+config-sed() {
+  description='GNU Stream Editor'
+  depends=('glibc')
+  files=('usr/bin/sed')
+  manfiles=('usr/share/man/man1/sed.1')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../sed-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --disable-acl \
+    --disable-nls \
+    --disable-rpath \
+    --disable-i18n \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share/info"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

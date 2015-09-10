@@ -1,0 +1,30 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+if [[ "$1" = 'help' ]]; then
+  echo 'halp!'
+  exit 0
+fi
+
+if [[ -z "$1" ]]; then
+  echo 'What do you want to install?'
+  exit 1
+fi
+
+for i in "$ROOT/cache/host/$1"-*.host.tar.xz; do
+  file="$i"
+done
+
+if [[ ! -f "$file" ]]; then
+  echo "Could not find cache/host/${1}-*.host.tar.xz"
+  exit 1
+fi
+
+cd "$ROOT"
+echo "Unpacking ${file}.."
+tar -xmvf "$file"
+
+# vim: set ft=sh ts=2 sw=2 et:

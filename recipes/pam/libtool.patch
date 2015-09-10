@@ -1,0 +1,12 @@
+diff -Naur Linux-PAM-1.2.1.orig/build-aux/ltmain.sh Linux-PAM-1.2.1/build-aux/ltmain.sh
+--- Linux-PAM-1.2.1.orig/build-aux/ltmain.sh	2015-06-22 14:19:47.000000000 +0200
++++ Linux-PAM-1.2.1/build-aux/ltmain.sh	2015-10-04 21:21:28.382396674 +0200
+@@ -6918,7 +6918,7 @@
+ 	      fi
+ 	    else
+ 	      # We cannot seem to hardcode it, guess we'll fake it.
+-	      add_dir="-L$libdir"
++	      add_dir="-L=$libdir"
+ 	      # Try looking first in the location we're being installed to.
+ 	      if test -n "$inst_prefix_dir"; then
+ 		case $libdir in

@@ -1,0 +1,85 @@
+parts=(libkmod kmod kmod-legacy kmod-bash-completion)
+version=21
+release=1
+sources=("ftp://ftp.kernel.org/pub/linux/utils/kernel/kmod/kmod-${version}.tar.xz")
+sha1sum=('b2c1a0a1f2979fd29c7b0825ed19254c332246b4')
+makedepends=('glibc-devel')
+
+config-libkmod() {
+  description='Linux kernel module handling library'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libkmod=$version-$release")
+  files=('usr/lib/libkmod.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libkmod.so'
+    'usr/lib/pkgconfig/libkmod.pc'
+  )
+}
+
+config-kmod() {
+  description='Linux kernel module handling'
+  depends=("libkmod=$version-$release")
+  files=('usr/bin/kmod')
+  manfiles=('usr/share/man/man5' 'usr/share/man/man8/kmod.8')
+}
+
+config-kmod-legacy() {
+  description='Linux kernel module handling - legacy names'
+  depends=("kmod=$version-$release")
+  files=(
+    'usr/bin/depmod'
+    'usr/bin/insmod'
+    'usr/bin/lsmod'
+    'usr/bin/modinfo'
+    'usr/bin/modprobe'
+    'usr/bin/rmmod'
+  )
+  manfiles=(
+    'usr/share/man/man8/depmod.8'
+    'usr/share/man/man8/insmod.8'
+    'usr/share/man/man8/lsmod.8'
+    'usr/share/man/man8/modinfo.8'
+    'usr/share/man/man8/modprobe.8'
+    'usr/share/man/man8/rmmod.8'
+  )
+}
+
+config-kmod-bash-completion() {
+  description='kmod bash completion'
+  depends=('bash')
+  files=('usr/share/bash-completion')
+}
+
+prepare() {
+  cd "kmod-$version"
+  patch -Np1 -i ../0001-libkmod-module-fix-return-code-in-error-path.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../kmod-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  for i in depmod insmod lsmod modinfo modprobe rmmod; do
+    ln -s kmod "$pkgdir/usr/bin/$i"
+  done
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,65 @@
+parts=(libcurl libcurl-devel curl)
+version=7.44.0
+release=1
+sources=("http://curl.haxx.se/download/curl-${version}.tar.gz")
+sha1sum=('4dc36d2f3310585cc1f9211b5f5c71327c86fb61')
+makedepends=('libz-devel' 'libidn-devel' 'libssl-devel')
+
+config-libcurl() {
+  description='A URL retrieval library'
+  depends=('libz' 'libidn' 'libssl')
+  files=('usr/lib/libcurl.so.*')
+  manfiles=('usr/share/man/man3')
+}
+
+config-libcurl-devel() {
+  description='Development files for libcurl'
+  depends=('glibc-devel' "libcurl=$version-$release")
+  files=(
+    'usr/include'
+    'usr/bin/curl-config'
+    'usr/lib/libcurl.so'
+    'usr/lib/libcurl.a'
+    'usr/lib/pkgconfig/libcurl.pc'
+    'usr/share/aclocal/libcurl.m4'
+  )
+  manfiles=('usr/share/man/man1/curl-config.1')
+}
+
+config-curl() {
+  description='A URL retrieval tool'
+  depends=("libcurl=$version-$release")
+  files=('usr/bin/curl')
+  manfiles=('usr/share/man/man1/curl.1')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../curl-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-ipv6 \
+    --disable-ldap \
+    --disable-ldaps \
+    --enable-versioned-symbols \
+    --enable-threaded-resolver \
+    --with-zlib \
+    --with-libidn \
+    --with-ssl \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

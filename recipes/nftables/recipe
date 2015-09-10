@@ -1,0 +1,43 @@
+parts=(nft)
+version=0.5
+release=1
+sources=("http://netfilter.org/projects/nftables/files/nftables-${version}.tar.bz2")
+sha1sum=('34cfe1daa33d7fd7087dd63199f64854dfb54064')
+makedepends=('libgmp-devel' 'libmnl-devel' 'libnftnl-devel' 'libncurses-devel' 'libreadline-devel' 'libhistory-devel')
+
+config-nft() {
+  description='Netfilter tables userspace tool'
+  depends=('libgmp' 'libmnl' 'libnftnl' 'libreadline')
+  files=(
+    'usr/bin/nft'
+    'usr/lib/systemd/scripts/nftables-reload'
+    'usr/lib/systemd/system/nftables.service'
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../nftables-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --sysconfdir=/etc
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  install -Dm755 ../nftables-reload "$pkgdir/usr/lib/systemd/scripts/nftables-reload"
+  install -Dm644 ../nftables.service "$pkgdir/usr/lib/systemd/system/nftables.service"
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

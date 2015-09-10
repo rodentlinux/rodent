@@ -1,0 +1,12 @@
+diff -Naur avahi-0.6.31.orig/configure avahi-0.6.31/configure
+--- avahi-0.6.31.orig/configure	2012-02-14 23:36:33.221047221 +0100
++++ avahi-0.6.31/configure	2015-10-07 10:23:53.283385955 +0200
+@@ -22710,7 +22710,7 @@
+ #
+ # Avahi runtime dir
+ #
+-avahi_runtime_dir="${localstatedir}/run"
++avahi_runtime_dir='/run'
+ avahi_socket="${avahi_runtime_dir}/avahi-daemon/socket"
+ 
+ 

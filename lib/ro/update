@@ -1,0 +1,30 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+usage() {
+  echo 'halp!'
+}
+
+if [[ "$1" == help ]]; then
+  usage
+  exit 0
+fi
+
+. "$ROOT/lib/ro/download.sh"
+. "$ROOT/settings"
+
+for i in "${REPOS[@]}"; do
+  name="${i%%:*}"
+  url="${i#*:}"
+  proto="${url%%:*}"
+
+  if [[ "$proto" = http || "$proto" = https ]]; then
+    mkdir -p "$ROOT/cache/$name"
+    download "$url/repo.${ARCH}.xz" "$ROOT/cache/$name/repo.${ARCH}.xz"
+  fi
+done
+
+# vim: set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,48 @@
+parts=(libexpat xmlwf)
+version=2.1.0
+release=1
+sources=("http://downloads.sourceforge.net/sourceforge/expat/expat-${version}.tar.gz")
+sha1sum=('b08197d146930a5543a7b99e871cba3da614f6f0')
+makedepends=('glibc-devel')
+
+config-libexpat() {
+  description='An XML parser library'
+  depends=('libgcc' 'glibc')
+  devdepends=('glibc-devel' "libexpat=$version-$release")
+  files=('usr/lib/libexpat.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libexpat.so'
+    'usr/lib/libexpat.a'
+    'usr/lib/pkgconfig/expat.pc'
+  )
+}
+
+config-xmlwf() {
+  description='An XML checker'
+  depends=("libexpat=$version-$release")
+  files=('usr/bin/xmlwf')
+  manfiles=('usr/share/man/man1/xmlwf.1')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../expat-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,12 @@
+diff -Naur ncurses-6.0.orig/configure ncurses-6.0.patched/configure
+--- ncurses-6.0.orig/configure	2015-08-05 11:20:32.000000000 +0200
++++ ncurses-6.0.patched/configure	2015-10-01 15:55:14.107669279 +0200
+@@ -2940,7 +2940,7 @@
+ 
+ 		save_CPPFLAGS="$CPPFLAGS"
+ 		eval cf_includedir=${includedir}
+-		CPPFLAGS="$CPPFLAGS -I${cf_includedir}"
++		#CPPFLAGS="$CPPFLAGS -I${cf_includedir}"
+ 
+ cat >conftest.$ac_ext <<_ACEOF
+ #line 2946 "configure"

@@ -1,0 +1,42 @@
+version=1.0.3
+release=1
+sources=("http://www.netfilter.org/projects/libmnl/files/libmnl-${version}.tar.bz2")
+sha1sum=('c27e25f67c6422ebf893fc3a844af8085a1c5b63')
+makedepends=('glibc-devel')
+
+config-libmnl() {
+  description='Minimalistic user-space library oriented to Netlink developers'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libmnl=$version-$release")
+  files=('usr/lib/libmnl.so.*')
+  devfiles=(
+    'usr/include'
+    'usr/lib/libmnl.so'
+    'usr/lib/libmnl.a'
+    'usr/lib/pkgconfig/libmnl.pc'
+  )
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libmnl-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-static \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

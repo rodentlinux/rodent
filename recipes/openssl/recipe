@@ -1,0 +1,93 @@
+parts=(libcrypto libssl openssl-engines openssl-devel-man openssl)
+version=1.0.2d
+release=1
+sources=("https://www.openssl.org/source/openssl-${version}.tar.gz")
+sha1sum=('d01d17b44663e8ffa6a33a5a30053779d9593c3d')
+makedepends=('libz-devel')
+
+config-libcrypto() {
+  description='OpenSSL Crypto Library'
+  depends=('libz')
+  devdepends=('glibc-devel' "libcrypto=$version-$release")
+  files=('usr/lib/libcrypto.so.*')
+  devfiles=(
+    'usr/include/openssl'
+    'usr/lib/libcrypto.a'
+    'usr/lib/libcrypto.so'
+    'usr/lib/pkgconfig/libcrypto.pc'
+  )
+}
+
+config-libssl() {
+  description='OpenSSL SSL library'
+  depends=("libcrypto=$version-$release")
+  devdepends=("libcrypto-devel=$version-$release" "libssl=$version-$release")
+  files=('usr/lib/libssl.so.*')
+  devfiles=(
+    'usr/lib/libssl.a'
+    'usr/lib/libssl.so'
+    'usr/lib/pkgconfig/libssl.pc'
+    'usr/lib/pkgconfig/openssl.pc'
+  )
+}
+
+config-openssl-engines() {
+  description='OpenSSL Engines'
+  depends=("libcrypto=$version-$release")
+  files=('usr/lib/engines')
+}
+
+config-openssl-devel-man() {
+  description='Development manual pages from openssl'
+  files=('usr/share/man/man3')
+}
+
+config-openssl() {
+  description='OpenSSL openssl utility'
+  depends=("libssl=$version-$release")
+  files=('usr/bin/openssl')
+  manfiles=('usr/share/man/man1/openssl.1')
+}
+
+prepare() {
+  cd "openssl-$version"
+  patch -Np0 -i ../ca-dir.patch
+  patch -Np0 -i ../no-rpath.patch
+}
+
+build() {
+  cd "openssl-$version"
+
+  unset MAKEFLAGS
+
+  case $ARCH in
+  armv7hl)
+    archopts=linux-armv4;;
+  *)
+    echo "Unknown architecture '$ARCH'."
+    exit 1;;
+  esac
+
+  ./Configure \
+    --cross-compile-prefix=$HOST- \
+    --prefix=/usr \
+    --openssldir=/etc/ssl \
+    --libdir=lib  \
+    shared zlib "${archopts[@]}" \
+    "-Wa,--noexecstack $CPPFLAGS $CFLAGS $LDFLAGS"
+
+  make
+  make rehash
+}
+
+package() {
+  cd "openssl-$version"
+  unset MAKEFLAGS
+
+  make INSTALL_PREFIX=$pkgdir MANDIR=/usr/share/man install
+
+  install -dm733 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

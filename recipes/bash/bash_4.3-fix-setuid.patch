@@ -1,0 +1,20 @@
+diff --git shell.c shell.c
+index bbc8a66..5bfd466 100644
+--- shell.c
++++ shell.c
+@@ -1226,8 +1226,12 @@ uidget ()
+ void
+ disable_priv_mode ()
+ {
+-  setuid (current_user.uid);
+-  setgid (current_user.gid);
++   
++  if( (setgid (current_user.gid) !=0) ||  (setuid (current_user.uid) != 0) ){
++     report_error("Drop privileges failed!!\n");
++     exit(-1);
++  }
++  
+   current_user.euid = current_user.uid;
+   current_user.egid = current_user.gid;
+ }
+

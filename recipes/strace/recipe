@@ -1,0 +1,45 @@
+parts=(strace strace-log-merge strace-graph)
+version=4.10
+release=1
+sources=("http://downloads.sourceforge.net/strace/strace-${version}.tar.xz")
+sha1sum=('5c3ec4c5a9eeb440d7ec70514923c2e7e7f9ab6c')
+makedepends=('libunwind-devel')
+
+config-strace() {
+  description='A useful diagnositic, instructional, and debugging tool'
+  depends=('libunwind')
+  files=('usr/bin/strace')
+  manfiles=('usr/share/man/man1/strace.1')
+}
+
+config-strace-log-merge() {
+  description='Log merging utility from strace'
+  depends=('sh' 'cat' 'sed')
+  files=('usr/bin/strace-log-merge')
+}
+
+config-strace-graph() {
+  description='Graph utility from strace'
+  depends=('perl' 'strace')
+  files=('usr/bin/strace-graph')
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../strace-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --with-libunwind
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

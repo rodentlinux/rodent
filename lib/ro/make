@@ -1,0 +1,281 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+usage() {
+  echo 'ro make [options] [recipe]'
+  echo
+  echo 'Build package from recipe'
+  echo 'If recipe is not specified try ./recipe'
+  echo
+  echo 'Options:'
+  echo ' -s SYSROOT  Use sysroot at SYSROOT'
+  echo ' -E          Skip extracting and prepare sources'
+  echo ' -R          Skip extracting and building'
+}
+
+while true; do
+  case "$1" in
+  -s) SYSROOT="$(readlink -f "$2")"; shift 2;;
+  -E) NOEXTRACT=1; shift;;
+  -R) NOEXTRACT=1; NOBUILD=1; shift;;
+  *) break;;
+  esac
+done
+
+if [[ "$1" = help ]]; then
+  usage
+  exit 0
+fi
+
+if [[ -n "$1" ]]; then
+  if [[ -f "$1" ]]; then
+    RECIPE="$1"
+  elif [[ -f "$1/recipe" ]]; then
+    RECIPE="$1/recipe"
+  elif [[ -f "$ROOT/recipes/$1/recipe" ]]; then
+    RECIPE="$ROOT/recipes/$1/recipe"
+  else
+    echo "Could not find package '$1'"
+    exit 1
+  fi
+else
+  if [[ -f ./recipe ]]; then
+    RECIPE='./recipe'
+  else
+    echo "Could not find recipe file in current directory"
+    exit 1
+  fi
+fi
+RECIPE="$(readlink -f "$RECIPE")"
+
+srcdir="$(dirname "$RECIPE")"
+pkgdir="$srcdir/pkg"
+base="$(basename "$srcdir")"
+
+. "$RECIPE"
+BASE_VERSION="$version"
+BASE_RELEASE="$release"
+BASE_DEPENDS=("${depends[@]}")
+
+if [[ "$(type -t package)" != 'function' && "$(type -t host-package)" != 'function' ]]; then
+  echo 'Broken recipe: no package function'
+  exit 1
+fi
+
+if [[ "$(type -t host-package)" != 'function' && ${#parts[@]} = 0 ]]; then
+  parts=($base)
+fi
+for part in "${parts[@]}"; do
+  if [[ "$(type -t "config-$part")" != 'function' ]]; then
+    echo "Broken recipe: no 'config-$part' function"
+    exit 1
+  fi
+done
+
+[[ -n "$SYSROOT" ]] || SYSROOT="$srcdir/sysroot.$ARCH"
+export SYSROOT
+
+if [[ "$(type -t host-package)" = 'function' ]]; then
+  export TARGET_CFLAGS="$CFLAGS"
+  unset CFLAGS
+  export TARGET_CXXFLAGS="$CXXFLAGS"
+  unset CXXFLAGS
+  export TARGET_CPPFLAGS="$CPPFLAGS"
+  unset CPPFLAGS
+  export TARGET_LDFLAGS="$LDFLAGS"
+  unset LDFLAGS
+else
+  export PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
+fi
+
+. "$ROOT/lib/ro/deps_install.sh"
+deps_install "${makedepends[@]}"
+
+downloadall() {
+  local noextract=0
+  local url
+  local sha1
+  local file
+  local i
+  local n="${#sources[@]}"
+  if [[ "$n" = 0 ]]; then return 0; fi
+
+  local prefix="cache/sources"
+  [[ -d "$ROOT/$prefix" ]] || mkdir -p "$ROOT/$prefix"
+
+  for ((i=0;i<n;i++)); do
+    url="${sources[$i]}"
+    sha1="${sha1sum[$i]}"
+    case "${url%%:*}" in
+    noextract)
+      noextract=1
+      url="${url#*:}"
+      ;;
+    esac
+
+    file="$(basename "$url")"
+    check_or_download "$prefix" "$file" "$sha1" "$url" || return 1
+
+    if [[ "$noextract" = 0 ]]; then
+      echo "Extracting ${file}.."
+      tar -xf "$ROOT/$prefix/$file"
+    else
+      ln -sf "$ROOT/$prefix/$file"
+    fi
+  done
+}
+
+
+if [[ -z "$NOEXTRACT" ]]; then
+  cd "$srcdir"
+  if ! downloadall; then
+    exit 1
+  fi
+  if [[ "$(type -t prepare)" = 'function' ]]; then
+    cd "$srcdir"
+    echo 'Preparing sources..'
+    set -x
+    prepare
+    set +x
+  fi
+fi
+
+if [[ -z "$NOBUILD" && "$(type -t build)" = 'function' ]]; then
+  cd "$srcdir"
+  echo 'Building..'
+  set -x
+  build
+  set +x
+fi
+
+if [[ "$(type -t host-package)" = 'function' ]]; then
+  cd "$srcdir"
+  rm -rf tools
+  mkdir tools
+  echo "Packaging host files.."
+  set -x
+  host-package
+  set +x
+  echo -n "Compressing ${base}-${BASE_VERSION}-${BASE_RELEASE}.host.tar.xz.. "
+  [[ -d "$ROOT/cache/host" ]] || mkdir -p "$ROOT/cache/host"
+  cd "$srcdir"
+  tar -c -f "$ROOT/cache/host/${base}-${BASE_VERSION}-${BASE_RELEASE}.host.tar.xz" \
+    -J --owner=root --group=root ./tools
+  echo 'done.'
+fi
+
+if [[ "$(type -t package)" = 'function' ]]; then
+  rm -rf "$pkgdir"
+  mkdir "$pkgdir"
+  echo 'Entering fakeroot'
+  fakeroot -- "$ROOT/lib/ro/make-fakerooted" "$RECIPE"
+  echo 'Exited fakeroot'
+else
+  exit 0
+fi
+
+mkfiles() {
+  local out="$1"; shift
+  if [[ -f "$out" ]]; then
+    out="${outr%-*}"
+    echo "Package ${out%-*} already defined."
+    exit 1
+  fi
+
+  for pattern in "$@"; do
+    while [[ "$pattern" != "${pattern#/}" ]]; do
+      pattern="${pattern#/}"
+    done
+    for i in $pattern; do
+      if [[ ! -e "$i" ]]; then
+        echo "WARNING: Couldn't find '$i' in \$pkgdir." >&2
+      fi
+      echo "$i"
+    done
+  done \
+    | awk -f "$ROOT/lib/ro/prefixes.awk" - "$srcdir/files" \
+    > "$out"
+}
+
+cd "$pkgdir"
+mkdir '#'
+for part in "${parts[@]}"; do
+  version="$BASE_VERSION"
+  provides=()
+  depends=()
+  devdepends=()
+  mandepends=()
+  description=""
+  files=()
+  devfiles=()
+  manfiles=()
+
+  "config-$part"
+
+  mkfiles "#/$part-$version-${BASE_RELEASE}.files" "${files[@]}"
+  echo -e "$part=${version}-${BASE_RELEASE}\t$base=${BASE_VERSION}-${BASE_RELEASE}\t${provides[*]}\t${depends[*]}\t$description" \
+    >> '#/meta'
+
+  if [[ ${#devdepends[@]} != 0 || ${#devfiles[@]} != 0 ]]; then
+    mkfiles "#/$part-devel-$version-${BASE_RELEASE}.files" "${devfiles[@]}"
+    echo -e "$part-devel=$version-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${devdepends[*]}\tDevelopment files for $part" \
+      >> '#/meta'
+  fi
+
+  if [[ ${#mandepends[@]} != 0 || ${#manfiles[@]} != 0 ]]; then
+    mkfiles "#/$part-man-$version-${BASE_RELEASE}.files" "${manfiles[@]}"
+    echo -e "$part-man=$version-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${mandepends[*]}\tManual pages for $part" \
+      >> '#/meta'
+  fi
+done
+
+sort -u \#/*.files \
+  | comm -23 "$srcdir/files" - \
+  | awk -f "$ROOT/lib/ro/prefixes.awk" - "$srcdir/files" \
+  > "$srcdir/files.leftover"
+
+if [[ -s "$srcdir/files.leftover" ]]; then
+  FILE="#/$base-extra-$BASE_VERSION-${BASE_RELEASE}.files"
+  if [[ -f "$FILE" ]]; then
+    echo "Package $base-extra already defined, but the following files are left over:"
+    awk -F'\t' '{print "- " $1}' "$srcdir/files.leftover"
+    exit 1
+  fi
+  mv "$srcdir/files.leftover" "$FILE"
+  echo -e "$base-extra=$BASE_VERSION-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${BASE_DEPENDS[*]}\tExtra files from $base" \
+    >> '#/meta'
+else
+  rm -f "$srcdir/files.leftover"
+fi
+
+echo 'Pruning pseudo files'
+find "$pkgdir" -mindepth 1 -printf '%P\n' \
+  | awk -f "$ROOT/lib/ro/make-prune.awk" "$srcdir/files" - \
+  | while read -r i; do
+  echo "+ rm -rf $i"
+  rm -rf "$pkgdir/$i"
+done
+
+echo -n "Compressing ${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar.xz.. "
+[[ -d "$ROOT/cache/local" ]] || mkdir -p "$ROOT/cache/local"
+cd "$pkgdir"
+tar -c -f "$ROOT/cache/local/${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar.xz" \
+  -J --owner=root --group=root \
+  --null --no-recursion -T <(
+  echo -ne "./#/meta\0"
+  for i in \#/*.files; do
+    echo -ne "./$i\0"
+  done
+  awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' "$srcdir/files" | tr '\n' '\0'
+)
+echo 'done.'
+
+echo -n "Updating local repo.. "
+cd "$ROOT/cache/local"
+"$ROOT/bin/makerepo"
+echo "done."
+
+# vim: set ft=sh ts=2 sw=2 et:

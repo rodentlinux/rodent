@@ -1,0 +1,44 @@
+version=1.0.3
+release=1
+sources=("http://hisham.hm/htop/releases/$version/htop-${version}.tar.gz")
+sha1sum=('261492274ff4e741e72db1ae904af5766fc14ef4')
+makedepends=('libncurses-devel')
+
+config-htop() {
+  description='Interactive process viewer'
+  depends=('libncurses')
+  files=('usr/bin/htop')
+  manfiles=('usr/share/man/man1/htop.1')
+}
+
+prepare() {
+  cd "htop-$version"
+  sed -i 's|ncursesw/curses.h|curses.h|' RichString.[ch] configure
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../htop-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --enable-cgroup \
+    --enable-taskstats \
+    --enable-unicode \
+    --enable-oom \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir"/usr/share/{applications,pixmaps}
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

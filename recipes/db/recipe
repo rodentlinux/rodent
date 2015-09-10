@@ -1,0 +1,88 @@
+parts=(libdb libdb_cxx libdb_stl db-utils)
+version=5.3.28
+release=1
+sources=("http://download.oracle.com/berkeley-db/db-${version}.tar.gz")
+sha1sum=('fa3f8a41ad5101f43d08bc0efb6241c9b6fc1ae9')
+makedepends=('glibc-devel')
+
+config-libdb() {
+  description='The Berkeley DB embedded database system'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libdb=$version-$release")
+  files=('usr/lib/libdb-5.3.so')
+  devfiles=(
+    'usr/include/db.h'
+    'usr/include/db_185.h'
+    'usr/lib/libdb-5.3.a' 
+    'usr/lib/libdb.a' 
+    'usr/lib/libdb-5.so' 
+    'usr/lib/libdb.so' 
+  )
+}
+
+config-libdb_cxx() {
+  description='The Berkeley DB embedded database system for C++'
+  depends=('libstdc++')
+  devdepends=('glibc-devel' "libdb_cxx=$version-$release")
+  files=('usr/lib/libdb_cxx-5.3.so')
+  devfiles=(
+    'usr/include/db_cxx.h'
+    'usr/lib/libdb_cxx-5.3.a' 
+    'usr/lib/libdb_cxx.a' 
+    'usr/lib/libdb_cxx-5.so' 
+    'usr/lib/libdb_cxx.so' 
+  )
+}
+
+config-libdb_stl() {
+  description='The Berkeley DB embedded database system for STL'
+  depends=('libstdc++')
+  devdepends=('glibc-devel' "libdb_stl=$version-$release")
+  files=('usr/lib/libdb_stl-5.3.so')
+  devfiles=(
+    'usr/include/dbstl*.h'
+    'usr/lib/libdb_stl-5.3.a' 
+    'usr/lib/libdb_stl.a' 
+    'usr/lib/libdb_stl-5.so' 
+    'usr/lib/libdb_stl.so' 
+  )
+}
+
+config-db-utils() {
+  description='The Berkeley DB embedded database utilities'
+  depends=("libdb=$version-$release")
+  files=('usr/bin/*')
+}
+
+build() {
+  cd "db-$version/build_unix"
+
+  ../dist/configure \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-compat185 \
+    --enable-shared \
+    --enable-static \
+    --enable-cxx \
+    --enable-dbm \
+    --enable-stl
+
+  make
+}
+
+package() {
+  cd "db-$version/build_unix"
+
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/docs"
+  rm "$pkgdir"/usr/lib/*.la
+
+  # replace links with symlinks
+  for i in libdb libdb_cxx libdb_stl; do
+    rm "$pkgdir/usr/lib/${i}.a"
+    ln -s "${i}-5.3.a" "$pkgdir/usr/lib/${i}.a"
+  done
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

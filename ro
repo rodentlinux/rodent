@@ -1,0 +1,93 @@
+#!/bin/bash
+# Copyright 2015 Emil Renner Berthing
+
+ROOT="$(dirname "$(readlink -f "$0")")"
+export PATH="$ROOT/tools/bin:$PATH"
+export LD_LIBRARY_PATH="$ROOT/tools/lib"
+export LC_COLLATE=C
+
+if [[ ! -f "$ROOT/settings" ]]; then
+  echo "No settings file found."
+  echo "Please copy settings.proto to settings."
+  exit 1
+fi
+
+. "$ROOT/settings"
+
+# Generic defaults
+[[ -n "$CFLAGS" ]]   || CFLAGS='-O2 -pipe -ggdb'
+[[ -n "$CXXFLAGS" ]] || CXXFLAGS='-O2 -pipe -ggdb'
+[[ -n "$LDFLAGS" ]]  || LDFLAGS='-Wl,-O1,--sort-common,--as-needed,-z,relro'
+
+# Architecture specific defaults
+case "$ARCH" in
+armv7hl)
+  [[ -n "$HOST" ]] || HOST='armv7hl-unknown-linux-gnueabi'
+  [[ -n "$COMPRESSION" ]] || COMPRESSION='xz -Xbcj armthumb'
+  ;;
+*)
+  echo "Unknown architecture '$ARCH'"
+  exit 1
+  ;;
+esac
+
+usage() {
+  echo 'usage: ro <command>'
+  echo
+  echo '  update       - update repo information'
+  echo '  install      - install package to sysroot'
+  echo '  verify       - verify sysroot'
+  echo '  list         - show installed packages in sysroot'
+  echo '  leaves       - show packages not required by any other in sysroot'
+  echo '  files        - show files in an installed packages'
+  echo '  make         - build new package'
+  echo '  host-install - install host package'
+  echo '  squash       - build squashfs image'
+  echo '  test         - run squashfs image in qemu'
+  echo
+}
+
+while true; do
+  case "$1" in
+  up|update)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/update" "$@";;
+  in|install)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/install" "$@";;
+  ver|verify)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/verify" "$@";;
+  ls|list)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/list" "$@";;
+  leaves)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/leaves" "$@";;
+  files)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/files" "$@";;
+  mk|make)
+    export ROOT ARCH HOST CFLAGS CXXFLAGS LDFLAGS MAKEFLAGS
+    shift; exec "$ROOT/lib/ro/make" "$@";;
+  hin|host-install)
+    export ROOT
+    shift; exec "$ROOT/lib/ro/host-install" "$@";;
+  sq|squash)
+    export ROOT ARCH HOST COMPRESSION
+    shift; exec "$ROOT/lib/ro/squash" "$@";;
+  test)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/test" "$@";;
+  help|-h|--help)
+    usage
+    exit 0
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+  esac
+done
+
+# vim: set ts=2 sw=2 et:
