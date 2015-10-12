@@ -1,7 +1,7 @@
-diff -Naur systemd-226.orig/configure.ac systemd-226.patched/configure.ac
---- systemd-226.orig/configure.ac	2015-09-08 14:03:22.000000000 +0200
-+++ systemd-226.patched/configure.ac	2015-09-29 15:14:56.259287507 +0200
-@@ -191,10 +191,7 @@
+diff -Naur systemd-227.orig/configure.ac systemd-227/configure.ac
+--- systemd-227.orig/configure.ac	2015-10-07 17:06:22.000000000 +0200
++++ systemd-227/configure.ac	2015-10-12 18:30:12.565241195 +0200
+@@ -190,10 +190,7 @@
          -fdiagnostics-show-option \
          -fno-strict-aliasing \
          -fvisibility=hidden \
@@ -11,9 +11,9 @@ diff -Naur systemd-226.orig/configure.ac systemd-226.patched/configure.ac
 -        --param=ssp-buffer-size=4])
 +        -fPIE])
  
- AS_CASE([$CC], [*clang*],
-         [CC_CHECK_FLAGS_APPEND([with_cppflags], [CPPFLAGS], [\
-@@ -208,10 +205,6 @@
+ CC_CHECK_FLAG_APPEND([with_cflags], [CFLAGS], [-Werror=shadow], [
+ #include <time.h>
+@@ -218,10 +215,6 @@
          [AC_MSG_RESULT([skipping -flto, optimization not enabled])])
  AC_SUBST([OUR_CFLAGS], "$with_cflags $sanitizer_cflags")
  

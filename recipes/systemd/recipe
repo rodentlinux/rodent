@@ -17,10 +17,10 @@ parts=(
   systemd-bash-completion
   systemd-zsh-completion
 )
-version=226
+version=227
 release=1
 sources=("https://github.com/systemd/systemd/archive/v${version}.tar.gz")
-sha1sum=('ac2024c0e708c4f6a9ac4849e808bdfeba2aec19')
+sha1sum=('ee92ac467bd2fada5495d46e21228851227f4164')
 makedepends=(
   'libcrypt-devel'
   'libcap-devel'
@@ -410,7 +410,6 @@ config-systemd-zsh-completion() {
 
 prepare() {
   cd "systemd-$version"
-  patch -Np1 -i ../malloc.patch
   patch -Np1 -i ../stack-protection.patch
   patch -Np1 -i ../no-sbin-path.patch
   ./autogen.sh
