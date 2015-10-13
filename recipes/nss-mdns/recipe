@@ -1,0 +1,38 @@
+parts=(
+  libnss_mdns  libnss_mdns_minimal
+  libnss_mdns4 libnss_mdns4_minimal
+  libnss_mdns6 libnss_mdns6_minimal
+)
+version=0.10
+release=1
+sources=("http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-${version}.tar.gz")
+sha1sum=('d8610950b8b209e29129a70765449b820bcda1a0')
+makedepends=('glibc-devel')
+
+for i in "${parts[@]}"; do
+  eval "config-$i() { description='glibc plugin providing host name resolution via mDNS'; depends=('avahi-daemon'); files=('usr/lib/${i}.so.*'); }"
+done
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../nss-mdns-$version/configure" \
+    ac_cv_func_malloc_0_nonnull=yes \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-avahi \
+    --disable-legacy \
+    --disable-lynx \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
