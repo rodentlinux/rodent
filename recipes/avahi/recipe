@@ -11,7 +11,7 @@ parts=(
   avahi-set-host-name
 )
 version=0.6.31
-release=1
+release=2
 sources=("http://www.avahi.org/download/avahi-${version}.tar.gz")
 sha1sum=('7e05bd78572c9088b03b1207a0ad5aba38490684')
 makedepends=('libexpat-devel' 'libdaemon-devel' 'libdbus-1-devel')
@@ -146,6 +146,7 @@ prepare() {
   patch -Np1 -i ../libtool.patch
   patch -Np1 -i ../runtime_dir.patch
   patch -Np1 -i ../no-nls.patch
+  patch -Np1 -i ../after-resolved.patch
 }
 
 build() {
