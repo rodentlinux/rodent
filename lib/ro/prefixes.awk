@@ -8,7 +8,6 @@ BEGIN {
 FILENAME=="-" {
   path=$1
   tag[path]=1
-  exact[path]=1
   while (match(path,/\/[^\/]*$/)) {
     path=substr(path,1,RSTART-1)
     if (tag[path])
@@ -18,22 +17,8 @@ FILENAME=="-" {
 }
 
 FILENAME!="-" {
-  if (prefix) {
-    if (plen<length($1) && substr($1,1,plen)==prefix)
+  if (tag[$1])
       print
-    else
-      prefix=""
-  }
-
-  if (!prefix) {
-    if (tag[$1]) {
-      print
-      if ($2=="d" && exact[$1]) {
-        prefix=$1 "/"
-        plen=length(prefix)
-      }
-    }
-  }
 }
 
 # vim: set ts=2 sw=2 et:

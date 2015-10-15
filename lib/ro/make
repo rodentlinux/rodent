@@ -185,17 +185,10 @@ mkfiles() {
     exit 1
   fi
 
-  for pattern in "$@"; do
-    while [[ "$pattern" != "${pattern#/}" ]]; do
-      pattern="${pattern#/}"
-    done
-    for i in $pattern; do
-      if [[ ! -e "$i" ]]; then
-        echo "WARNING: Couldn't find '$i' in \$pkgdir." >&2
-      fi
-      echo "$i"
-    done
+  for i in "$@"; do
+    echo "$i"
   done \
+    | awk -f "$ROOT/lib/ro/make-patterns.awk" - "$srcdir/files" \
     | awk -f "$ROOT/lib/ro/prefixes.awk" - "$srcdir/files" \
     > "$out"
 }
