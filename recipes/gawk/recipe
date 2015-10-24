@@ -1,0 +1,72 @@
+parts=('gawk' 'gawk-default' 'igawk' 'gawk-libs' 'gawk-devel')
+version=4.1.3
+release=1
+sources=("ftp://ftp.gnu.org/gnu/gawk/gawk-${version}.tar.xz")
+sha1sum=('76b0acbbdeaa0e58466675c5faf68895eedd8306')
+makedepends=('glibc-devel')
+
+config-gawk() {
+  description='GNU awk'
+  depends=('glibc')
+  files=('usr/bin/gawk')
+  manfiles=('usr/share/man/man1/gawk.1')
+}
+
+config-gawk-default() {
+  description='Use GNU awk as the default awk'
+  provides=('awk')
+  depends=("gawk=$version-$release")
+  files=('usr/bin/awk')
+}
+
+config-igawk() {
+  description='GNU awk with include files'
+  depends=('sh' "gawk=$version-$release")
+  files=('usr/bin/igawk')
+  manfiles=('usr/share/man/man1/igawk.1')
+}
+
+config-gawk-libs() {
+  description='GNU awk libraries'
+  depends=("gawk=$version-$release")
+  files=('usr/lib/gawk/**' 'usr/lib/awk/**' 'usr/share/awk/**')
+  manfiles=('usr/share/man/man3/**')
+}
+
+config-gawk-devel() {
+  description='GNU awk library development headers'
+  depends=('glibc-devel')
+  files=('usr/include/gawkapi.h')
+}
+
+prepare() {
+  cd "gawk-$version"
+  patch -Np1 -i ../has_f_format.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../gawk-$version/configure" \
+    ac_cv_func_working_mktime=yes \
+    --host=$HOST \
+    --prefix=/usr \
+    --libexecdir=/usr/lib \
+    --disable-nls \
+    --disable-rpath \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir/usr/bin/gawk-$version"
+  rm -r "$pkgdir/usr/share/info"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
