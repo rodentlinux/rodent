@@ -9,19 +9,20 @@ parts=(
   terminfo
   terminfo-tools
   ncurses-utils
+  ncurses-tabs
 )
 version=6.0
-release=1
+release=2
 sources=("ftp://invisible-island.net/ncurses/ncurses-${version/_/-}.tar.gz")
 sha1sum=('acd606135a5124905da770803c05f1f20dd3b21c')
-makedepends=('glibc-devel')
+makedepends=('libutil-devel')
 
 config-libncurses() {
   description='System V Release 4.0 curses emulation library'
   provides=('libcurses')
   depends=('glibc')
   files=('usr/lib/libncursesw.so.*')
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 config-libncurses-devel() {
@@ -150,46 +151,46 @@ config-terminfo() {
   depends=("terminfo-xterm=$version-$release")
   files=(
     'usr/lib/terminfo'
-    'usr/share/terminfo/1'
-    'usr/share/terminfo/2'
-    'usr/share/terminfo/3'
-    'usr/share/terminfo/4'
-    'usr/share/terminfo/5'
-    'usr/share/terminfo/6'
-    'usr/share/terminfo/7'
-    'usr/share/terminfo/8'
-    'usr/share/terminfo/9'
-    'usr/share/terminfo/A'
-    'usr/share/terminfo/E'
-    'usr/share/terminfo/L'
-    'usr/share/terminfo/M'
-    'usr/share/terminfo/N'
-    'usr/share/terminfo/P'
-    'usr/share/terminfo/Q'
-    'usr/share/terminfo/X'
-    'usr/share/terminfo/a'
-    'usr/share/terminfo/b'
-    'usr/share/terminfo/c'
-    'usr/share/terminfo/d'
-    'usr/share/terminfo/e'
-    'usr/share/terminfo/f'
-    'usr/share/terminfo/g'
-    'usr/share/terminfo/h'
-    'usr/share/terminfo/i'
-    'usr/share/terminfo/j'
-    'usr/share/terminfo/k'
-    'usr/share/terminfo/l'
-    'usr/share/terminfo/m'
-    'usr/share/terminfo/n'
-    'usr/share/terminfo/o'
-    'usr/share/terminfo/p'
-    'usr/share/terminfo/q'
-    'usr/share/terminfo/r'
-    'usr/share/terminfo/s'
-    'usr/share/terminfo/t'
-    'usr/share/terminfo/u'
-    'usr/share/terminfo/v'
-    'usr/share/terminfo/w'
+    'usr/share/terminfo/1/**'
+    'usr/share/terminfo/2/**'
+    'usr/share/terminfo/3/**'
+    'usr/share/terminfo/4/**'
+    'usr/share/terminfo/5/**'
+    'usr/share/terminfo/6/**'
+    'usr/share/terminfo/7/**'
+    'usr/share/terminfo/8/**'
+    'usr/share/terminfo/9/**'
+    'usr/share/terminfo/A/**'
+    'usr/share/terminfo/E/**'
+    'usr/share/terminfo/L/**'
+    'usr/share/terminfo/M/**'
+    'usr/share/terminfo/N/**'
+    'usr/share/terminfo/P/**'
+    'usr/share/terminfo/Q/**'
+    'usr/share/terminfo/X/**'
+    'usr/share/terminfo/a/**'
+    'usr/share/terminfo/b/**'
+    'usr/share/terminfo/c/**'
+    'usr/share/terminfo/d/**'
+    'usr/share/terminfo/e/**'
+    'usr/share/terminfo/f/**'
+    'usr/share/terminfo/g/**'
+    'usr/share/terminfo/h/**'
+    'usr/share/terminfo/i/**'
+    'usr/share/terminfo/j/**'
+    'usr/share/terminfo/k/**'
+    'usr/share/terminfo/l/**'
+    'usr/share/terminfo/m/**'
+    'usr/share/terminfo/n/**'
+    'usr/share/terminfo/o/**'
+    'usr/share/terminfo/p/**'
+    'usr/share/terminfo/q/**'
+    'usr/share/terminfo/r/**'
+    'usr/share/terminfo/s/**'
+    'usr/share/terminfo/t/**'
+    'usr/share/terminfo/u/**'
+    'usr/share/terminfo/v/**'
+    'usr/share/terminfo/w/**'
     'usr/share/terminfo/x/x1*'
     'usr/share/terminfo/x/x68*'
     'usr/share/terminfo/x/x820'
@@ -209,7 +210,7 @@ config-terminfo() {
     'usr/share/terminfo/x/xterms'
     'usr/share/terminfo/x/xterms-sun'
     'usr/share/terminfo/x/xwsh'
-    'usr/share/terminfo/z'
+    'usr/share/terminfo/z/**'
   )
   manfiles=(
     'usr/share/man/man5/term.5'
@@ -254,6 +255,14 @@ config-ncurses-utils() {
   )
 }
 
+config-ncurses-tabs() {
+  description='Set tabs on a terminal'
+  provides=('tabs')
+  depends=("libncurses=$version-$release")
+  files=('usr/bin/tabs' 'usr/share/tabset/**')
+  manfiles=('usr/share/man/man1/tabs.1')
+}
+
 prepare() {
   cd "ncurses-$version"
   patch -Np1 -i ../configure.patch
@@ -265,6 +274,12 @@ build() {
   cd build
 
   "../ncurses-$version/configure" \
+    cf_cv_cpp_param_init=no \
+    cf_cv_func_mkstemp=yes \
+    cf_cv_func_nanosleep=yes \
+    cf_cv_link_dataonly=yes \
+    cf_cv_link_funcs=' link symlink' \
+    cf_cv_working_poll=yes \
     --host=$HOST \
     --prefix=/usr \
     --with-pkg-config-libdir=/usr/lib/pkgconfig \
