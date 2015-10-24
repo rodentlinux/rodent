@@ -1,0 +1,96 @@
+parts=(
+  fuser
+  killall
+  peekfd
+  prtstat
+  pstree
+  psmisc
+)
+version=22.21
+release=1
+sources=("http://downloads.sourceforge.net/project/psmisc/psmisc/psmisc-${version}.tar.gz")
+sha1sum=('09fabbef4539b58b6b8738a73da3d21d5daa1a58')
+makedepends=('libncurses-devel')
+
+config-fuser() {
+  description='Identify processes using files or sockets'
+  depends=('glibc')
+  files=('usr/bin/fuser')
+  manfiles=('usr/share/man/man1/fuser.1')
+}
+
+config-killall() {
+  description='Kill processes by name'
+  depends=('glibc')
+  files=('usr/bin/killall')
+  manfiles=('usr/share/man/man1/killall.1')
+}
+
+config-peekfd() {
+  description='Peek at file descriptiors of running processes'
+  depends=('glibc')
+  files=('usr/bin/peekfd')
+  manfiles=('usr/share/man/man1/peekfd.1')
+}
+
+config-prtstat() {
+  description='Print statistics of a process'
+  depends=('glibc')
+  files=('usr/bin/prtstat')
+  manfiles=('usr/share/man/man1/prtstat.1')
+}
+
+config-pstree() {
+  description='Display a tree of processes'
+  depends=('libncurses')
+  files=('usr/bin/pstree')
+  manfiles=('usr/share/man/man1/pstree.1')
+}
+
+config-psmisc() {
+  description='Small utilities that use the /proc filesystem'
+  depends=(
+    "fuser=$version-$release"
+    "killall=$version-$release"
+    "peekfd=$version-$release"
+    "prtstat=$version-$release"
+    "pstree=$version-$release"
+  )
+}
+
+prepare() {
+  cd "psmisc-$version"
+  patch -Np1 -i ../psmisc-fuser.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../psmisc-$version/configure" \
+    ac_cv_func_closedir_void=no \
+    ac_cv_func_lstat_dereferences_slashed_symlink=yes \
+    ac_cv_func_lstat_empty_string_bug=no \
+    ac_cv_func_malloc_0_nonnull=yes \
+    ac_cv_func_memcmp_working=yes \
+    ac_cv_func_realloc_0_nonnull=yes \
+    ac_cv_func_stat_empty_string_bug=no \
+    --host=$HOST \
+    --prefix=/usr \
+    --disable-nls \
+    --disable-rpath \
+    --disable-harden-flags \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir/usr/bin/pstree.x11"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
