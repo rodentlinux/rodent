@@ -1,0 +1,24 @@
+diff --git a/Makefile.am b/Makefile.am
+index 8646e55..db99631 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -262,7 +262,7 @@ LOCAL_FS_TARGET_WANTS =
+ MULTI_USER_TARGET_WANTS =
+ GRAPHICAL_TARGET_WANTS =
+ RESCUE_TARGET_WANTS =
+-SYSINIT_TARGET_WANTS =
++SYSINIT_TARGET_WANTS = swap.target
+ SOCKETS_TARGET_WANTS =
+ BUSNAMES_TARGET_WANTS =
+ TIMERS_TARGET_WANTS =
+diff --git a/units/sysinit.target b/units/sysinit.target
+index ec33503..a7de50a 100644
+--- a/units/sysinit.target
++++ b/units/sysinit.target
+@@ -9,5 +9,5 @@
+ Description=System Initialization
+ Documentation=man:systemd.special(7)
+ Conflicts=emergency.service emergency.target
+-Wants=local-fs.target swap.target
++Wants=local-fs.target
+ After=local-fs.target swap.target emergency.service emergency.target

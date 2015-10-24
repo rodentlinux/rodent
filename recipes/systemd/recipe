@@ -2,6 +2,11 @@ parts=(
   libudev
   libsystemd
   systemd
+  systemd-configfs
+  systemd-debugfs
+  systemd-binfmt_misc
+  systemd-init
+  systemd-initrd
   systemd-hostname
   systemd-coredump
   systemd-networkd
@@ -18,7 +23,7 @@ parts=(
   systemd-zsh-completion
 )
 version=227
-release=1
+release=2
 sources=("https://github.com/systemd/systemd/archive/v${version}.tar.gz")
 sha1sum=('ee92ac467bd2fada5495d46e21228851227f4164')
 makedepends=(
@@ -52,7 +57,7 @@ config-libsystemd() {
   devdepends=('glibc-devel' "libsystemd=$version-$release")
   files=('usr/lib/libsystemd.so.*')
   devfiles=(
-    'usr/include/systemd'
+    'usr/include/systemd/*'
     'usr/lib/libsystemd.so'
     'usr/lib/pkgconfig/libsystemd.pc'
   )
@@ -68,43 +73,35 @@ config-systemd() {
     'libmount'
     'libcap'
     'mount'
-    'dbus-daemon'
   )
   files=(
+    'usr/bin/journalctl'
+    'usr/bin/systemctl'
+    'usr/bin/udevadm'
+    'usr/bin/systemd-tmpfiles'
     'usr/lib/sysctl.d/50-default.conf'
     'usr/lib/systemd/system-shutdown'
-    'usr/lib/systemd/system-sleep'
     'usr/lib/systemd/system/-.slice'
     'usr/lib/systemd/system/basic.target'
+    'usr/lib/systemd/system/busnames.target'
     'usr/lib/systemd/system/busnames.target.wants/org.freedesktop.systemd1.busname'
     'usr/lib/systemd/system/ctrl-alt-del.target'
-    'usr/lib/systemd/system/default.target'
-    'usr/lib/systemd/system/dev-hugepages.mount'
-    'usr/lib/systemd/system/dev-mqueue.mount'
     'usr/lib/systemd/system/emergency.service'
     'usr/lib/systemd/system/emergency.target'
     'usr/lib/systemd/system/final.target'
-    'usr/lib/systemd/system/graphical.target'
     'usr/lib/systemd/system/halt.target'
-    'usr/lib/systemd/system/hybrid-sleep.target'
     'usr/lib/systemd/system/local-fs-pre.target'
     'usr/lib/systemd/system/local-fs.target'
-    'usr/lib/systemd/system/local-fs.target.wants/tmp.mount'
-    'usr/lib/systemd/system/local-fs.target.wants/var.mount'
-    'usr/lib/systemd/system/multi-user.target'
     'usr/lib/systemd/system/nss-lookup.target'
     'usr/lib/systemd/system/nss-user-lookup.target'
     'usr/lib/systemd/system/org.freedesktop.systemd1.busname'
     'usr/lib/systemd/system/paths.target'
     'usr/lib/systemd/system/poweroff.target'
-    'usr/lib/systemd/system/proc-sys-fs-binfmt_misc.automount'
-    'usr/lib/systemd/system/proc-sys-fs-binfmt_misc.mount'
     'usr/lib/systemd/system/reboot.target'
     'usr/lib/systemd/system/rescue.service'
     'usr/lib/systemd/system/rescue.target'
     'usr/lib/systemd/system/shutdown.target'
     'usr/lib/systemd/system/sigpwr.target'
-    'usr/lib/systemd/system/sleep.target'
     'usr/lib/systemd/system/slices.target'
     'usr/lib/systemd/system/sockets.target'
     'usr/lib/systemd/system/sockets.target.wants/systemd-journald-audit.socket'
@@ -112,40 +109,23 @@ config-systemd() {
     'usr/lib/systemd/system/sockets.target.wants/systemd-journald.socket'
     'usr/lib/systemd/system/sockets.target.wants/systemd-udevd-control.socket'
     'usr/lib/systemd/system/sockets.target.wants/systemd-udevd-kernel.socket'
-    'usr/lib/systemd/system/sound.target'
-    'usr/lib/systemd/system/suspend.target'
-    'usr/lib/systemd/system/swap.target'
-    'usr/lib/systemd/system/sys-kernel-config.mount'
-    'usr/lib/systemd/system/sys-kernel-debug.mount'
     'usr/lib/systemd/system/sysinit.target'
-    'usr/lib/systemd/system/sysinit.target.wants/dev-hugepages.mount'
-    'usr/lib/systemd/system/sysinit.target.wants/dev-mqueue.mount'
-    'usr/lib/systemd/system/sysinit.target.wants/proc-sys-fs-binfmt_misc.automount'
-    'usr/lib/systemd/system/sysinit.target.wants/systemd-binfmt.service'
     'usr/lib/systemd/system/sysinit.target.wants/systemd-journald.service'
-    'usr/lib/systemd/system/sysinit.target.wants/systemd-machine-id-commit.service'
     'usr/lib/systemd/system/sysinit.target.wants/systemd-sysctl.service'
     'usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup-dev.service'
     'usr/lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup.service'
     'usr/lib/systemd/system/sysinit.target.wants/systemd-udev-trigger.service'
     'usr/lib/systemd/system/sysinit.target.wants/systemd-udevd.service'
-    'usr/lib/systemd/system/syslog.socket'
     'usr/lib/systemd/system/system.slice'
-    'usr/lib/systemd/system/systemd-binfmt.service'
     'usr/lib/systemd/system/systemd-halt.service'
-    'usr/lib/systemd/system/systemd-hybrid-sleep.service'
     'usr/lib/systemd/system/systemd-journal-flush.service'
     'usr/lib/systemd/system/systemd-journald-audit.socket'
     'usr/lib/systemd/system/systemd-journald-dev-log.socket'
     'usr/lib/systemd/system/systemd-journald.service'
     'usr/lib/systemd/system/systemd-journald.socket'
-    'usr/lib/systemd/system/systemd-machine-id-commit.service'
     'usr/lib/systemd/system/systemd-poweroff.service'
     'usr/lib/systemd/system/systemd-reboot.service'
-    'usr/lib/systemd/system/systemd-suspend.service'
     'usr/lib/systemd/system/systemd-sysctl.service'
-    'usr/lib/systemd/system/systemd-tmpfiles-clean.service'
-    'usr/lib/systemd/system/systemd-tmpfiles-clean.timer'
     'usr/lib/systemd/system/systemd-tmpfiles-setup-dev.service'
     'usr/lib/systemd/system/systemd-tmpfiles-setup.service'
     'usr/lib/systemd/system/systemd-udev-settle.service'
@@ -153,24 +133,14 @@ config-systemd() {
     'usr/lib/systemd/system/systemd-udevd-control.socket'
     'usr/lib/systemd/system/systemd-udevd-kernel.socket'
     'usr/lib/systemd/system/systemd-udevd.service'
-    'usr/lib/systemd/system/time-sync.target'
     'usr/lib/systemd/system/timers.target'
-    'usr/lib/systemd/system/timers.target.wants/systemd-tmpfiles-clean.timer'
-    'usr/lib/systemd/system/tmp.mount'
     'usr/lib/systemd/system/umount.target'
-    'usr/lib/systemd/system/var.mount'
     'usr/lib/systemd/systemd'
-    'usr/lib/systemd/systemd-ac-power'
-    'usr/lib/systemd/systemd-activate'
-    'usr/lib/systemd/systemd-binfmt'
     'usr/lib/systemd/systemd-cgroups-agent'
     'usr/lib/systemd/systemd-journald'
-    'usr/lib/systemd/systemd-machine-id-commit'
     'usr/lib/systemd/systemd-shutdown'
-    'usr/lib/systemd/systemd-sleep'
     'usr/lib/systemd/systemd-sysctl'
     'usr/lib/systemd/systemd-udevd'
-    'usr/lib/tmpfiles.d/systemd-nologin.conf'
     'usr/lib/tmpfiles.d/systemd.conf'
     'usr/lib/tmpfiles.d/tmp.conf'
     'usr/lib/tmpfiles.d/var.conf'
@@ -203,11 +173,86 @@ config-systemd() {
     'usr/share/dbus-1/services/org.freedesktop.systemd1.service'
     'usr/share/dbus-1/system-services/org.freedesktop.systemd1.service'
     'usr/share/dbus-1/system.d/org.freedesktop.systemd1.conf'
+  )
+}
+
+config-systemd-configfs() {
+  description='Systemd init files for configfs'
+  depends="systemd=$version-$release"
+  files=(
+    'usr/lib/systemd/system/sys-kernel-config.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/sys-kernel-config.mount'
+  )
+}
+
+config-systemd-debugfs() {
+  description='Systemd init files for debugfs'
+  depends="systemd=$version-$release"
+  files=(
+    'usr/lib/systemd/system/sys-kernel-debug.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/sys-kernel-debug.mount'
+  )
+}
+
+config-systemd-binfmt_misc() {
+  description='Systemd init files for binfmt_misc'
+  depends="systemd=$version-$release"
+  files=(
+    'usr/lib/systemd/system/proc-sys-fs-binfmt_misc.automount'
+    'usr/lib/systemd/system/proc-sys-fs-binfmt_misc.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/proc-sys-fs-binfmt_misc.automount'
+    'usr/lib/systemd/system/sysinit.target.wants/systemd-binfmt.service'
+    'usr/lib/systemd/system/systemd-binfmt.service'
+    'usr/lib/systemd/systemd-binfmt'
+  )
+}
+
+config-systemd-init() {
+  description='Systemd init files'
+  depends=('filesystem' 'dbus-daemon' "systemd=$version-$release")
+  files=(
     'usr/bin/init'
-    'usr/bin/journalctl'
-    'usr/bin/systemctl'
-    'usr/bin/udevadm'
-    'usr/bin/systemd-tmpfiles'
+    'usr/lib/systemd/system-sleep'
+    'usr/lib/systemd/system/default.target'
+    'usr/lib/systemd/system/dev-hugepages.mount'
+    'usr/lib/systemd/system/dev-mqueue.mount'
+    'usr/lib/systemd/system/graphical.target'
+    'usr/lib/systemd/system/hybrid-sleep.target'
+    'usr/lib/systemd/system/local-fs.target.wants/tmp.mount'
+    'usr/lib/systemd/system/local-fs.target.wants/var.mount'
+    'usr/lib/systemd/system/multi-user.target'
+    'usr/lib/systemd/system/sound.target'
+    'usr/lib/systemd/system/suspend.target'
+    'usr/lib/systemd/system/sysinit.target.wants/dev-hugepages.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/dev-mqueue.mount'
+    'usr/lib/systemd/system/sysinit.target.wants/swap.target'
+    'usr/lib/systemd/system/systemd-hybrid-sleep.service'
+    'usr/lib/systemd/system/systemd-suspend.service'
+    'usr/lib/systemd/system/systemd-tmpfiles-clean.service'
+    'usr/lib/systemd/system/systemd-tmpfiles-clean.timer'
+    'usr/lib/systemd/system/swap.target'
+    'usr/lib/systemd/system/time-sync.target'
+    'usr/lib/systemd/system/timers.target.wants/systemd-tmpfiles-clean.timer'
+    'usr/lib/systemd/system/tmp.mount'
+    'usr/lib/systemd/system/var.mount'
+    'usr/lib/systemd/systemd-sleep'
+    'usr/lib/tmpfiles.d/systemd-nologin.conf'
+  )
+}
+
+config-systemd-initrd() {
+  description='Systemd initrd files'
+  depends=('filesystem-initrd' "systemd=$version-$release")
+  files=(
+    'init'
+    'usr/lib/systemd/system/initrd-cleanup.service'
+    'usr/lib/systemd/system/initrd-fs.target'
+    'usr/lib/systemd/system/initrd-parse-etc.service'
+    'usr/lib/systemd/system/initrd-root-fs.target'
+    'usr/lib/systemd/system/initrd-switch-root.service'
+    'usr/lib/systemd/system/initrd-switch-root.target'
+    'usr/lib/systemd/system/initrd-udevadm-cleanup-db.service'
+    'usr/lib/systemd/system/initrd.target'
   )
 }
 
@@ -395,23 +440,24 @@ config-systemd-logind() {
 config-systemd-cgls() {
   description='Recursively show control group contents'
   depends=('glibc')
-  files=('/usr/bin/systemd-cgls')
+  files=('usr/bin/systemd-cgls')
 }
 
 config-systemd-bash-completion() {
   description='Bash completion for systemd'
-  files=('/usr/share/bash-completion')
+  files=('usr/share/bash-completion/**')
 }
 
 config-systemd-zsh-completion() {
   description='Zsh completion for systemd'
-  files=('/usr/share/zsh')
+  files=('usr/share/zsh/**')
 }
 
 prepare() {
   cd "systemd-$version"
   patch -Np1 -i ../stack-protection.patch
   patch -Np1 -i ../no-sbin-path.patch
+  patch -Np1 -i ../no-swap.patch
   ./autogen.sh
 }
 
@@ -498,6 +544,7 @@ EOF
   rm -r "$pkgdir/usr/var"
   rm -r "$pkgdir/var"
 
+  ln -s 'usr/lib/systemd/systemd' "$pkgdir/init"
   ln -s '../lib/systemd/systemd' "$pkgdir/usr/bin/init"
 }
 
