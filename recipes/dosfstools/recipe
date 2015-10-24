@@ -1,0 +1,61 @@
+parts=(dosfstools-mkfs dosfstools-fsck dosfstools-label dosfstools)
+version=3.0.28
+release=1
+sources=("https://github.com/dosfstools/dosfstools/releases/download/v$version/dosfstools-${version}.tar.gz")
+sha1sum=('5f5d1f195a8dc20eaee255198b9ffcb63c58ad6f')
+makedepends=('glibc-devel')
+
+config-dosfstools-mkfs() {
+  description='Create an MS-DOS filesystem'
+  provides=('mkfs.fat' 'mkfs.vfat' 'mkfs.msdos' 'mkdosfs')
+  depends=('glibc')
+  files=('usr/bin/mkfs.*' 'usr/bin/mkdosfs')
+  manfiles=('usr/share/man/man8/mkfs.*.8' 'usr/share/man/man8/mkdosfs.8')
+}
+
+config-dosfstools-fsck() {
+  description='Check and repair MS-DOS filesystems'
+  provides=('fsck.fat' 'fsck.vfat' 'fsck.msdos' 'dosfsck')
+  depends=('glibc')
+  files=('usr/bin/fsck.*' 'usr/bin/dosfsck')
+  manfiles=('usr/share/man/man8/fsck.*.8' 'usr/share/man/man8/dosfsck.8')
+}
+
+config-dosfstools-label() {
+  description='Set or get MS-DOS filesystem label'
+  provides=('fatlabel' 'dosfslabel')
+  depends=('glibc')
+  files=('usr/bin/fatlabel' 'usr/bin/dosfslabel')
+  manfiles=('usr/share/man/man8/fatlabel.8' 'usr/share/man/man8/dosfslabel.8')
+}
+
+config-dosfstools() {
+  description='DOS filesystem utilities'
+  depends=(
+    "dosfstools-mkfs=$version-$release"
+    "dosfstools-fsck=$version-$release"
+    "dosfstools-label=$version-$release"
+  )
+}
+
+build() {
+  cd "dosfstools-$version"
+
+  make \
+    CC="$HOST-gcc" \
+    OPTFLAGS='-D_GNU_SOURCE -D_LARGEFILE_SOURCE -D_FILE_AFFSET_BITS=64' \
+    DEBUGFLAGS=
+}
+
+package() {
+  cd "dosfstools-$version"
+
+  make \
+    DESTDIR="$pkgdir" \
+    PREFIX=/usr \
+    SBINDIR=/usr/bin \
+    LANGUAGES= \
+    install-symlinks
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
