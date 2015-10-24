@@ -1,0 +1,71 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015 Emil Renner Berthing
+
+set -e
+
+usage() {
+  echo 'halp!'
+}
+
+while true; do
+  case "$1" in
+  -s) SYSROOT="$(readlink -f "$2")"; shift 2;;
+  -o) OUTPUT="$(readlink -f "$2")";  shift 2;;
+  -c) COMPRESSION="$2";           shift 2;;
+  *) break;;
+  esac
+done
+
+if [[ "$1" = help ]]; then
+  usage
+  exit 0
+fi
+
+[[ -n "$SYSROOT" ]] || SYSROOT="$ROOT/sysroot.$ARCH"
+[[ -n "$OUTPUT"  ]] || OUTPUT="$ROOT/initrd.cpio"
+
+if ! command -v gen_init_cpio >/dev/null 2>&1; then
+  [[ -n "$CC" ]] || CC=gcc
+  [[ -n "$CFLAGS" ]] || CFLAGS='-O2 -pipe -Wall -Wextra'
+  mkdir -p "$ROOT/tools/bin"
+  $CC $CFLAGS $LDFLAGS "$ROOT/lib/gen_init_cpio.c" -o "$ROOT/tools/bin/gen_init_cpio"
+fi
+
+if [[ -n "$*" ]]; then
+  . "$ROOT/lib/ro/deps_install.sh"
+  deps_install "$@"
+elif [[ ! -d "$SYSROOT" ]]; then
+    echo "No sysroot found in '$SYSROOT'."
+    exit 1
+fi
+
+sort -u "$SYSROOT/#"/*.files > "$ROOT/initrd.files"
+
+mkdir "${SYSROOT}.tmp"
+cd "${SYSROOT}.tmp"
+awk -F'\t' '{print $1;print $2;print $6;print $7}' "$ROOT/initrd.files" | while read -r path; do
+  read -r type
+  read -r extra
+  read -r strip
+  case "$type" in
+  d) mkdir -p "$path";;
+  l) ln -s "$extra" "$path";;
+  f)
+    if [[ "$strip" = 'strip' ]]; then
+      ${HOST}-strip --strip-unneeded -o "$path" "$SYSROOT/$path"
+    else
+      ln "$SYSROOT/$path" "$path"
+    fi
+    ;;
+  esac
+done
+
+awk -f "$ROOT/lib/ro/initrd.awk" "$ROOT/initrd.files" \
+  > "$ROOT/initrd.list"
+
+gen_init_cpio "$ROOT/initrd.list" > "$OUTPUT"
+
+rm -rf "${SYSROOT}.tmp"
+
+# vim: set ft=sh ts=2 sw=2 et:

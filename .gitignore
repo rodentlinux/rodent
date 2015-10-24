@@ -1,6 +1,9 @@
 /pseudofile
 /image.files
 /image.sqfs
+/initrd.list
+/initrd.files
+/initrd.cpio
 /settings
 /cache
 /tools

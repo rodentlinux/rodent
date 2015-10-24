@@ -43,6 +43,7 @@ usage() {
   echo '  make         - build new package'
   echo '  host-install - install host package'
   echo '  squash       - build squashfs image'
+  echo '  initrd       - build initramfs cpio archive'
   echo '  test         - run squashfs image in qemu'
   echo
 }
@@ -76,6 +77,9 @@ while true; do
   sq|squash)
     export ROOT ARCH HOST COMPRESSION
     shift; exec "$ROOT/lib/ro/squash" "$@";;
+  initrd)
+    export ROOT ARCH HOST COMPRESSION
+    shift; exec "$ROOT/lib/ro/initrd" "$@";;
   test)
     export ROOT ARCH
     shift; exec "$ROOT/lib/ro/test" "$@";;
