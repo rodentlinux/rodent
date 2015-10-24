@@ -27,6 +27,7 @@ alias restart='systemctl restart'
 alias status='systemctl status'
 alias cgls='systemd-cgls'
 alias cgtop='systemd-cgtop'
+alias reboot='systemctl reboot'
 alias poweroff='systemctl poweroff'
 
 cd

@@ -1,5 +1,5 @@
 version=0.1
-release=1
+release=2
 sources=()
 sha1sum=()
 makedepends=()
@@ -16,6 +16,7 @@ config-testmachine() {
     'ip' 'ss'
     'htop'
     'terminfo-xterm'
+    'systemd-init'
     'systemd-hostname'
     'systemd-coredump'
     'systemd-networkd'
@@ -28,7 +29,7 @@ config-testmachine() {
     'pam_unix' 'pam_nologin'
     'avahi-browse'
   )
-  files=('*')
+  files=('**')
 }
 
 #build() {
