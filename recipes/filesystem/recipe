@@ -1,23 +1,44 @@
+parts=(filesystem-common filesystem filesystem-initrd)
 version=0.1
-release=1
+release=2
 sources=()
 sha1sum=()
 makedepends=()
 
-config-filesystem() {
-  description='Basic filesystem layout'
-  devdepends=("filesystem=$version-$release")
+config-filesystem-common() {
+  description='Common filesystem layout'
   files=(
-    'dev'
+    'dev/**'
     'sys' 'proc' 'run' 'tmp'
-    'boot' 'etc' 'home' 'root'
+    'etc/mtab'
+    'etc/os-release'
+    'boot' 'root'
     'bin' 'usr/bin'
     'sbin' 'usr/sbin'
-    'lib' 'usr/lib'
-    'usr/local'
+    'usr/lib/os-release'
+    'lib'
     'var'
   )
+}
+
+config-filesystem() {
+  description='Basic filesystem layout'
+  depends=("filesystem-common=$version-$release")
+  devdepends=("filesystem-common=$version-$release")
+  files=(
+    'home'
+    'usr/local'
+  )
   devfiles=('usr/include')
+}
+
+config-filesystem-initrd() {
+  description='Basic filesystem layout for initramfs'
+  depends=("filesystem-common=$version-$release")
+  files=(
+    'sysroot'
+    'etc/initrd-release'
+  )
 }
 
 package() {
@@ -35,9 +56,11 @@ package() {
   install -dm755 "$pkgdir/boot"
   install -dm755 "$pkgdir/home"
   install -dm755 "$pkgdir/root"
+  install -dm755 "$pkgdir/sysroot"
 
   install -dm755 "$pkgdir/etc"
   ln -s '../usr/lib/os-release' "$pkgdir/etc/os-release"
+  ln -s '../usr/lib/os-release' "$pkgdir/etc/initrd-release"
   ln -s '../proc/self/mounts'   "$pkgdir/etc/mtab"
 
   install -dm755 "$pkgdir/usr/include"
