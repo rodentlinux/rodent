@@ -8,7 +8,7 @@ parts=(
   openssh-keygen
 )
 version=7.1p1
-release=1
+release=2
 sources=("http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${version}.tar.gz")
 sha1sum=('ed22af19f962262c493fcc6ed8c8826b2761d9b6')
 makedepends=(
@@ -24,7 +24,7 @@ makedepends=(
 
 config-openssh-client() {
   description='OpenSSH Client'
-  provides=('ssh-server')
+  provides=('ssh-client')
   depends=('libz' 'libcrypto')
   files=('usr/bin/ssh' 'usr/bin/slogin')
   manfiles=(
