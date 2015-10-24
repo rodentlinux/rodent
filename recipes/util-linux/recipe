@@ -69,6 +69,7 @@ parts=(
   util-linux-kill
   cramfs-utils
   swap-utils
+  losetup
   util-linux-bash-completions
   util-linux-man
   util-linux-all
@@ -77,7 +78,7 @@ for i in "${_simple[@]}"; do
   parts+=("$i")
 done
 version=2.27
-release=1
+release=2
 sources=("https://www.kernel.org/pub/linux/utils/util-linux/v$version/util-linux-${version}.tar.xz")
 sha1sum=('0549760ba1d2eb0e48b41b926d54ac55533369af')
 makedepends=(
@@ -246,14 +247,21 @@ config-swap-utils() {
   )
 }
 
+config-losetup() {
+  description='losetup utility from util-linux'
+  depends=("libsmartcols=$version-$release")
+  files=('usr/bin/losetup')
+  manfiles=('usr/share/man/man8/losetup.8')
+}
+
 config-util-linux-bash-completions() {
   description='bash completions for util-linux'
-  files=('usr/share/bash-completion')
+  files=('usr/share/bash-completion/**')
 }
 
 config-util-linux-man() {
   description='Miscelaneous manual pages from using util-linux'
-  files=('usr/share/man/man5')
+  files=('usr/share/man/man5/**')
 }
 
 config-util-linux-all() {
@@ -265,7 +273,7 @@ config-util-linux-all() {
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
-  for i in uuidd mount fdisk cfdisk fstrim sulogin login agetty util-linux-kill swap-utils; do
+  for i in uuidd mount fdisk cfdisk fstrim sulogin login agetty util-linux-kill swap-utils losetup; do
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
@@ -278,7 +286,6 @@ config-util-linux-all() {
     'usr/bin/findfs' # libblkid
     'usr/bin/fsck' # libmount
     'usr/bin/logger' # libsystemd
-    'usr/bin/losetup' # libsmartcols
     'usr/bin/lsblk' # libmount libsmartcols
     'usr/bin/lscpu' # libsmartcols
     'usr/bin/lsipc' # libsmartcols
@@ -323,7 +330,6 @@ config-util-linux-all() {
     'usr/share/man/man8/blkid.8'
     'usr/share/man/man8/findfs.8'
     'usr/share/man/man8/fsck.8'
-    'usr/share/man/man8/losetup.8'
     'usr/share/man/man8/lsblk.8'
     'usr/share/man/man8/lslocks.8'
     'usr/share/man/man8/partx.8'
