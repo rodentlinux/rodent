@@ -1,0 +1,84 @@
+version=2.21
+release=1
+sources=("ftp://ftp.gnu.org/gnu/grep/grep-${version}.tar.xz")
+sha1sum=('c7e6525c5c5aaa1bc3c1774db1697f42b11c2d85')
+makedepends=('glibc-devel')
+
+config-grep() {
+  description='A string search utility'
+  depends=('glibc')
+  files=('usr/bin/*grep')
+  manfiles=('usr/share/man/man1/*grep.1')
+}
+
+prepare() {
+  cd "grep-$version"
+  patch -Np1 -i ../CVE-2015-1345.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../grep-$version/configure" \
+    ac_cv_func_closedir_void=no \
+    am_cv_func_iconv_works=yes \
+    gl_cv_double_slash_root=no \
+    gl_cv_func_btowc_nul=yes \
+    gl_cv_func_dup2_works=yes \
+    gl_cv_func_fcntl_f_dupfd_works=yes \
+    gl_cv_func_fdopen_works=yes \
+    gl_cv_func_fdopendir_works=yes \
+    gl_cv_func_fnmatch_posix=yes \
+    gl_cv_func_fstatat_zero_flag=yes \
+    gl_cv_func_getcwd_null=yes \
+    gl_cv_func_getdtablesize_works=yes \
+    gl_cv_func_getopt_gnu=yes \
+    gl_cv_func_getopt_long_gnu=yes \
+    gl_cv_func_getopt_posix=yes \
+    gl_cv_func_gettimeofday_clobber=no \
+    gl_cv_func_iswcntrl_works=yes \
+    gl_cv_func_itold_works=yes \
+    gl_cv_func_lstat_dereferences_slashed_symlink=yes \
+    gl_cv_func_memchr_works=yes \
+    gl_cv_func_nl_langinfo_yesexpr_works=yes \
+    gl_cv_func_open_slash=yes \
+    gl_cv_func_printf_positions=yes \
+    gl_cv_func_setenv_works=yes \
+    gl_cv_func_snprintf_retval_c99=yes \
+    gl_cv_func_snprintf_size1=yes \
+    gl_cv_func_stat_dir_slash=yes \
+    gl_cv_func_stat_file_slash=yes \
+    gl_cv_func_strerror_0_works=yes \
+    gl_cv_func_strstr_linear=yes \
+    gl_cv_func_strstr_works_always=yes \
+    gl_cv_func_strtoimax=yes \
+    gl_cv_func_svid_putenv=yes \
+    gl_cv_func_symlink_works=yes \
+    gl_cv_func_unsetenv_works=yes \
+    gl_cv_func_wcwidth_works=yes \
+    gl_cv_func_working_strerror=yes \
+    gl_cv_have_weak=yes \
+    gl_cv_header_working_fcntl_h=yes \
+    gl_cv_struct_dirent_d_ino=yes \
+    --host=$HOST \
+    --prefix=/usr \
+    --enable-threads=posix \
+    --disable-nls \
+    --disable-rpath \
+    --disable-perl-regexp \
+    --with-gnu-ld \
+    --without-included-regex
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share/info"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
