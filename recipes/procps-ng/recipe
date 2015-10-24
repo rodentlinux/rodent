@@ -1,0 +1,190 @@
+parts=(
+  libprocps
+  procps-ng-kill
+  procps-ng-uptime
+  free
+  pgrep
+  pidof
+  pmap
+  ps
+  pwdx
+  slabtop
+  sysctl
+  tload
+  top
+  vmstat
+  w
+  watch
+)
+version=3.3.11
+release=1
+sources=("http://downloads.sourceforge.net/project/procps-ng/Production/procps-ng-${version}.tar.xz")
+sha1sum=('1bdca65547df9ed019bd83649b0f8b8eaa017e25')
+makedepends=('libncurses-devel' 'libsystemd-devel')
+
+config-libprocps() {
+  description='Library for reading information in /proc'
+  depends=('libsystemd')
+  devdepends=("libprocps=$version-$release")
+  files=('usr/lib/libprocps.so.*')
+  devfiles=(
+    'usr/include/proc/**'
+    'usr/lib/libprocps.a'
+    'usr/lib/libprocps.so'
+    'usr/lib/pkgconfig/libprocps.pc'
+  )
+  manfiles=('usr/share/man/man3/**')
+}
+
+config-procps-ng-kill() {
+  description='Terminate a process'
+  provides=('kill')
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/kill')
+  manfiles=('usr/share/man/man1/kill.1')
+}
+
+config-procps-ng-uptime() {
+  description='Tell how long the system has been running'
+  provides=('uptime')
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/uptime')
+  manfiles=('usr/share/man/man1/uptime.1')
+}
+
+config-free() {
+  description='Display amount of free and used memory'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/free')
+  manfiles=('usr/share/man/man1/free.1')
+}
+
+config-pgrep() {
+  description='Look up or signal processes based on name or other attributes'
+  provides=('pkill')
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/pgrep' 'usr/bin/pkill')
+  manfiles=(
+    'usr/share/man/man1/pgrep.1'
+    'usr/share/man/man1/pkill.1'
+  )
+}
+
+config-pidof() {
+  description='Find process ID of a running program'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/pidof')
+  manfiles=('usr/share/man/man1/pidof.1')
+}
+
+config-pmap() {
+  description='Report memory map of a process'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/pmap')
+  manfiles=('usr/share/man/man1/pmap.1')
+}
+
+config-ps() {
+  description='Report a snapshot of current processes'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/ps')
+  manfiles=('usr/share/man/man1/ps.1')
+}
+
+config-pwdx() {
+  description='Report current working directory of a process'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/pwdx')
+  manfiles=('usr/share/man/man1/pwdx.1')
+}
+
+config-slabtop() {
+  description='Display kernel slab cache information in real time'
+  depends=("libprocps=$version-$release" 'libncurses')
+  files=('usr/bin/slabtop')
+  manfiles=('usr/share/man/man1/slabtop.1')
+}
+
+config-sysctl() {
+  description='Configure kernel parameters at runtime'
+  depends=('glibc')
+  files=('usr/bin/sysctl')
+  manfiles=(
+    'usr/share/man/man8/sysctl.8'
+    'usr/share/man/man5/sysctl.conf.5'
+  )
+}
+
+config-tload() {
+  description='Graphic representation of system load average'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/tload')
+  manfiles=('usr/share/man/man1/tload.1')
+}
+
+config-top() {
+  description='Display Linux processes'
+  depends=("libprocps=$version-$release" 'libncurses')
+  files=('usr/bin/top')
+  manfiles=('usr/share/man/man1/top.1')
+}
+
+config-vmstat() {
+  description='Report virtual memory statistics'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/vmstat')
+  manfiles=('usr/share/man/man8/vmstat.8')
+}
+
+config-w() {
+  description='Show who is logged on and what they are doing'
+  depends=("libprocps=$version-$release")
+  files=('usr/bin/w')
+  manfiles=('usr/share/man/man1/w.1')
+}
+
+config-watch() {
+  description='Execute a program periodically'
+  depends=('libncurses')
+  files=('usr/bin/watch')
+  manfiles=('usr/share/man/man1/watch.1')
+}
+
+prepare() {
+  cd "procps-ng-$version"
+  patch -Np1 -i ../ncurses.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../procps-ng-$version/configure" \
+    ac_cv_func_malloc_0_nonnull=yes \
+    ac_cv_func_mmap_fixed_mapped=yes \
+    ac_cv_func_realloc_0_nonnull=yes \
+    ac_cv_func_strtod=yes \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --sbindir=/usr/bin \
+    --enable-watch8bit \
+    --disable-nls \
+    --disable-rpath \
+    --with-systemd \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share/doc"
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
