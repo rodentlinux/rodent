@@ -67,6 +67,7 @@ parts=(
   login
   agetty
   util-linux-kill
+  util-linux-fsck
   cramfs-utils
   swap-utils
   losetup
@@ -78,7 +79,7 @@ for i in "${_simple[@]}"; do
   parts+=("$i")
 done
 version=2.27
-release=2
+release=3
 sources=("https://www.kernel.org/pub/linux/utils/util-linux/v$version/util-linux-${version}.tar.xz")
 sha1sum=('0549760ba1d2eb0e48b41b926d54ac55533369af')
 makedepends=(
@@ -223,6 +224,14 @@ config-util-linux-kill() {
   manfiles=('usr/share/man/man1/kill.1')
 }
 
+config-util-linux-fsck() {
+  description='fsck utility from util-linux'
+  provides=('fsck')
+  depends=("libmount=$version-$release")
+  files=('usr/bin/fsck')
+  manfiles=('usr/share/man/man8/fsck.8')
+}
+
 config-cramfs-utils() {
   description='cramfs utilities from util-linux'
   depends=('libz')
@@ -273,7 +282,7 @@ config-util-linux-all() {
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
-  for i in uuidd mount fdisk cfdisk fstrim sulogin login agetty util-linux-kill swap-utils losetup; do
+  for i in uuidd mount fdisk cfdisk fstrim sulogin login agetty util-linux-kill util-linux-fsck swap-utils losetup; do
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
@@ -284,7 +293,6 @@ config-util-linux-all() {
     'usr/bin/chsh' # libpam_misc
     'usr/bin/eject' # libmount
     'usr/bin/findfs' # libblkid
-    'usr/bin/fsck' # libmount
     'usr/bin/logger' # libsystemd
     'usr/bin/lsblk' # libmount libsmartcols
     'usr/bin/lscpu' # libsmartcols
@@ -329,7 +337,6 @@ config-util-linux-all() {
     'usr/share/man/man1/uuidgen.1'
     'usr/share/man/man8/blkid.8'
     'usr/share/man/man8/findfs.8'
-    'usr/share/man/man8/fsck.8'
     'usr/share/man/man8/lsblk.8'
     'usr/share/man/man8/lslocks.8'
     'usr/share/man/man8/partx.8'
