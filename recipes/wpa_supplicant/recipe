@@ -1,0 +1,104 @@
+parts=(wpa_supplicant wpa_cli wpa_passphrase)
+version=2.5
+release=1
+sources=("https://w1.fi/releases/wpa_supplicant-${version}.tar.gz")
+sha1sum=('f82281c719d2536ec4783d9442c42ff956aa39ed')
+makedepends=('libnl-genl-3-devel' 'libssl-devel' 'libdbus-1-devel' 'libncurses-devel' 'libreadline-devel' 'libhistory-devel')
+
+config-wpa_supplicant() {
+  description='Wi-Fi Protected Access client and IEEE 802.1X supplicant'
+  depends=('librt' 'libnl-genl-3' 'libssl' 'libdbus-1')
+  files=(
+    'usr/bin/wpa_supplicant'
+    'usr/lib/systemd/system/wpa_supplicant@.service'
+    'usr/share/dbus-1/system-services/fi.w1.wpa_supplicant1.service'
+    'usr/share/dbus-1/system.d/wpa_supplicant.conf'
+  )
+  manfiles=(
+    'usr/share/man/man5/wpa_supplicant.conf.5'
+    'usr/share/man/man8/wpa_supplicant.8'
+    'usr/share/man/man8/wpa_background.8'
+  )
+}
+
+config-wpa_cli() {
+  description='Command line client for wpa_supplicant'
+  depends=('librt' 'libreadline')
+  files=('usr/bin/wpa_cli')
+  manfiles=('usr/share/man/man8/wpa_cli.8')
+}
+
+config-wpa_passphrase() {
+  description='Generate a WPA PSK from an ASCII passphrase for an SSID'
+  depends=('librt' 'libcrypto')
+  files=('usr/bin/wpa_passphrase')
+  manfiles=('usr/share/man/man8/wpa_passphrase.8')
+}
+
+build() {
+  cd wpa_supplicant-$version/wpa_supplicant
+
+  sed \
+    -e 's/^#*\(CONFIG_DRIVER_WEXT=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_DRIVER_NL80211=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_LIBNL20=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_LIBNL32=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_DRIVER_WIRED=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_EAP_FAST=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_WPS=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_SMARTCARD=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_HT_OVERRIDES=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_VHT_OVERRIDES=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_CTRL_IFACE=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_READLINE=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_NO_STDOUT_DEBUG=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_NO_CONFIG_WRITE=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_MAIN=\).*/\1main/' \
+    -e 's/^#*\(CONFIG_OS=\).*/\1unix/' \
+    -e 's/^#*\(CONFIG_ELOOP=\).*/\1eloop/' \
+    -e 's/^#*\(CONFIG_ELOOP_POLL=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_ELOOP_EPOLL=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_L2_PACKET=\).*/\1linux/' \
+    -e 's/^#*\(CONFIG_TLS=\).*/\1openssl/' \
+    -e 's/^#*\(CONFIG_CTRL_IFACE_DBUS=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_CTRL_IFACE_DBUS_NEW=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_NO_RANDOM_POOL=\).*/\1y/' \
+    -e 's/^#*\(CONFIG_AP=\).*/#\1y/' \
+    -e 's/^#*\(CONFIG_AUTOSCAN_PERIODIC=\).*/\1y/' \
+    defconfig > .config
+
+  make CC=${host}-gcc V=1 \
+    DESTDIR="$pkgdir" \
+    INCDIR=/usr/include \
+    LIBDIR=/usr/lib \
+    BINDIR=/usr/bin
+}
+
+package() {
+  cd wpa_supplicant-$version/wpa_supplicant
+
+  make CC=${host}-gcc V=1 \
+    DESTDIR="$pkgdir" \
+    INCDIR=/usr/include \
+    LIBDIR=/usr/lib \
+    BINDIR=/usr/bin \
+    install
+
+  install -dm755 "$pkgdir/usr/share/factory/etc/wpa_supplicant"
+  install -m644 wpa_supplicant.conf "$pkgdir/usr/share/factory/etc/wpa_supplicant/wpa_supplicant.conf"
+
+  install -dm755 "$pkgdir"/usr/share/man/man{5,8}
+  install -m644 doc/docbook/*.5 "$pkgdir/usr/share/man/man5/"
+  install -m644 doc/docbook/wpa_{supplicant,background,cli,passphrase}.8 "$pkgdir/usr/share/man/man8/"
+
+  install -dm755 "$pkgdir/usr/share/dbus-1/system-services"
+  install -m644 dbus/fi.w1.wpa_supplicant1.service "$pkgdir/usr/share/dbus-1/system-services/"
+
+  install -dm755 "$pkgdir/usr/share/dbus-1/system.d"
+  install -m644 dbus/dbus-wpa_supplicant.conf "$pkgdir/usr/share/dbus-1/system.d/wpa_supplicant.conf"
+
+  install -dm755 "$pkgdir/usr/lib/systemd/system"
+  install -m644 "$srcdir/wpa_supplicant@.service" "$pkgdir/usr/lib/systemd/system/"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
