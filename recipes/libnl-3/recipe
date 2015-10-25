@@ -1,0 +1,137 @@
+parts=(
+  libnl-3
+  libnl-genl-3
+  libnl-idiag-3
+  libnl-route-3
+  libnl-nf-3
+  libnl-cli-3
+  libnl-utils
+)
+version=3.2.25
+release=1
+sources=("http://www.infradead.org/~tgr/libnl/files/libnl-${version}.tar.gz")
+sha1sum=('b7a4981f7edf7398256d35fd3c0b87bc84ae27d1')
+makedepends=('glibc-devel')
+
+config-libnl-3() {
+  description='Library for dealing with netlink sockets'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libnl-3=$version-$release")
+  files=('usr/lib/libnl-3.so.*')
+  devfiles=(
+    'usr/include/libnl3/netlink/*.h'
+    'usr/lib/libnl-3.a'
+    'usr/lib/libnl-3.so'
+    'usr/lib/pkgconfig/libnl-3.0.pc'
+  )
+}
+
+config-libnl-genl-3() {
+  description='Library for dealing with netlink sockets - genl'
+  depends=("libnl-3=$version-$release")
+  devdepends=("libnl-3-devel=$version-$release" "libnl-genl-3=$version-$release")
+  files=('usr/lib/libnl-genl-3.so.*')
+  devfiles=(
+    'usr/include/libnl3/netlink/genl/**'
+    'usr/lib/libnl-genl-3.a'
+    'usr/lib/libnl-genl-3.so'
+    'usr/lib/pkgconfig/libnl-genl-3.0.pc'
+  )
+}
+
+config-libnl-idiag-3() {
+  description='Library for dealing with netlink sockets - idiag'
+  depends=("libnl-3=$version-$release")
+  devdepends=("libnl-3-devel=$version-$release" "libnl-idiag-3=$version-$release")
+  files=('usr/lib/libnl-idiag-3.so.*')
+  devfiles=(
+    'usr/include/libnl3/netlink/idiag/**'
+    'usr/lib/libnl-idiag-3.a'
+    'usr/lib/libnl-idiag-3.so'
+  )
+}
+
+config-libnl-route-3() {
+  description='Library for dealing with netlink sockets - route'
+  depends=("libnl-3=$version-$release")
+  devdepends=("libnl-3-devel=$version-$release" "libnl-route-3=$version-$release")
+  files=('usr/lib/libnl-route-3.so.*')
+  devfiles=(
+    'usr/include/libnl3/netlink/fib_lookup/**'
+    'usr/include/libnl3/netlink/route/**'
+    'usr/lib/libnl-route-3.a'
+    'usr/lib/libnl-route-3.so'
+    'usr/lib/pkgconfig/libnl-route-3.0.pc'
+  )
+}
+
+config-libnl-nf-3() {
+  description='Library for dealing with netlink sockets - netfilter'
+  depends=("libnl-route-3=$version-$release")
+  devdepends=("libnl-route-3-devel=$version-$release" "libnl-nf-3=$version-$release")
+  files=('usr/lib/libnl-nf-3.so.*')
+  devfiles=(
+    'usr/include/libnl3/netlink/netfilter/**'
+    'usr/lib/libnl-nf-3.a'
+    'usr/lib/libnl-nf-3.so'
+    'usr/lib/pkgconfig/libnl-nf-3.0.pc'
+  )
+}
+
+config-libnl-cli-3() {
+  description='Library for dealing with netlink sockets - cli'
+  depends=("libnl-genl-3=$version-$release" "libnl-nf-3=$version-$release")
+  devdepends=(
+    "libnl-route-3-devel=$version-$release"
+    "libnl-genl-3-devel=$version-$release"
+    "libnl-cli-3=$version-$release"
+  )
+  files=('usr/lib/libnl-cli-3.so.*' 'usr/lib/libnl/cli/*/*.so')
+  devfiles=(
+    'usr/include/libnl3/netlink/cli/**'
+    'usr/lib/libnl-cli-3.a'
+    'usr/lib/libnl-cli-3.so'
+    'usr/lib/libnl/cli/*/*.a'
+    'usr/lib/pkgconfig/libnl-cli-3.0.pc'
+  )
+}
+
+config-libnl-utils() {
+  description='Command line utilities from libnl-3'
+  depends=("libnl-cli-3=$version-$release")
+  files=('usr/bin/*')
+  manfiles=('usr/share/man/man8/*')
+}
+
+prepare() {
+  cd "libnl-$version"
+  patch -Np1 -i ../libtool.patch
+}
+
+build() {
+  rm -rf build
+  mkdir build
+  cd build
+
+  "../libnl-$version/configure" \
+    --host=$HOST \
+    --prefix=/usr \
+    --sysconfdir=/etc \
+    --sbindir=/usr/bin \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd build
+  make DESTDIR="$pkgdir" install
+
+  install -dm755 "$pkgdir/usr/share/factory"
+  mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
+
+  find "$pkgdir/usr/lib" -name '*.la' -delete
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
