@@ -43,13 +43,13 @@ config-arpd() {
 config-libnetlink() {
   description='The netlink library from iproute2'
   depends=('glibc-devel')
-  files=('usr/include/libnetlink.h' '/usr/lib/libnetlink.a')
+  files=('usr/include/libnetlink.h' 'usr/lib/libnetlink.a')
   manfiles=('usr/share/man/man3/libnetlink.3')
 }
 
 config-iproute2-docs() {
   description='iproute2 extra documentation'
-  files=('usr/share/doc')
+  files=('usr/share/doc/**')
 }
 
 prepare() {

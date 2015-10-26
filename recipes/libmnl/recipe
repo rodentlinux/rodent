@@ -10,9 +10,9 @@ config-libmnl() {
   devdepends=('glibc-devel' "libmnl=$version-$release")
   files=('usr/lib/libmnl.so.*')
   devfiles=(
-    'usr/include'
-    'usr/lib/libmnl.so'
+    'usr/include/**'
     'usr/lib/libmnl.a'
+    'usr/lib/libmnl.so'
     'usr/lib/pkgconfig/libmnl.pc'
   )
 }

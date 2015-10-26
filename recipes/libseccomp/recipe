@@ -12,11 +12,11 @@ config-libseccomp() {
   files=('usr/lib/libseccomp.so.*')
   devfiles=(
     'usr/include/seccomp.h'
-    'usr/lib/libseccomp.so'
     'usr/lib/libseccomp.a'
+    'usr/lib/libseccomp.so'
     'usr/lib/pkgconfig/libseccomp.pc'
   )
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 config-scmp_sys_resolver() {

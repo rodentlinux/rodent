@@ -22,7 +22,7 @@ config-libavahi-common() {
   devdepends=('glibc-devel' "libavahi-common=$version-$release")
   files=('usr/lib/libavahi-common.so.*')
   devfiles=(
-    'usr/include/avahi-common'
+    'usr/include/avahi-common/**'
     'usr/lib/libavahi-common.a'
     'usr/lib/libavahi-common.so'
   )
@@ -34,7 +34,7 @@ config-libavahi-core() {
   devdepends=('glibc-devel' "libavahi-core=$version-$release")
   files=('usr/lib/libavahi-core.so.*')
   devfiles=(
-    'usr/include/avahi-core'
+    'usr/include/avahi-core/**'
     'usr/lib/libavahi-core.a'
     'usr/lib/libavahi-core.so'
     'usr/lib/pkgconfig/avahi-core.pc'
@@ -47,7 +47,7 @@ config-libavahi-client() {
   devdepends=('glibc-devel' "libavahi-client=$version-$release")
   files=('usr/lib/libavahi-client.so.*')
   devfiles=(
-    'usr/include/avahi-client'
+    'usr/include/avahi-client/**'
     'usr/lib/libavahi-client.a'
     'usr/lib/libavahi-client.so'
     'usr/lib/pkgconfig/avahi-client.pc'

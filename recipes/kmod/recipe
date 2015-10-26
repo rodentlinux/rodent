@@ -11,7 +11,7 @@ config-libkmod() {
   devdepends=('glibc-devel' "libkmod=$version-$release")
   files=('usr/lib/libkmod.so.*')
   devfiles=(
-    'usr/include'
+    'usr/include/**'
     'usr/lib/libkmod.so'
     'usr/lib/pkgconfig/libkmod.pc'
   )
@@ -21,7 +21,7 @@ config-kmod() {
   description='Linux kernel module handling'
   depends=("libkmod=$version-$release")
   files=('usr/bin/kmod')
-  manfiles=('usr/share/man/man5' 'usr/share/man/man8/kmod.8')
+  manfiles=('usr/share/man/man5/**' 'usr/share/man/man8/kmod.8')
 }
 
 config-kmod-legacy() {
@@ -48,7 +48,7 @@ config-kmod-legacy() {
 config-kmod-bash-completion() {
   description='kmod bash completion'
   depends=('bash')
-  files=('usr/share/bash-completion')
+  files=('usr/share/bash-completion/**')
 }
 
 prepare() {

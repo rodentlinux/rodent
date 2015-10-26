@@ -11,12 +11,12 @@ config-libcap() {
   devdepends=('glibc-devel' "libcap=$version-$release")
   files=('usr/lib/libcap.so.*')
   devfiles=(
-    'usr/include'
+    'usr/include/**'
     'usr/lib/libcap.a'
     'usr/lib/libcap.so'
     'usr/lib/pkgconfig/libcap.pc'
   )
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 config-libcap-utils() {

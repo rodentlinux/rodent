@@ -10,11 +10,12 @@ config-libunwind() {
   devdepends=('glibc-devel' "libunwind=$version-$release")
   files=('usr/lib/libunwind*.so.*')
   devfiles=(
-    'usr/include'
-    'usr/lib/libunwind*.so' 'usr/lib/libunwind*.a'
-    'usr/lib/pkgconfig'
+    'usr/include/**'
+    'usr/lib/libunwind*.a'
+    'usr/lib/libunwind*.so'
+    'usr/lib/pkgconfig/**'
   )
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 build() {

@@ -11,12 +11,12 @@ config-libidn() {
   devdepends=('glibc-devel' "libidn=$version-$release")
   files=('usr/lib/libidn.so.*')
   devfiles=(
-    'usr/include'
-    'usr/lib/libidn.so'
+    'usr/include/**'
     'usr/lib/libidn.a'
+    'usr/lib/libidn.so'
     'usr/lib/pkgconfig/libidn.pc'
   )
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 config-idn() {

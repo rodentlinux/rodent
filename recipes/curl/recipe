@@ -9,17 +9,17 @@ config-libcurl() {
   description='A URL retrieval library'
   depends=('libz' 'libidn' 'libssl')
   files=('usr/lib/libcurl.so.*')
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 config-libcurl-devel() {
   description='Development files for libcurl'
   depends=('glibc-devel' "libcurl=$version-$release")
   files=(
-    'usr/include'
+    'usr/include/**'
     'usr/bin/curl-config'
-    'usr/lib/libcurl.so'
     'usr/lib/libcurl.a'
+    'usr/lib/libcurl.so'
     'usr/lib/pkgconfig/libcurl.pc'
     'usr/share/aclocal/libcurl.m4'
   )

@@ -22,7 +22,7 @@ config-glibc() {
     'usr/lib/libnss_files-*.so' 'usr/lib/libnss_files.so.*'
   )
   devfiles=(
-    'usr/include'
+    'usr/include/**'
     'usr/lib/*.o'
     'usr/lib/libc_nonshared.a'
     'usr/lib/libpthread_nonshared.a'

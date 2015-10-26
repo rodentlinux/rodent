@@ -46,7 +46,7 @@ config-vim-links() {
 config-vimtutor() {
   description='Vim tutor'
   depends=('sh' "vim=$version-$release")
-  files=('usr/bin/vimtutor' 'usr/share/vim/vim74/tutor')
+  files=('usr/bin/vimtutor' 'usr/share/vim/vim74/tutor/*')
   manfiles=('usr/share/man/man1/vimtutor.1')
 }
 
@@ -60,35 +60,35 @@ config-xxd() {
 config-vim-docs() {
   description='Vim documentation'
   depends=("vim=$version-$release")
-  files=('usr/share/vim/vim74/doc')
+  files=('usr/share/vim/vim74/doc/**')
 }
 
 config-vim-print() {
   description='Vim ps files'
   depends=("vim=$version-$release")
-  files=('usr/share/vim/vim74/print')
+  files=('usr/share/vim/vim74/print/**')
 }
 
 config-vim-spell() {
   description='Vim spell files'
   depends=("vim=$version-$release")
-  files=('usr/share/vim/vim74/spell')
+  files=('usr/share/vim/vim74/spell/**')
 }
 
 config-vim-tools() {
   description='Vim extra tools'
   depends=("vim=$version-$release")
-  files=('usr/share/vim/vim74/tools')
+  files=('usr/share/vim/vim74/tools/**')
 }
 
 config-vim-extra() {
   description='Vim syntax, colors and macros'
   depends=("vim=$version-$release")
   files=(
-    'usr/share/vim/vim74/autoload'
+    'usr/share/vim/vim74/autoload/**'
     'usr/share/vim/vim74/bugreport.vim'
-    'usr/share/vim/vim74/colors'
-    'usr/share/vim/vim74/compiler'
+    'usr/share/vim/vim74/colors/*'
+    'usr/share/vim/vim74/compiler/*'
     'usr/share/vim/vim74/delmenu.vim'
     'usr/share/vim/vim74/filetype.vim'
     'usr/share/vim/vim74/ftoff.vim'
@@ -98,14 +98,14 @@ config-vim-extra() {
     'usr/share/vim/vim74/indent.vim'
     'usr/share/vim/vim74/indent/*'
     'usr/share/vim/vim74/indoff.vim'
-    'usr/share/vim/vim74/macros'
+    'usr/share/vim/vim74/macros/**'
     'usr/share/vim/vim74/menu.vim'
     'usr/share/vim/vim74/mswin.vim'
     'usr/share/vim/vim74/optwin.vim'
-    'usr/share/vim/vim74/plugin'
+    'usr/share/vim/vim74/plugin/*'
     'usr/share/vim/vim74/scripts.vim'
     'usr/share/vim/vim74/synmenu.vim'
-    'usr/share/vim/vim74/syntax'
+    'usr/share/vim/vim74/syntax/*'
   )
 }
 

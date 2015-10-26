@@ -16,7 +16,6 @@ release=1
 sources=("http://linux-pam.org/library/Linux-PAM-${version}.tar.bz2")
 sha1sum=('3620ab5f5e02272825c426622761a19a1a2facca')
 makedepends=('libutil-devel' 'libcrypt-devel')
-#'libtirpc-devel')
 
 config-libpam() {
   description='PAM library'
@@ -24,11 +23,11 @@ config-libpam() {
   devdepends=('glibc-devel' "libpam=$version-$release")
   files=('usr/lib/libpam.so.*')
   devfiles=(
-    'usr/include'
+    'usr/include/**'
     'usr/lib/libpam.a'
     'usr/lib/libpam.so'
   )
-  manfiles=('usr/share/man/man3')
+  manfiles=('usr/share/man/man3/**')
 }
 
 config-libpam_misc() {
@@ -48,7 +47,6 @@ config-libpamc() {
   devdepends=("libpam-devel=$version-$release" "libpamc=$version-$release")
   files=('usr/lib/libpamc.so.*')
   devfiles=(
-    'usr/include'
     'usr/lib/libpamc.a'
     'usr/lib/libpamc.so'
   )
@@ -56,7 +54,7 @@ config-libpamc() {
 
 config-pam-man() {
   description='PAM manual pages'
-  files=('usr/share/man/man5' 'usr/share/man/man8')
+  files=('usr/share/man/man5/**' 'usr/share/man/man8/**')
 }
 
 config-pam_filter() {
