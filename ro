@@ -25,6 +25,10 @@ armv7hl)
   [[ -n "$HOST" ]] || HOST='armv7hl-unknown-linux-gnueabi'
   [[ -n "$COMPRESSION" ]] || COMPRESSION='xz -Xbcj armthumb'
   ;;
+quark)
+  [[ -n "$HOST" ]] || HOST='i586-quark-linux-gnu'
+  [[ -n "$COMPRESSION" ]] || COMPRESSION='xz -Xbcj x86'
+  ;;
 *)
   echo "Unknown architecture '$ARCH'"
   exit 1

@@ -1,4 +1,6 @@
 ARCH=armv7hl
+#ARCH=quark
+
 MAKEFLAGS=-j4
 
 REPOS=(
