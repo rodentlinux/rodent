@@ -1,0 +1,45 @@
+version=0.1
+release=1
+sources=()
+sha1sum=()
+makedepends=()
+
+config-beaglebone() {
+  description='BeagleBone Image'
+  depends=(
+    'bash-default'
+    'util-linux-kill'
+    'cat' 'ls' 'mkdir' 'rmdir' 'rm' 'mv' 'cp' 'ln'
+    'ldd' 'getent'
+    'free' 'procps-ng-uptime'
+    'ncurses-utils'
+    'less' 'sed' 'find'
+    'ip' 'ss'
+    'htop'
+    'terminfo-xterm'
+    'systemd-init'
+    'systemd-configfs'
+    'systemd-fsck'
+    'systemd-hostname'
+    'systemd-networkd'
+    'systemd-resolved'
+    'systemd-timesyncd'
+    'systemd-logind'
+    'systemd-cgls'
+    'openssh-server'
+    'openssh-client'
+    'openssh-scp'
+    'pam_unix' 'pam_nologin'
+    'avahi-browse' 'libnss_mdns'
+    'dosfstools-fsck'
+  )
+  files=('**')
+}
+
+package() {
+  cp -a "$srcdir/etc" "$pkgdir"
+  cp -a "$srcdir/root" "$pkgdir"
+  ln -s /usr/lib/systemd/systemd "$pkgdir/init"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

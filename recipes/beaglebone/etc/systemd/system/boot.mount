@@ -1,0 +1,9 @@
+[Unit]
+RequiresOverridable=systemd-fsck@dev-mmcblk0p1.service
+After=systemd-fsck@dev-mmcblk0p1.service
+
+[Mount]
+What=/dev/mmcblk0p1
+Where=/boot
+Type=vfat
+Options=defaults,noauto,noatime,discard,iocharset=iso8859-15,utf8,tz=UTC,dmask=0022,fmask=0133
