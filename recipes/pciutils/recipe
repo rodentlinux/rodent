@@ -1,0 +1,93 @@
+parts=(libpci lspci setpci pci-ids pciutils)
+version=3.4.0
+release=1
+sources=("ftp://atrey.karlin.mff.cuni.cz/pub/linux/pci/pciutils-${version}.tar.gz")
+sha1sum=('71341dc741e303c1d8ba6bd457438fa8a1a96b81')
+makedepends=('libudev-devel' 'libkmod-devel')
+
+config-libpci() {
+  description='A library for accessing PCI devices'
+  depends=('libudev')
+  devdepends=('glibc-devel' "libpci=$version-$release")
+  files=('usr/lib/libpci.so.*')
+  devfiles=(
+    'usr/include/**'
+    'usr/lib/libpci.a'
+    'usr/lib/libpci.so'
+    'usr/lib/pkgconfig/libpci.pc'
+  )
+  manfiles=('usr/share/man/man7/pcilib.7')
+}
+
+config-lspci() {
+  description='List PCI devices'
+  depends=("libpci=$version-$release" 'libkmod')
+  files=('usr/bin/lspci')
+  manfiles=('usr/share/man/man8/lspci.8')
+}
+
+config-setpci() {
+  description='Configure PCI devices'
+  depends=("libpci=$version-$release")
+  files=('usr/bin/setpci')
+  manfiles=('usr/share/man/man8/setpci.8')
+}
+
+config-pci-ids() {
+  description='List of PCI IDs'
+  files=('usr/share/hwdata/pci.ids')
+}
+
+config-pciutils() {
+  description='List and configure PCI devices'
+  depends=(
+    "lspci=$version-$release"
+    "setpci=$version-$release"
+    "pci-ids=$version-$release"
+  )
+}
+
+build() {
+  cd "pciutils-$version"
+
+  make CC="$HOST-gcc" OPT="$CFLAGS" STRIP= \
+    ZLIB=no SHARED=no \
+    DESTDIR="$pkgdir" \
+    PREFIX=/usr \
+    SHAREDIR=/usr/share/hwdata \
+    MANDIR=/usr/share/man \
+    SBINDIR=/usr/bin \
+    lib/libpci.a 
+
+  cp lib/libpci.a ..
+  make clean
+
+  make CC="$HOST-gcc" OPT="$CFLAGS" STRIP= \
+    ZLIB=no SHARED=yes \
+    DESTDIR="$pkgdir" \
+    PREFIX=/usr \
+    SHAREDIR=/usr/share/hwdata \
+    MANDIR=/usr/share/man \
+    SBINDIR=/usr/bin \
+    all
+}
+
+package() {
+  cd "pciutils-$version"
+
+  make CC="$HOST-gcc" OPT="$CFLAGS" STRIP= \
+    ZLIB=no SHARED=yes \
+    DESTDIR="$pkgdir" \
+    PREFIX=/usr \
+    SHAREDIR=/usr/share/hwdata \
+    MANDIR=/usr/share/man \
+    SBINDIR=/usr/bin \
+    install install-lib
+
+  install -m644 ../libpci.a "$pkgdir/usr/lib/"
+
+  rm "$pkgdir/usr/bin/update-pciids"
+  rm "$pkgdir/usr/share/man/man8/update-pciids.8"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
