@@ -24,7 +24,7 @@ parts=(
   systemd-zsh-completion
 )
 version=227
-release=3
+release=4
 sources=("https://github.com/systemd/systemd/archive/v${version}.tar.gz")
 sha1sum=('ee92ac467bd2fada5495d46e21228851227f4164')
 makedepends=(
@@ -39,6 +39,12 @@ makedepends=(
   'libcurl-devel'
   'libdbus-1-devel'
 )
+case "$ARCH" in
+quark)
+  parts+=(systemd-boot)
+  makedepends+=('gnu-efi-devel')
+  ;;
+esac
 
 config-libudev() {
   description='The udev library'
@@ -447,6 +453,13 @@ config-systemd-logind() {
   )
 }
 
+config-systemd-boot() {
+  description='systemd-boot EFI boot manager'
+  provides=('bootctl')
+  depends=('libblkid')
+  files=('usr/bin/bootctl' 'usr/lib/systemd/boot/**')
+}
+
 config-systemd-cgls() {
   description='Recursively show control group contents'
   depends=('glibc')
@@ -476,8 +489,14 @@ build() {
   mkdir build
   cd build
 
+  local archopts
   case $ARCH in
   armv7hl) archopts=(--disable-efi --disable-gnuefi);;
+  quark) archopts=(
+      --enable-efi --enable-gnuefi
+      "--with-efi-includedir=$SYSROOT/usr/include"
+      "--with-efi-libdir=$SYSROOT/usr/lib"
+    );;
   *)
     echo "Unknown architecture '$ARCH'."
     exit 1;;
