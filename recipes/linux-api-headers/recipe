@@ -6,7 +6,7 @@ sha1sum=('5e65d0dc94298527726fcd7458b6126e60fb2a8a')
 config-linux-api-headers() {
   description='Linux kernel headers sanitized for use in userspace'
   depends=('filesystem-devel')
-  files=('usr/include')
+  files=('usr/include/**')
 }
 
 build() {
@@ -14,6 +14,7 @@ build() {
 
   case "$ARCH" in
   armv7hl) KARCH=arm;;
+  quark)   KARCH=x86;;
   *)
     echo "Unknown architecture '$ARCH'."
     exit 1
@@ -31,6 +32,7 @@ package() {
 
   case "$ARCH" in
   armv7hl) KARCH=arm;;
+  quark)   KARCH=x86;;
   esac
 
   make ARCH=$KARCH CROSS_COMPILE=$HOST- INSTALL_HDR_PATH="$pkgdir/usr" headers_install
