@@ -11,7 +11,7 @@ config-libcrypto() {
   devdepends=('glibc-devel' "libcrypto=$version-$release")
   files=('usr/lib/libcrypto.so.*')
   devfiles=(
-    'usr/include/openssl'
+    'usr/include/openssl/**'
     'usr/lib/libcrypto.a'
     'usr/lib/libcrypto.so'
     'usr/lib/pkgconfig/libcrypto.pc'
@@ -29,24 +29,25 @@ config-libssl() {
     'usr/lib/pkgconfig/libssl.pc'
     'usr/lib/pkgconfig/openssl.pc'
   )
+  manfiles=('usr/share/man/man5/**')
 }
 
 config-openssl-engines() {
   description='OpenSSL Engines'
   depends=("libcrypto=$version-$release")
-  files=('usr/lib/engines')
+  files=('usr/lib/engines/**')
 }
 
 config-openssl-devel-man() {
   description='Development manual pages from openssl'
-  files=('usr/share/man/man3')
+  files=('usr/share/man/man3/**')
 }
 
 config-openssl() {
   description='OpenSSL openssl utility'
   depends=("libssl=$version-$release")
   files=('usr/bin/openssl')
-  manfiles=('usr/share/man/man1/openssl.1')
+  manfiles=('usr/share/man/man1/**' 'usr/share/man/man7/**')
 }
 
 prepare() {
@@ -60,9 +61,10 @@ build() {
 
   unset MAKEFLAGS
 
+  local archopts
   case $ARCH in
-  armv7hl)
-    archopts=linux-armv4;;
+  armv7hl) archopts=(linux-armv4);;
+  quark)   archopts=(linux-elf);;
   *)
     echo "Unknown architecture '$ARCH'."
     exit 1;;
