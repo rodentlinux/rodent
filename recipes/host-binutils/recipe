@@ -48,6 +48,17 @@ EOF
     ln tools/bin/$HOST-ld "$i"
   done
 
+  if [[ "$ARCH" = quark ]]; then
+    mv tools/bin/$HOST-as{,.orig}
+    cat > tools/bin/$HOST-as <<EOF
+#!/bin/sh
+exec -a "\$0" $HOST-as.orig -momit-lock-prefix=yes "\$@"
+EOF
+    chmod 0755 tools/bin/$HOST-as
+    rm tools/$HOST/bin/as
+    ln tools/bin/$HOST-as tools/$HOST/bin/as
+  fi
+
   # Remove unwanted files
   rm -r tools/share/info
   rm tools/share/man/man1/*-{dlltool,nlmconv,windres,windmc}.1
