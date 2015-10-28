@@ -1,0 +1,9 @@
+[Unit]
+Description=Prepare writable /etc
+DefaultDependencies=no
+RequiresMountsFor=/run
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mkdir -p /run/etc
+ExecStart=/usr/bin/mkdir -p /run/workdir/etc
