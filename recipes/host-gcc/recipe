@@ -1,10 +1,21 @@
 base="$ARCH-gcc"
 parts=(libgcc libstdc++ libatomic libitm)
-version=4.9.3
-_rversion=4.9.4
+case $ARCH in
+armv7hl)
+  version=4.9.3
+  _rversion=4.9.4
+  sha1sum=('2e6490a908eac8b2b56b73679bd7c2a5237df1f8')
+  ;;
+quark)
+  parts+=(libquadmath libcilkrts)
+  version=5.2.0
+  _rversion=$version
+  sha1sum=('fe3f5390949d47054b613edc36c557eb1d51c18e')
+  ;;
+esac
 release=1
+
 sources=("ftp://gcc.gnu.org/pub/gcc/releases/gcc-$version/gcc-${version}.tar.bz2")
-sha1sum=('2e6490a908eac8b2b56b73679bd7c2a5237df1f8')
 hostdepends=("$ARCH-binutils")
 makedepends=('glibc-devel')
 
@@ -19,10 +30,7 @@ config-libgcc() {
 config-libstdc++() {
   description='libstdc++ from GCC'
   depends=("libgcc=$version-$release")
-  files=(
-    'usr/lib/libstdc++.so.6'
-    'usr/lib/libstdc++.so.6.0.20'
-  )
+  files=('usr/lib/libstdc++.so.*')
 }
 
 config-libatomic() {
@@ -37,16 +45,34 @@ config-libitm() {
   files=('usr/lib/libitm.so.*')
 }
 
+config-libquadmath() {
+  description='libquadmath from GCC'
+  depends=('glibc')
+  files=('usr/lib/libquadmath.so.*')
+}
+
+config-libcilkrts() {
+  description='libcilkrts from GCC'
+  depends=("libgcc=$version-$release")
+  files=('usr/lib/libcilkrts.so.*')
+}
+
 prepare() {
   cd "gcc-$version"
 
-  patch -Np1 -i ../trunk-${version}.patch
+  case $ARCH in
+  armv7hl)
+    patch -Np1 -i ../trunk-${version}.patch
+    ;;
+  esac
 }
 
 build() {
   rm -rf build
   mkdir build
   cd build
+
+  local archflags
 
   case "$ARCH" in
   armv7hl)
@@ -55,6 +81,10 @@ build() {
       --with-fpu=neon
       --with-float=hard
       --with-mode=thumb
+    );;
+  quark)
+    archflags=(
+      --with-arch=i586
     );;
   *)
     echo "Unkown architecture '$ARCH'"
