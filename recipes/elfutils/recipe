@@ -1,0 +1,75 @@
+parts=(libelf libdw libasm elfutils)
+version=0.167
+release=1
+sources=("https://fedorahosted.org/releases/e/l/elfutils/${version}/elfutils-${version}.tar.bz2")
+sha1sum=('91cec7fec0031758cc0c842a87ee8c5faa4d8107')
+makedepends=('libz-devel')
+
+config-libelf() {
+  description='Library to handle ELF object files'
+  depends=('libz')
+  devdepends=('glibc-devel' "libelf=$version-$release")
+  files=('usr/lib/libelf-*.so' 'usr/lib/libelf.so.*')
+  devfiles=(
+    'usr/include/**'
+    'usr/lib/libebl.a'
+    'usr/lib/libelf.a'
+    'usr/lib/libelf.so'
+    'usr/lib/pkgconfig/libelf.pc'
+  )
+}
+
+config-libdw() {
+  description='Library to handle DWARF debugging information'
+  depends=('libdl' "libelf=$version-$release")
+  devdepends=("libelf-devel=$version-$release" "libdw=$version-$release")
+  files=(
+    'usr/lib/libdw-*.so'
+    'usr/lib/libdw.so.*'
+    'usr/lib/elfutils/*.so'
+  )
+  devfiles=(
+    'usr/lib/libdw.a'
+    'usr/lib/libdw.so'
+    'usr/lib/pkgconfig/libdw.pc'
+  )
+}
+
+config-libasm() {
+  description='Library to handle assembler instructions'
+  depends=("libdw=$version-$release")
+  devdepends=("libdw-devel=$version-$release" "libasm=$version-$release")
+  files=('usr/lib/libasm-*.so' 'usr/lib/libasm.so.*')
+  devfiles=('usr/lib/libasm.a' 'usr/lib/libasm.so')
+}
+
+config-elfutils() {
+  description='Utilities to handle ELF object files'
+  depends=(
+    'libstdc++' # nm, stack
+    "libasm=$version-$release"
+    'sh' 'ls' 'rm' 'mv' 'mkdir' 'xargs' # make-debug-archive
+  )
+  files=('usr/bin/*')
+}
+
+build() {
+  cd elfutils-$version
+
+  ./configure \
+    --host=$host \
+    --program-prefix=eu- \
+    --prefix=/usr \
+    --enable-deterministic-archives \
+    --disable-nls \
+    --without-biarch
+
+  make
+}
+
+package() {
+  cd elfutils-$version
+  make DESTDIR="$pkgdir" install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
