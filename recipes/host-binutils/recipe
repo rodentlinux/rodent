@@ -37,7 +37,7 @@ host-package() {
   # Create wrappers to set sysroot from environment
   mv tools/bin/$HOST-ld{,.orig}
   cat > tools/bin/$HOST-ld <<EOF
-#!/bin/sh
+#!/bin/bash
 exec -a "\$0" $HOST-ld.orig "--sysroot=\$SYSROOT" "\$@"
 EOF
   chmod 0755 tools/bin/$HOST-ld
@@ -51,7 +51,7 @@ EOF
   if [[ "$ARCH" = quark ]]; then
     mv tools/bin/$HOST-as{,.orig}
     cat > tools/bin/$HOST-as <<EOF
-#!/bin/sh
+#!/bin/bash
 exec -a "\$0" $HOST-as.orig -momit-lock-prefix=yes "\$@"
 EOF
     chmod 0755 tools/bin/$HOST-as
