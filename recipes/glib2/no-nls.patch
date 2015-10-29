@@ -1,0 +1,12 @@
+diff -Naur glib-2.48.2.orig/configure glib-2.48.2/configure
+--- glib-2.48.2.orig/configure	2016-08-17 18:37:42.000000000 +0200
++++ glib-2.48.2/configure	2016-09-14 17:34:48.131436400 +0200
+@@ -8032,7 +8032,7 @@
+ 
+     fi
+   fi
+-     USE_NLS=yes
++     USE_NLS=no
+ 
+ 
+     gt_cv_have_gettext=no
