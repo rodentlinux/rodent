@@ -145,14 +145,14 @@ host-package() {
   # Create wrappers to set sysroot from environment
   mv tools/bin/$HOST-cpp{,.orig}
   cat > tools/bin/$HOST-cpp <<EOF
-#!/bin/sh
+#!/bin/bash
 exec -a "\$0" $HOST-cpp.orig --sysroot "\$SYSROOT" "\$@"
 EOF
   chmod 0755 tools/bin/$HOST-cpp
 
   mv tools/bin/$HOST-gcc{,.orig}
   cat > tools/bin/$HOST-gcc <<EOF
-#!/bin/sh
+#!/bin/bash
 exec -a "\$0" $HOST-gcc.orig --sysroot "\$SYSROOT" "\$@"
 EOF
   chmod 0755 tools/bin/$HOST-gcc
@@ -161,7 +161,7 @@ EOF
 
   mv tools/bin/$HOST-g++{,.orig}
   cat > tools/bin/$HOST-g++ <<EOF
-#!/bin/sh
+#!/bin/bash
 exec -a "\$0" $HOST-g++.orig --sysroot "\$SYSROOT" "\$@"
 EOF
   chmod 0755 tools/bin/$HOST-g++
