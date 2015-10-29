@@ -1,0 +1,56 @@
+version=3.2.1
+release=1
+sources=("ftp://sourceware.org/pub/libffi/libffi-${version}.tar.gz")
+sha1sum=('280c265b789e041c02e5c97815793dfc283fb1e6')
+makedepends=('glibc-devel')
+
+config-libffi() {
+  description='Portable foreign function interface library'
+  depends=('libgcc')
+  devdepends=("libffi=$version-$release")
+  files=('usr/lib/libffi.so.*')
+  devfiles=(
+    'usr/lib/libffi-*/**'
+    'usr/lib/libffi.a'
+    'usr/lib/libffi.so'
+    'usr/lib/pkgconfig/libffi.pc'
+  )
+  devmanfiles=('usr/share/man/man3/ffi*')
+}
+
+build() {
+  cd libffi-$version
+  patch -Np1 -i "$srcdir/mips-softfloat.patch"
+
+  local _arch
+  case $arch in
+  armv7hl) _arch=armv7-a;;
+  rpi)     _arch=armv6kz;;
+  x86_64)  _arch=core2;;
+  quark)   _arch=i586;;
+  mips)    _arch=mips32r2;;
+  mipsel)  _arch=mips32r2;;
+  *)
+    echo "Unknown architecture '$arch'."
+    exit 1;;
+  esac
+
+  ./configure \
+    --host=$host \
+    --prefix=/usr \
+    --with-gcc-arch=$_arch \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd libffi-$version
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share/info"
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
