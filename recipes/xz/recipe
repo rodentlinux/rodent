@@ -1,0 +1,145 @@
+parts=(liblzma xz xzdec lzmadec lzmainfo xzdiff xzgrep xzless xzmore)
+version=5.2.2
+release=1
+sources=("http://tukaani.org/xz/xz-${version}.tar.xz")
+sha1sum=('72c567d3263345844191a7e618779b179d1f49e0')
+makedepends=('glibc-devel')
+
+config-liblzma() {
+  description='Library for XZ and LZMA compressed files'
+  depends=('libpthread')
+  devdepends=('glibc-devel' "liblzma=$version-$release")
+  files=('usr/lib/liblzma.so.*')
+  devfiles=(
+    'usr/include/lzma.h'
+    'usr/include/lzma/*.h'
+    'usr/lib/liblzma.a'
+    'usr/lib/liblzma.so'
+    'usr/lib/pkgconfig/liblzma.pc'
+  )
+}
+
+config-xz() {
+  description='Command line tools for XZ and LZMA compressed files'
+  provides=('unxz' 'xzcat' 'lzma' 'unlzma' 'lzcat')
+  depends=("liblzma=$version-$release")
+  files=(
+    'usr/bin/xz'
+    'usr/bin/unxz'
+    'usr/bin/xzcat'
+    'usr/bin/lzma'
+    'usr/bin/unlzma'
+    'usr/bin/lzcat'
+  )
+  manfiles=(
+    'usr/share/man/man1/xz.1'
+    'usr/share/man/man1/unxz.1'
+    'usr/share/man/man1/xzcat.1'
+    'usr/share/man/man1/lzma.1'
+    'usr/share/man/man1/unlzma.1'
+    'usr/share/man/man1/lzcat.1'
+  )
+}
+
+config-xzdec() {
+  description='Small lzma decompressor'
+  depends=("liblzma=$version-$release")
+  files=('usr/bin/xzdec')
+  manfiles=('usr/share/man/man1/xzdec.1')
+}
+
+config-lzmadec() {
+  description='Small lzma decompressor'
+  depends=("liblzma=$version-$release")
+  mandepends=("xzdec-man=$version-$release")
+  files=('usr/bin/lzmadec')
+  manfiles=('usr/share/man/man1/lzmadec.1')
+}
+
+config-lzmainfo() {
+  description='Show information stored in the lzma file header'
+  depends=("liblzma=$version-$release")
+  files=('usr/bin/lzmainfo')
+  manfiles=('usr/share/man/man1/lzmainfo.1')
+}
+
+config-xzdiff() {
+  description='Wrapper script to compare xz and lzma compressed files'
+  provides=('lzcmp' 'lzdiff' 'xzcmp')
+  depends=('sh' 'sed' 'cmp' 'diff' 'mktemp' "xz=$version-$release")
+  files=(
+    'usr/bin/lzcmp'
+    'usr/bin/lzdiff'
+    'usr/bin/xzcmp'
+    'usr/bin/xzdiff'
+  )
+  manfiles=(
+    'usr/share/man/man1/lzcmp.1'
+    'usr/share/man/man1/lzdiff.1'
+    'usr/share/man/man1/xzcmp.1'
+    'usr/share/man/man1/xzdiff.1'
+  )
+}
+
+config-xzgrep() {
+  description='Wrapper script to grep in xz and lzma compressed files'
+  provides=('lzegrep' 'lzfgrep' 'xzegrep' 'xzfgrep')
+  depends=('sh' 'sed' 'grep' "xz=$version-$release")
+  files=(
+    'usr/bin/lzegrep'
+    'usr/bin/lzfgrep'
+    'usr/bin/lzgrep'
+    'usr/bin/xzegrep'
+    'usr/bin/xzfgrep'
+    'usr/bin/xzgrep'
+  )
+  manfiles=(
+    'usr/share/man/man1/lzegrep.1'
+    'usr/share/man/man1/lzfgrep.1'
+    'usr/share/man/man1/lzgrep.1'
+    'usr/share/man/man1/xzegrep.1'
+    'usr/share/man/man1/xzfgrep.1'
+    'usr/share/man/man1/xzgrep.1'
+  )
+}
+
+config-xzless() {
+  description='Wrapper script to view xz or lzma compressed files'
+  provides=('lzless')
+  depends=('sh' 'less' "xz=$version-$release")
+  files=('usr/bin/lzless' 'usr/bin/xzless')
+  manfiles=('usr/share/man/man1/lzless.1' 'usr/share/man/man1/xzless.1')
+}
+
+config-xzmore() {
+  description='Wrapper script for paging xz or lzma compressed files'
+  provides=('lzmore')
+  depends=('sh' 'stty' 'more' "xz=$version-$release")
+  files=('usr/bin/lzmore' 'usr/bin/xzmore')
+  manfiles=('usr/share/man/man1/lzmore.1' 'usr/share/man/man1/xzmore.1')
+}
+
+build() {
+  cd xz-$version
+
+  ./configure \
+    --host=$host \
+    --prefix=/usr \
+    --enable-threads=posix \
+    --disable-doc \
+    --disable-nls \
+    --disable-rpath \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd xz-$version
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
