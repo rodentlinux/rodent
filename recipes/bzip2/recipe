@@ -1,0 +1,89 @@
+parts=(libbz2 bzip2)
+version=1.0.6
+release=1
+sources=("http://www.bzip.org/${version}/bzip2-${version}.tar.gz")
+sha1sum=('3f89f861209ce81a6bab1fd1998c0ef311712002')
+makedepends=('glibc-devel')
+
+config-libbz2() {
+  description='High-quality data compression program'
+  depends=('libc')
+  devdepends=('glibc-devel' "libbz2=$version-$release")
+  files=('usr/lib/libbz2.so.1.0' "usr/lib/libbz2.so.$version")
+  devfiles=(
+    'usr/include/bzlib.h'
+    'usr/lib/libbz2.a'
+    'usr/lib/libbz2.so'
+    'usr/lib/libbz2.so.1'
+  )
+}
+
+config-bzip2() {
+  description='bzip2 compression tool'
+  depends=("libbz2=$version-$release")
+  files=('usr/bin/bzip2' 'usr/bin/bunzip2' 'usr/bin/bzcat')
+  manfiles=(
+    'usr/share/man/man1/bzip2.1'
+    'usr/share/man/man1/bunzip2.1'
+    'usr/share/man/man1/bzcat.1'
+  )
+}
+
+build() {
+  cd bzip2-$version
+  patch -Np1 -i "$srcdir/bzip2-1.0.4-bzip2recover.patch"
+
+  make -f Makefile-libbz2_so \
+    CC=${host}-gcc \
+    CFLAGS="$CFLAGS -fPIC -D_FILE_OFFSET_BITS=64" \
+    LDFLAGS="$LDFLAGS"
+
+  make \
+    CC=${host}-gcc \
+    AR=${host}-ar \
+    RANLIB=${host}-ranlib \
+    CFLAGS="$CFLAGS -D_FILE_OFFSET_BITS=64" \
+    LDFLAGS="$LDFLAGS" \
+    bzip2 bzip2recover
+}
+
+package() {
+  cd bzip2-$version
+
+  install -dm755 "$pkgdir/usr/bin"
+  install -m755 bzip2-shared "$pkgdir/usr/bin/bzip2"
+  ln -s bzip2                "$pkgdir/usr/bin/bunzip2"
+  ln -s bzip2                "$pkgdir/usr/bin/bzcat"
+  install -m755 bzip2recover "$pkgdir/usr/bin/bzip2recover"
+  install -m755 bzdiff       "$pkgdir/usr/bin/bzdiff"
+  ln -s bzdiff               "$pkgdir/usr/bin/bzcmp"
+  install -m755 bzgrep       "$pkgdir/usr/bin/bzgrep"
+  ln -s bzgrep               "$pkgdir/usr/bin/bzegrep"
+  ln -s bzgrep               "$pkgdir/usr/bin/bzfgrep"
+  install -m755 bzmore       "$pkgdir/usr/bin/bzmore"
+  ln -s bzmore               "$pkgdir/usr/bin/bzless"
+
+  install -dm755 "$pkgdir/usr/include"
+  install -m644 bzlib.h "$pkgdir/usr/include/bzlib.h"
+
+  install -dm755 "$pkgdir/usr/lib"
+  install -m644 libbz2.a "$pkgdir/usr/lib/libbz2.a"
+  install -m755 libbz2.so.$version "$pkgdir/usr/lib/libbz2.so.$version"
+  ln -s libbz2.so.$version "$pkgdir/usr/lib/libbz2.so"
+  ln -s libbz2.so.$version "$pkgdir/usr/lib/libbz2.so.1"
+  ln -s libbz2.so.$version "$pkgdir/usr/lib/libbz2.so.1.0"
+
+  install -dm755 "$pkgdir/usr/share/man/man1"
+  install -m644 bzip2.1  "$pkgdir/usr/share/man/man1/bzip2.1"
+  ln -s bzip2.1          "$pkgdir/usr/share/man/man1/bunzip2.1"
+  ln -s bzip2.1          "$pkgdir/usr/share/man/man1/bzcat.1"
+  install -m644 bzdiff.1 "$pkgdir/usr/share/man/man1/bzdiff.1"
+  ln -s bzdiff.1         "$pkgdir/usr/share/man/man1/bzcmp.1"
+  install -m644 bzgrep.1 "$pkgdir/usr/share/man/man1/bzgrep.1"
+  ln -s bzgrep.1         "$pkgdir/usr/share/man/man1/bzegrep.1"
+  ln -s bzgrep.1         "$pkgdir/usr/share/man/man1/bzfgrep.1"
+  install -m644 bzmore.1 "$pkgdir/usr/share/man/man1/bzmore.1"
+  ln -s bzmore           "$pkgdir/usr/share/man/man1/bzless.1"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
