@@ -180,7 +180,7 @@ fi
 mkfiles() {
   local out="$1"; shift
   if [[ -f "$out" ]]; then
-    out="${outr%-*}"
+    out="${out%-*}"
     echo "Package ${out%-*} already defined."
     exit 1
   fi
