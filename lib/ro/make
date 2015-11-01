@@ -88,6 +88,7 @@ if [[ "$(type -t host-package)" = 'function' ]]; then
   export TARGET_LDFLAGS="$LDFLAGS"
   unset LDFLAGS
 else
+  export PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig"
   export PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
 fi
 
