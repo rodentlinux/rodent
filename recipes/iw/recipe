@@ -1,0 +1,30 @@
+version=4.3
+release=1
+sources=("https://www.kernel.org/pub/software/network/iw/iw-${version}.tar.xz")
+sha1sum=('1ca0cbf00c99069b7445507cddf6f7f4d227b097')
+makedepends=('libnl-genl-3-devel')
+
+config-iw() {
+  description='Linux wireless configuration utility'
+  depends=('libnl-genl-3')
+  files=('usr/bin/iw')
+  manfiles=('usr/share/man/man8/iw.8')
+}
+
+prepare() {
+  cd "iw-$version"
+  patch -Np1 -i ../no-gzip.patch
+}
+
+build() {
+  cd "iw-$version"
+
+  make CC="$HOST-gcc"
+}
+
+package() {
+  cd "iw-$version"
+  make DESTDIR="$pkgdir" SBINDIR=/usr/bin install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

@@ -1,0 +1,19 @@
+diff -Naur iw-4.3.orig/Makefile iw-4.3/Makefile
+--- iw-4.3.orig/Makefile	2015-09-18 10:54:53.000000000 +0200
++++ iw-4.3/Makefile	2015-11-01 09:50:27.278132321 +0100
+@@ -114,13 +114,13 @@
+ 	@$(NQ) ' GZIP' $<
+ 	$(Q)gzip < $< > $@
+ 
+-install: iw iw.8.gz
++install: iw iw.8
+ 	@$(NQ) ' INST iw'
+ 	$(Q)$(MKDIR) $(DESTDIR)$(SBINDIR)
+ 	$(Q)$(INSTALL) -m 755 iw $(DESTDIR)$(SBINDIR)
+ 	@$(NQ) ' INST iw.8'
+ 	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man8/
+-	$(Q)$(INSTALL) -m 644 iw.8.gz $(DESTDIR)$(MANDIR)/man8/
++	$(Q)$(INSTALL) -m 644 iw.8 $(DESTDIR)$(MANDIR)/man8/
+ 
+ clean:
+ 	$(Q)rm -f iw *.o *~ *.gz version.c *-stamp
