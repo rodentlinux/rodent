@@ -1,8 +1,8 @@
 parts=(libdbus-1 dbus-daemon dbus-utils dbus-test-tool dbus)
-version=1.10.0
+version=1.10.2
 release=1
 sources=("http://dbus.freedesktop.org/releases/dbus/dbus-${version}.tar.gz")
-sha1sum=('eec3c798633f623e960eb1d9f93b47648f389443')
+sha1sum=('a7bb0e44bb3551b2e607c5a1f927244bec5b8f0a')
 makedepends=('libexpat-devel' 'libsystemd-devel')
 
 config-libdbus-1() {
