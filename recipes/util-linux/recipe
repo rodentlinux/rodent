@@ -1,3 +1,10 @@
+_libs=(
+  libuuid
+  libsmartcols
+  libblkid
+  libmount
+  libfdisk
+)
 _simple=(
   addpart
   blkdiscard
@@ -59,27 +66,41 @@ _simple=(
   wall
   whereis
 )
-parts=(
-  libuuid libsmartcols libblkid libmount libfdisk
+_manual=(
   uuidd
-  mount fdisk cfdisk fstrim
+  uuidgen
+  mount
+  fdisk
+  cfdisk
+  wipefs
+  fstrim
+  partx
+  eject
   sulogin
   login
+  su
   agetty
   util-linux-kill
+  zramctl
+  blkid
+  lsblk
   util-linux-fsck
   cramfs-utils
   swap-utils
   losetup
+  wdctl
+  setterm
+)
+parts=(
+  "${_libs[@]}"
+  "${_simple[@]}"
+  "${_manual[@]}"
   util-linux-bash-completions
   util-linux-man
   util-linux-all
 )
-for i in "${_simple[@]}"; do
-  parts+=("$i")
-done
 version=2.27
-release=3
+release=4
 sources=("https://www.kernel.org/pub/linux/utils/util-linux/v$version/util-linux-${version}.tar.xz")
 sha1sum=('0549760ba1d2eb0e48b41b926d54ac55533369af')
 makedepends=(
@@ -159,11 +180,22 @@ config-libfdisk() {
   )
 }
 
+for i in "${_simple[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=('glibc'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
 config-uuidd() {
   description='uuid daemon from util-linux'
   depends=("libuuid=$version-$release" 'libsystemd')
   files=('usr/bin/uuidd' 'usr/lib/systemd/system/uuidd.*')
   manfiles=('usr/share/man/man8/uuidd.8')
+}
+
+config-uuidgen() {
+  description='uuidgen utility from util-linux'
+  depends=("libuuid=$version-$release")
+  files=('usr/bin/uuidgen')
+  manfiles=('usr/share/man/man1/uuidgen.1')
 }
 
 config-mount() {
@@ -187,12 +219,32 @@ config-cfdisk() {
   manfiles=('usr/share/man/man8/cfdisk.8')
 }
 
+config-wipefs() {
+  description='wipefs utility from util-linux'
+  depends=("libblkid=$version-$release")
+  files=('usr/bin/wipefs')
+  manfiles=('usr/share/man/man8/wipefs.8')
+}
 
 config-fstrim() {
   description='fstrim utility from util-linux'
   depends=("libmount=$version-$release")
   files=('usr/bin/fstrim' 'usr/lib/systemd/system/fstrim.*')
   manfiles=('usr/share/man/man8/fstrim.8')
+}
+
+config-partx() {
+  description='partx utility from util-linux'
+  depends=("libblkid=$version-$release" "libsmartcols=$version-$release")
+  files=('usr/bin/partx')
+  manfiles=('usr/share/man/man8/partx.8')
+}
+
+config-eject() {
+  description='eject utility from util-linux'
+  depends=("libmount=$version-$release")
+  files=('usr/bin/eject')
+  manfiles=('usr/share/man/man1/eject.1')
 }
 
 config-sulogin() {
@@ -209,6 +261,13 @@ config-login() {
   manfiles=('usr/share/man/man1/login.1')
 }
 
+config-su() {
+  description='su utility from util-linux'
+  depends=('libpam_misc')
+  files=('usr/bin/su')
+  manfiles=('usr/share/man/man1/su.1')
+}
+
 config-agetty() {
   description='agetty utility from util-linux'
   depends=('login')
@@ -222,6 +281,27 @@ config-util-linux-kill() {
   depends=('login')
   files=('usr/bin/kill')
   manfiles=('usr/share/man/man1/kill.1')
+}
+
+config-zramctl() {
+  description='zramctl utility from util-linux'
+  depends=("libsmartcols=$version-$release")
+  files=('usr/bin/zramctl')
+  manfiles=('usr/share/man/man8/zramctl.8')
+}
+
+config-blkid() {
+  description='blkid utility from util-linux'
+  depends=("libblkid=$version-$release")
+  files=('usr/bin/blkid')
+  manfiles=('usr/share/man/man8/blkid.8')
+}
+
+config-lsblk() {
+  description='lsblk utility from util-linux'
+  depends=("libmount=$version-$release" "libsmartcols=$version-$release")
+  files=('usr/bin/lsblk')
+  manfiles=('usr/share/man/man8/lsblk.8')
 }
 
 config-util-linux-fsck() {
@@ -263,6 +343,20 @@ config-losetup() {
   manfiles=('usr/share/man/man8/losetup.8')
 }
 
+config-wdctl() {
+  description='wdctl utility from util-linux'
+  depends=("libsmartcols=$version-$release")
+  files=('usr/bin/wdctl')
+  manfiles=('usr/share/man/man8/wdctl.8')
+}
+
+config-setterm() {
+  description='setterm utility from util-linux'
+  depends=('libncurses')
+  files=('usr/bin/setterm')
+  manfiles=('usr/share/man/man1/setterm.1')
+}
+
 config-util-linux-bash-completions() {
   description='bash completions for util-linux'
   files=('usr/share/bash-completion/**')
@@ -282,43 +376,32 @@ config-util-linux-all() {
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
-  for i in uuidd mount fdisk cfdisk fstrim sulogin login agetty util-linux-kill util-linux-fsck swap-utils losetup; do
+  for i in "${_manual[@]}"; do
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
   files=(
-    'usr/bin/blkid' # libblkid
     'usr/bin/cal' # libncurses
     'usr/bin/chfn' # libpam_misc
     'usr/bin/chsh' # libpam_misc
-    'usr/bin/eject' # libmount
     'usr/bin/findfs' # libblkid
     'usr/bin/logger' # libsystemd
-    'usr/bin/lsblk' # libmount libsmartcols
     'usr/bin/lscpu' # libsmartcols
     'usr/bin/lsipc' # libsmartcols
     'usr/bin/lslocks' # libmount libsmartcols
     'usr/bin/lslogins' #libsystemd libsmartcols
     'usr/bin/more' # libncurses
     'usr/bin/mountpoint' # libmount
-    'usr/bin/partx' # libblkid libsmartcols
     'usr/bin/pg' # libncurses
     'usr/bin/prlimit' # libsmartcols
     'usr/bin/runuser' # libpam_misc
     'usr/bin/script' # libutil
-    'usr/bin/setterm' # libncurses
-    'usr/bin/su' # libpam_misc
     'usr/bin/ul' # libncurses
-    'usr/bin/uuidgen' # libuuid
-    'usr/bin/wdctl' # libsmartcols
-    'usr/bin/wipefs' # libblkid
-    'usr/bin/zramctl' # libsmartcols
   )
   manfiles=(
     'usr/share/man/man1/cal.1'
     'usr/share/man/man1/chfn.1'
     'usr/share/man/man1/chsh.1'
-    'usr/share/man/man1/eject.1'
     'usr/share/man/man1/fallocate.1'
     'usr/share/man/man1/logger.1'
     'usr/share/man/man1/login.1'
@@ -331,24 +414,11 @@ config-util-linux-all() {
     'usr/share/man/man1/prlimit.1'
     'usr/share/man/man1/runuser.1'
     'usr/share/man/man1/script.1'
-    'usr/share/man/man1/setterm.1'
-    'usr/share/man/man1/su.1'
     'usr/share/man/man1/ul.1'
-    'usr/share/man/man1/uuidgen.1'
-    'usr/share/man/man8/blkid.8'
     'usr/share/man/man8/findfs.8'
-    'usr/share/man/man8/lsblk.8'
     'usr/share/man/man8/lslocks.8'
-    'usr/share/man/man8/partx.8'
-    'usr/share/man/man8/wdctl.8'
-    'usr/share/man/man8/wipefs.8'
-    'usr/share/man/man8/zramctl.8'
   )
 }
-
-for i in "${_simple[@]}"; do
-  eval "config-$i() { description='$i from util-linux'; depends=('glibc'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
-done
 
 build() {
   rm -rf build
