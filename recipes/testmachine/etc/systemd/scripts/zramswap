@@ -1,0 +1,41 @@
+#!/bin/sh
+
+set -e
+
+num_present_cpus() {
+  local num_cpus=0
+  for item in $(sed -e 's/,/ /g' /sys/devices/system/cpu/present); do
+    case $item in
+    *-*)
+      local first=${item%-*}
+      local last=${item#*-}
+      num_cpus=$((num_cpus + last - first + 1))
+      ;;
+    *)
+      num_cpus=$((num_cpus + 1))
+      ;;
+    esac
+  done
+  echo $num_cpus
+}
+
+dev=${2#/dev/}
+case $1 in
+up)
+  # get the amount of memory in the machine (in 4k blocks)
+  size=$(sed -ne 's/^MemTotal: *\([0-9]*\) kB/\1/p' /proc/meminfo)
+  size=$(((size / 4) * 4096))
+
+  # initialize the device
+  num_present_cpus > /sys/block/$dev/max_comp_streams
+  echo $size > /sys/block/$dev/disksize
+  #echo $((size / 2)) > /sys/block/$dev/mem_limit
+  mkswap /dev/$dev
+  ;;
+
+down)
+  echo 1 > /sys/block/$dev/reset
+  ;;
+esac
+
+# vim: set ts=2 sw=2 et:

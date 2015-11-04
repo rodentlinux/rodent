@@ -1,0 +1,9 @@
+[Unit]
+Description=on %f
+BindsTo=zramswap@%p.service
+After=zramswap@%p.service
+
+[Swap]
+What=/dev/zram0
+Priority=100
+Options=discard=pages

@@ -1,0 +1,11 @@
+[Unit]
+Description=Prepare swap on %f
+DefaultDependencies=no
+Requires=%i.device
+StopWhenUnneeded=true
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/etc/systemd/scripts/zramswap up %f
+ExecStop=/etc/systemd/scripts/zramswap down %f
