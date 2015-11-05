@@ -1,0 +1,15 @@
+diff -Naur systemd-227.orig/units/ldconfig.service systemd-227/units/ldconfig.service
+--- systemd-227.orig/units/ldconfig.service	2015-10-07 17:06:22.000000000 +0200
++++ systemd-227/units/ldconfig.service	2015-11-05 15:35:30.676694275 +0100
+@@ -12,10 +12,8 @@
+ Conflicts=shutdown.target
+ After=systemd-remount-fs.service
+ Before=sysinit.target shutdown.target systemd-update-done.service
+-ConditionNeedsUpdate=|/etc
+-ConditionFileNotEmpty=|!/etc/ld.so.cache
+ 
+ [Service]
+ Type=oneshot
+ RemainAfterExit=yes
+-ExecStart=/sbin/ldconfig -X
++ExecStart=/usr/bin/ldconfig -X

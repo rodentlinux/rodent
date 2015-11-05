@@ -1,0 +1,10 @@
+diff -Naur systemd-227.orig/src/login/73-seat-late.rules.in systemd-227/src/login/73-seat-late.rules.in
+--- systemd-227.orig/src/login/73-seat-late.rules.in	2015-10-07 17:06:22.000000000 +0200
++++ systemd-227/src/login/73-seat-late.rules.in	2015-11-05 15:56:58.966411967 +0100
+@@ -12,6 +12,4 @@
+ 
+ ENV{ID_SEAT}!="", TAG+="$env{ID_SEAT}"
+ 
+-TAG=="uaccess", ENV{MAJOR}!="", RUN{builtin}+="uaccess"
+-
+ LABEL="seat_late_end"

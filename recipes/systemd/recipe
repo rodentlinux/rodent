@@ -7,8 +7,9 @@ parts=(
   systemd-binfmt_misc
   systemd-init
   systemd-initrd
-  systemd-hostname
+  systemd-ldconfig
   systemd-fsck
+  systemd-hostname
   systemd-coredump
   systemd-networkd
   systemd-resolved
@@ -24,7 +25,7 @@ parts=(
   systemd-zsh-completion
 )
 version=227
-release=4
+release=5
 sources=("https://github.com/systemd/systemd/archive/v${version}.tar.gz")
 sha1sum=('ee92ac467bd2fada5495d46e21228851227f4164')
 makedepends=(
@@ -263,6 +264,24 @@ config-systemd-initrd() {
   )
 }
 
+config-systemd-ldconfig() {
+  description='Systemd service to rebuild ld.so.cache at boot'
+  depends=("systemd=$version-$release" 'ldconfig')
+  files=(
+    'usr/lib/systemd/system/ldconfig.service'
+    'usr/lib/systemd/system/sysinit.target.wants/ldconfig.service'
+  )
+}
+
+config-systemd-fsck() {
+  description='Systemd fsck utilities'
+  depends=("systemd=$version-$release" 'fsck')
+  files=(
+    'usr/lib/systemd/system/systemd-fsck@.service'
+    'usr/lib/systemd/systemd-fsck'
+  )
+}
+
 config-systemd-hostname() {
   description='Systemd hostname utilities'
   depends=("systemd=$version-$release")
@@ -275,15 +294,6 @@ config-systemd-hostname() {
     'usr/lib/systemd/systemd-hostnamed'
     'usr/share/dbus-1/system-services/org.freedesktop.hostname1.service'
     'usr/share/dbus-1/system.d/org.freedesktop.hostname1.conf'
-  )
-}
-
-config-systemd-fsck() {
-  description='Systemd fsck utilities'
-  depends=('fsck' "systemd=$version-$release")
-  files=(
-    'usr/lib/systemd/system/systemd-fsck@.service'
-    'usr/lib/systemd/systemd-fsck'
   )
 }
 
@@ -481,6 +491,8 @@ prepare() {
   patch -Np1 -i ../stack-protection.patch
   patch -Np1 -i ../no-sbin-path.patch
   patch -Np1 -i ../no-swap.patch
+  patch -Np1 -i ../ldconfig.patch
+  patch -Np1 -i ../seat-late-no-uaccess.patch
   ./autogen.sh
 }
 
