@@ -1,6 +1,31 @@
-parts=(glibc libcrypt libutil libnsl libanl libcidn glibc-ldd glibc-getent glibc-locales)
+parts=(
+  glibc
+  libcrypt
+  libutil
+  libnsl
+  libanl
+  libcidn
+  libthread_db
+  libBrokenLocale
+  libnss_files
+  libnss_dns
+  libnss_db
+  libnss_compat
+  libnss_nis
+  libnss_nisplus
+  libnss_hesiod
+  gconv-modules
+  ldconfig
+  ldd
+  getent
+  makedb
+  iconv
+  iconvconfig
+  getconf
+  locale
+)
 version=2.22
-release=1
+release=2
 sources=("http://ftp.gnu.org/gnu/glibc/glibc-${version}.tar.xz")
 sha1sum=('5be95334f197121d8b351059a1c6518305d88e2a')
 makedepends=('linux-api-headers')
@@ -18,8 +43,6 @@ config-glibc() {
     'usr/lib/libpthread-*.so' 'usr/lib/libpthread.so.*'
     'usr/lib/libresolv-*.so' 'usr/lib/libresolv.so.*'
     'usr/lib/librt-*.so' 'usr/lib/librt.so.*'
-    'usr/lib/libnss_dns-*.so' 'usr/lib/libnss_dns.so.*'
-    'usr/lib/libnss_files-*.so' 'usr/lib/libnss_files.so.*'
   )
   devfiles=(
     'usr/include/**'
@@ -75,27 +98,136 @@ config-libcidn() {
   devfiles=('usr/lib/libcidn.so')
 }
 
-config-glibc-getent() {
-  description='Get entries from Name Service Switch libraries'
-  provides=('getent')
+config-libthread_db() {
+  description='Thread debugging library from glibc'
   depends=("glibc=$version-$release")
-  files=('usr/bin/getent')
+  devdepends=("glibc-devel=$version-$release" "libthread_db=$version-$release")
+  files=('usr/lib/libthread_db-*.so' 'usr/lib/libthread_db.so.*')
+  devfiles=('usr/lib/libthread_db.so')
 }
 
-config-glibc-ldd() {
+config-libBrokenLocale() {
+  description='Glibc broken locale library'
+  depends=("glibc=$version-$release")
+  devdepends=("glibc-devel=$version-$release" "libBrokenLocale=$version-$release")
+  files=('usr/lib/libBrokenLocale-*.so' 'usr/lib/libBrokenLocale.so.*')
+  devfiles=(
+    'usr/lib/libBrokenLocale.a'
+    'usr/lib/libBrokenLocale.so'
+  )
+}
+
+config-libnss_files() {
+  description='Name service switch module for reading local files'
+  depends=("glibc=$version-$release")
+  devdepends=('glibc-devel' "libnss_files=$version-$release")
+  files=('usr/lib/libnss_files-*.so' 'usr/lib/libnss_files.so.*')
+  devfiles=('usr/lib/libnss_files.so')
+}
+
+config-libnss_dns() {
+  description='Name service switch module for DNS queries'
+  depends=("glibc=$version-$release")
+  devdepends=('glibc-devel' "libnss_dns=$version-$release")
+  files=('usr/lib/libnss_dns-*.so' 'usr/lib/libnss_dns.so.*')
+  devfiles=('usr/lib/libnss_dns.so')
+}
+
+config-libnss_db() {
+  description='Name service switch module for binary database lookups'
+  depends=("libnss_files=$version-$release")
+  devdepends=('glibc-devel' "libnss_db=$version-$release")
+  files=('usr/lib/libnss_db-*.so' 'usr/lib/libnss_db.so.*')
+  devfiles=('usr/lib/libnss_db.so')
+}
+
+config-libnss_compat() {
+  description='Name service switch compat module'
+  depends=("libnsl=$version-$release")
+  devdepends=('glibc-devel' "libnss_compat=$version-$release")
+  files=('usr/lib/libnss_compat-*.so' 'usr/lib/libnss_compat.so.*')
+  devfiles=('usr/lib/libnss_compat.so')
+}
+
+config-libnss_nis() {
+  description='Name service switch module for NIS queries'
+  depends=("libnsl=$version-$release" "libnss_files=$version-$release")
+  devdepends=('glibc-devel' "libnss_nis=$version-$release")
+  files=('usr/lib/libnss_nis-*.so' 'usr/lib/libnss_nis.so.*')
+  devfiles=('usr/lib/libnss_nis.so')
+}
+
+config-libnss_nisplus() {
+  description='Name service switch module for NIS+ queries'
+  depends=("libnsl=$version-$release")
+  devdepends=('glibc-devel' "libnss_nisplus=$version-$release")
+  files=('usr/lib/libnss_nisplus-*.so' 'usr/lib/libnss_nisplus.so.*')
+  devfiles=('usr/lib/libnss_nisplus.so')
+}
+
+config-libnss_hesiod() {
+  description='Name service switch module for Hesiod queries'
+  depends=("glibc=$version-$release")
+  devdepends=('glibc-devel' "libnss_hesiod=$version-$release")
+  files=('usr/lib/libnss_hesiod-*.so' 'usr/lib/libnss_hesiod.so.*')
+  devfiles=('usr/lib/libnss_hesiod.so')
+}
+
+config-gconv-modules() {
+  description='GConv modules for various charsets'
+  depends=("glibc=$version-$release")
+  files=('usr/lib/gconv/*')
+}
+
+config-ldconfig() {
+  description='Configure dynamic linker run-time bindings'
+  depends=("glibc=$version-$release")
+  files=('usr/bin/ldconfig')
+}
+
+config-ldd() {
   description='Script to list shared object dependencies'
-  provides=('ldd')
   depends=("glibc=$version-$release" 'bash')
   files=('usr/bin/ldd')
 }
 
-config-glibc-locales() {
-  description='Locales from the GNU C library'
+config-getent() {
+  description='Get entries from Name Service Switch libraries'
+  depends=("glibc=$version-$release")
+  files=('usr/bin/getent')
+}
+
+config-makedb() {
+  description='Create database for use with libnss_db from textual input'
+  depends=("glibc=$version-$release")
+  files=('usr/bin/makedb')
+}
+
+config-iconv() {
+  description='Convert text from one character encoding to another'
+  depends=("gconv-modules=$version-$release")
+  files=('usr/bin/iconv')
+}
+
+config-iconvconfig() {
+  description='Create gconv module configuration cache'
+  depends=("gconv-modules=$version-$release")
+  files=('usr/bin/iconvconfig')
+}
+
+config-getconf() {
+  description='Get libc configuration values'
   depends=("glibc=$version-$release")
   files=(
-    'usr/bin/locale'
-    'usr/share/locale'
+    'usr/bin/getconf'
+    'usr/lib/getconf/*'
   )
+}
+
+config-locale() {
+  description='Get locale-specific information'
+  depends=("glibc=$version-$release")
+  files=('usr/bin/locale')
 }
 
 build() {
@@ -110,7 +242,9 @@ build() {
     echo "rootsbindir=/usr/bin"
   } > configparms
 
-  "../glibc-${version}/configure" \
+  export CFLAGS="$CFLAGS -DLD_SO_CACHE='\"/run/ld.so.cache\"'"
+
+  "../glibc-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
     --libdir=/usr/lib \
