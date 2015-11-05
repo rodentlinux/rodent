@@ -1,6 +1,6 @@
 parts=(radvd radvdump)
 version=2.11
-release=1
+release=2
 sources=("http://www.litech.org/radvd/dist/radvd-${version}.tar.xz")
 sha1sum=('6935f3bb92a9c1aaf7f57225fbeb6cb07191104e')
 makedepends=('glibc-devel')
