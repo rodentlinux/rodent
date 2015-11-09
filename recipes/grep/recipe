@@ -1,7 +1,7 @@
-version=2.21
+version=2.22
 release=1
 sources=("ftp://ftp.gnu.org/gnu/grep/grep-${version}.tar.xz")
-sha1sum=('c7e6525c5c5aaa1bc3c1774db1697f42b11c2d85')
+sha1sum=('561ba83226872b1c45205bdd583106ee8df0fe79')
 makedepends=('glibc-devel')
 
 config-grep() {
@@ -9,11 +9,6 @@ config-grep() {
   depends=('glibc')
   files=('usr/bin/*grep')
   manfiles=('usr/share/man/man1/*grep.1')
-}
-
-prepare() {
-  cd "grep-$version"
-  patch -Np1 -i ../CVE-2015-1345.patch
 }
 
 build() {
