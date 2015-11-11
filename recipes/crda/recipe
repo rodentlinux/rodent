@@ -1,0 +1,59 @@
+parts=(libreg crda regdbdump)
+version=3.18
+release=1
+sources=("https://kernel.org/pub/software/network/crda/crda-${version}.tar.xz")
+sha1sum=('16e5a1b67a168d37c28245d681512cbc46f865d9')
+makedepends=('libnl-genl-3-devel' 'libgcrypt-devel')
+
+config-libreg() {
+  description='Wireless regulatory domain library'
+  depends=('glibc')
+  devdepends=('glibc-devel' "libreg=$version-$release")
+  files=('usr/lib/libreg.so')
+  devfiles=(
+    'usr/include/reglib/**'
+  )
+}
+
+config-crda() {
+  description='Central regulatory domain agent'
+  depends=('libnl-genl-3' 'libgcrypt' "libreg=$version-$release" 'wireless-regdb')
+  files=('usr/bin/crda' 'usr/lib/udev/rules.d/85-regulatory.rules')
+  manfiles=('usr/share/man/man8/crda.8')
+}
+
+config-regdbdump() {
+  description='Dump regulatory domain database'
+  depends=('libgcrypt' "libreg=$version-$release")
+  files=('usr/bin/regdbdump')
+  manfiles=('usr/share/man/man8/regdbdump.8')
+}
+
+prepare() {
+  cd "crda-$version"
+  sed -e '1s/python/python2/' -i utils/key2pub.py
+  patch -Np1 -i ../Makefile.patch
+}
+
+build() {
+  cd "crda-$version"
+
+  make \
+    CC="$HOST-gcc" \
+    all_noverify
+}
+
+package() {
+  cd "crda-$version"
+
+  make \
+    DESTDIR="$pkgdir" \
+    UDEV_RULE_DIR=/usr/lib/udev/rules.d/ \
+    SBINDIR=/usr/bin/ \
+    LDCONFIG=true \
+    CRDA_8=crda.8 \
+    REGDBDUMP_8=regdbdump.8 \
+    install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

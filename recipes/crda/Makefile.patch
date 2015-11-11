@@ -1,0 +1,49 @@
+diff -Naur crda-3.18.orig/Makefile crda-3.18/Makefile
+--- crda-3.18.orig/Makefile	2014-12-11 00:51:29.000000000 +0100
++++ crda-3.18/Makefile	2015-11-11 17:26:00.029122559 +0100
+@@ -3,6 +3,11 @@
+ REG_BIN?=/usr/lib/crda/regulatory.bin
+ REG_GIT?=git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
+ 
++CRDA_8 ?= crda.8.gz
++REGDBDUMP_8 ?= regdbdump.8.gz
++LDCONFIG = ldconfig
++
++
+ PREFIX ?= /usr/
+ MANDIR ?= $(PREFIX)/share/man/
+ INCLUDE_DIR ?= $(PREFIX)/include/reglib/
+@@ -127,7 +132,7 @@
+ 	$(NQ) '  INSTALL  libreg'
+ 	$(Q)mkdir -p $(DESTDIR)/$(LIBDIR)
+ 	$(Q)cp $(LIBREG) $(DESTDIR)/$(LIBDIR)/
+-	$(Q)ldconfig
++	$(Q)$(LDCONFIG)
+ 
+ %.o: %.c regdb.h $(LIBREG)
+ 	$(NQ) '  CC  ' $@
+@@ -163,7 +168,7 @@
+ 	@$(NQ) ' GZIP' $<
+ 	$(Q)gzip < $< > $@
+ 
+-install: install-libreg install-libreg-headers crda crda.8.gz regdbdump.8.gz
++install: install-libreg install-libreg-headers crda $(CRDA_8) $(REGDBDUMP_8)
+ 	$(NQ) '  INSTALL  crda'
+ 	$(Q)$(MKDIR) $(DESTDIR)/$(SBINDIR)
+ 	$(Q)$(INSTALL) -m 755 -t $(DESTDIR)/$(SBINDIR) crda
+@@ -179,11 +184,11 @@
+ 	$(Q)$(INSTALL) -m 644 -t \
+ 		$(DESTDIR)/$(UDEV_RULE_DIR)/ \
+ 		udev/$(UDEV_LEVEL)regulatory.rules
+-	$(NQ) '  INSTALL  crda.8.gz'
++	$(NQ) '  INSTALL  $(CRDA_8)'
+ 	$(Q)$(MKDIR) $(DESTDIR)$(MANDIR)/man8/
+-	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ crda.8.gz
+-	$(NQ) '  INSTALL  regdbdump.8.gz'
+-	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ regdbdump.8.gz
++	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ $(CRDA_8)
++	$(NQ) '  INSTALL  $(REGDBDUMP_8)'
++	$(Q)$(INSTALL) -m 644 -t $(DESTDIR)/$(MANDIR)/man8/ $(REGDBDUMP_8)
+ 
+ clean:
+ 	$(Q)rm -f $(LIBREG) crda regdbdump intersect db2rd optimize \
