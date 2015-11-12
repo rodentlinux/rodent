@@ -1,0 +1,32 @@
+#parts=(libreg crda regdbdump)
+version=2015.04.06
+release=1
+sources=("http://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-${version}.tar.xz")
+sha1sum=('8135d9c68e7c66ebe1f146dfff162402cee89da2')
+makedepends=()
+
+config-wireless-regdb() {
+  description='Central Regulatory Domain Database'
+  files=('usr/lib/crda/regulatory.bin')
+  manfiles=('usr/share/man/man5/regulatory.bin.5')
+}
+
+package() {
+  cd "wireless-regdb-$version"
+
+  install -dm755 "$pkgdir/usr/lib/crda"
+  install -m644 regulatory.bin "$pkgdir/usr/lib/crda/regulatory.bin"
+  install -dm755 "$pkgdir/usr/share/man/man5"
+  install -m644 regulatory.bin.5 "$pkgdir/usr/share/man/man5/regulatory.bin.5"
+
+  if command -v regdbdump; then
+    if regdbdump "$pkgdir/usr/lib/crda/regulatory.bin" > /dev/null; then
+      echo 'Regulatory database validated.'
+    else
+      echo 'Regulatory database does not validate!'
+      exit 1
+    fi
+  fi
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
