@@ -1,6 +1,6 @@
-parts=(libpci lspci setpci pci-ids pciutils)
+parts=(libpci lspci setpci pciutils)
 version=3.4.0
-release=1
+release=2
 sources=("ftp://atrey.karlin.mff.cuni.cz/pub/linux/pci/pciutils-${version}.tar.gz")
 sha1sum=('71341dc741e303c1d8ba6bd457438fa8a1a96b81')
 makedepends=('libudev-devel' 'libkmod-devel')
@@ -21,7 +21,7 @@ config-libpci() {
 
 config-lspci() {
   description='List PCI devices'
-  depends=("libpci=$version-$release" 'libkmod')
+  depends=("libpci=$version-$release" 'libkmod' 'pci-ids')
   files=('usr/bin/lspci')
   manfiles=('usr/share/man/man8/lspci.8')
 }
@@ -33,17 +33,11 @@ config-setpci() {
   manfiles=('usr/share/man/man8/setpci.8')
 }
 
-config-pci-ids() {
-  description='List of PCI IDs'
-  files=('usr/share/hwdata/pci.ids')
-}
-
 config-pciutils() {
   description='List and configure PCI devices'
   depends=(
     "lspci=$version-$release"
     "setpci=$version-$release"
-    "pci-ids=$version-$release"
   )
 }
 
@@ -85,6 +79,9 @@ package() {
     install install-lib
 
   install -m644 ../libpci.a "$pkgdir/usr/lib/"
+
+  # Use pci.ids from the gentoo hwids repo
+  rm -r "$pkgdir/usr/share/hwdata"
 
   rm "$pkgdir/usr/bin/update-pciids"
   rm "$pkgdir/usr/share/man/man8/update-pciids.8"
