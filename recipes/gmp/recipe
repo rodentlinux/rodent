@@ -1,8 +1,8 @@
 parts=(libgmp libgmpxx)
-version=6.0.0
+version=6.1.0
 release=1
-sources=("https://gmplib.org/download/gmp/gmp-${version}a.tar.xz")
-sha1sum=('1aaf78358ab9e34aeb61f3ae08174ee9118ece98')
+sources=("https://gmplib.org/download/gmp/gmp-${version}.tar.xz")
+sha1sum=('99d691607613e749aa5d7c0c2a89aeab38fec070')
 makedepends=('libncurses-devel')
 
 config-libgmp() {

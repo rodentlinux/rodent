@@ -1,12 +1,12 @@
-diff -Naur gmp-6.0.0.orig/ltmain.sh gmp-6.0.0/ltmain.sh
---- gmp-6.0.0.orig/ltmain.sh	2015-10-07 23:49:08.868933778 +0200
-+++ gmp-6.0.0/ltmain.sh	2015-10-07 23:39:32.614606223 +0200
-@@ -6918,7 +6918,7 @@
+diff -Naur gmp-6.1.0.orig/ltmain.sh gmp-6.1.0/ltmain.sh
+--- gmp-6.1.0.orig/ltmain.sh	2015-09-05 21:10:02.000000000 +0200
++++ gmp-6.1.0/ltmain.sh	2015-11-18 18:45:00.434904624 +0100
+@@ -8361,7 +8361,7 @@
  	      fi
  	    else
  	      # We cannot seem to hardcode it, guess we'll fake it.
--	      add_dir="-L$libdir"
-+	      add_dir="-L=$libdir"
+-	      add_dir=-L$libdir
++	      add_dir=-L=$libdir
  	      # Try looking first in the location we're being installed to.
  	      if test -n "$inst_prefix_dir"; then
  		case $libdir in
