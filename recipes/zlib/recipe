@@ -23,7 +23,7 @@ build() {
   cp -r --reflink ../zlib-$version/* .
 
   CHOST="$HOST" \
-  ./configure --prefix=/usr
+  ./configure --prefix=/usr --uname=Linux
   make
 }
 
