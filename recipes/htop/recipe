@@ -1,5 +1,5 @@
 version=1.0.3
-release=1
+release=2
 sources=("http://hisham.hm/htop/releases/$version/htop-${version}.tar.gz")
 sha1sum=('261492274ff4e741e72db1ae904af5766fc14ef4')
 makedepends=('libncurses-devel')
@@ -22,6 +22,11 @@ build() {
   cd build
 
   "../htop-$version/configure" \
+    ac_cv_file__proc_meminfo=yes \
+    ac_cv_file__proc_stat=yes \
+    ac_cv_func_closedir_void=no \
+    ac_cv_func_lstat_dereferences_slashed_symlink=yes \
+    ac_cv_func_stat_empty_string_bug=no \
     --host=$HOST \
     --prefix=/usr \
     --sysconfdir=/etc \
