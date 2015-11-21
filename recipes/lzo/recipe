@@ -1,0 +1,58 @@
+parts=(liblzo2 libminilzo)
+version=2.09
+release=1
+sources=("http://www.oberhumer.com/opensource/lzo/download/lzo-${version}.tar.gz")
+sha1sum=('e2a60aca818836181e7e6f8c4f2c323aca6ac057')
+makedepends=('glibc-devel')
+
+config-liblzo2() {
+  description='Fast portable lossless data compression library'
+  depends=('libc')
+  devdepends=('glibc-devel' "liblzo2=$version-$release")
+  files=('usr/lib/liblzo2.so.*')
+  devfiles=(
+    'usr/include/lzo/lzo*.h'
+    'usr/lib/liblzo2.a'
+    'usr/lib/liblzo2.so'
+  )
+}
+
+config-libminilzo() {
+  description='Minimal LZO1X-1 compression and decompression library'
+  depends=('libc')
+  files=('usr/lib/libminilzo.so.0')
+  devfiles=(
+    'usr/include/lzo/minilzo.h'
+    'usr/lib/libminilzo.so'
+  )
+}
+
+build() {
+  cd lzo-$version
+
+  ./configure \
+    --host=$host \
+    --prefix=/usr \
+    --enable-shared \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+
+  ${host}-gcc $CFLAGS -fPIC -Iinclude/lzo -o minilzo/minilzo.o -c minilzo/minilzo.c
+  ${host}-gcc $LDFLAGS -shared -o libminilzo.so.0 -Wl,-soname,libminilzo.so.0 minilzo/minilzo.o
+}
+
+package() {
+  cd lzo-$version
+  make DESTDIR="$pkgdir" install
+
+  install -m644 minilzo/minilzo.h "$pkgdir/usr/include/lzo"
+  install -m755 libminilzo.so.0 "$pkgdir/usr/lib"
+  ln -s libminilzo.so.0 "$pkgdir/usr/lib/libminilzo.so"
+
+  rm -r "$pkgdir/usr/share"
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
