@@ -6,6 +6,6 @@ After=pre-overlay@%p.service
 
 [Mount]
 What=overlay
-Where=/etc
+Where=/root
 Type=overlay
-Options=lowerdir=/etc,upperdir=/run/etc,workdir=/run/workdir/etc
+Options=lowerdir=/root,upperdir=/run/root,workdir=/run/workdir/root
