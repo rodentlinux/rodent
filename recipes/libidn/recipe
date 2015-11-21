@@ -1,6 +1,6 @@
 parts=(libidn idn)
 version=1.32
-release=1
+release=2
 sources=("http://ftp.gnu.org/gnu/libidn/libidn-${version}.tar.gz")
 sha1sum=('ddd018611b98af7c67d434aa42d15d39f45129f5')
 makedepends=('glibc-devel')
@@ -32,6 +32,27 @@ build() {
   cd build
 
   "../libidn-$version/configure" \
+    am_cv_func_iconv_works=yes \
+    gl_cv_func_dup2_works=yes \
+    gl_cv_func_fdopen_works=yes \
+    gl_cv_func_getcwd_null=yes \
+    gl_cv_func_getdtablesize_works=yes \
+    gl_cv_func_getopt_gnu=yes \
+    gl_cv_func_getopt_long_gnu=yes \
+    gl_cv_func_getopt_posix=yes \
+    gl_cv_func_gettimeofday_clobber=no \
+    gl_cv_func_lstat_dereferences_slashed_symlink=yes \
+    gl_cv_func_open_slash=yes \
+    gl_cv_func_setenv_works=yes \
+    gl_cv_func_stat_dir_slash=yes \
+    gl_cv_func_stat_file_slash=yes \
+    gl_cv_func_strerror_0_works=yes \
+    gl_cv_func_svid_putenv=yes \
+    gl_cv_func_symlink_works=yes \
+    gl_cv_func_unsetenv_works=yes \
+    gl_cv_func_working_strerror=yes \
+    gl_cv_have_weak=yes \
+    gl_cv_header_working_fcntl_h=yes \
     --host=$HOST \
     --prefix=/usr \
     --disable-nls \
