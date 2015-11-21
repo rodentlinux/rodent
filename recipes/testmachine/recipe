@@ -19,6 +19,7 @@ config-testmachine() {
     'htop'
     'terminfo-xterm'
     'systemd-init'
+    'systemd-ldconfig'
     'systemd-hostname'
     'systemd-coredump'
     'systemd-networkd'
