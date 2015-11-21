@@ -1,5 +1,5 @@
 version=4.2.2
-release=1
+release=2
 sources=("ftp://ftp.gnu.org/pub/gnu/sed/sed-${version}.tar.gz")
 sha1sum=('2f24b4624d1a3080626b11610053996ec30ba0f1')
 makedepends=('glibc-devel')
@@ -17,6 +17,32 @@ build() {
   cd build
 
   "../sed-$version/configure" \
+    gl_cv_double_slash_root=no \
+    gl_cv_func_btowc_nul=yes \
+    gl_cv_func_getopt_gnu=yes \
+    gl_cv_func_getopt_long_gnu=yes \
+    gl_cv_func_getopt_posix=yes \
+    gl_cv_func_gettimeofday_clobber=no \
+    gl_cv_func_iswcntrl_works=yes \
+    gl_cv_func_lstat_dereferences_slashed_symlink=yes \
+    gl_cv_func_memchr_works=yes \
+    gl_cv_func_nl_langinfo_yesexpr_works=yes \
+    gl_cv_func_re_compile_pattern_working=yes \
+    gl_cv_func_readlink_works=yes \
+    gl_cv_func_realpath_works=yes \
+    gl_cv_func_rename_dest_works=yes \
+    gl_cv_func_rename_link_works=yes \
+    gl_cv_func_rename_slash_dst_works=yes \
+    gl_cv_func_rename_slash_src_works=yes \
+    gl_cv_func_rmdir_works=yes \
+    gl_cv_func_stat_dir_slash=yes \
+    gl_cv_func_stat_file_slash=yes \
+    gl_cv_func_strerror_0_works=yes \
+    gl_cv_func_working_getdelim=yes \
+    gl_cv_func_working_strerror=yes \
+    gl_cv_header_working_fcntl_h=yes \
+    sed_cv_fopen_rt=yes \
+    sed_cv_libcp_needed=no \
     --host=$HOST \
     --prefix=/usr \
     --disable-acl \
