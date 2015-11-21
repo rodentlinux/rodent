@@ -1,9 +1,9 @@
 parts=(less less-utils)
 version=481
-release=1
+release=2
 sources=("http://www.greenwoodsoftware.com/less/less-${version}.tar.gz")
 sha1sum=('58e7e62a760a9ca3636349de8e3357f7102aea1d')
-makedepends=('libncurses-devel') # 'libpcre-devel')
+makedepends=('libncurses-devel')
 
 config-less() {
   description='A terminal based program for viewing text files'
@@ -31,28 +31,14 @@ build() {
     --host=$HOST \
     --prefix=/usr \
     --sysconfdir=/etc \
-    --with-regex=pcre
+    --with-regex=posix
 
   make
-
-  #rm -rf build-pcre
-  #mkdir build-pcre
-  #cd build-pcre
-
-  #"../less-$version/configure" \
-  #  --host=$HOST \
-  #  --prefix=/usr \
-  #  --sysconfdir=/etc \
-  #  --with-regex=pcre
-
-  #make less
 }
 
 package() {
   cd build
   make DESTDIR="$pkgdir" install
-
-  #install -m744 ../build-pcre/less "$pkgdir/usr/bin/less-pcre"
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
