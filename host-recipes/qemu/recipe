@@ -1,0 +1,42 @@
+base=qemu
+version=2.7.0
+release=1
+sources=("http://wiki.qemu-project.org/download/qemu-${version}.tar.bz2")
+sha1sum=('96737d31a2fb74553dacbd0ddaa93014858dc986')
+
+description='Qemu'
+
+build() {
+  cd qemu-$version
+
+  PYTHON=python2 \
+  ./configure \
+    --prefix=/tools \
+    --libexecdir=/tools/lib/qemu \
+    --target-list=arm-softmmu,x86_64-softmmu,i386-softmmu,mips-softmmu,mipsel-softmmu \
+    --audio-drv-list='' \
+    --disable-stack-protector \
+    --disable-docs \
+    --disable-gnutls \
+    --disable-vnc \
+    --disable-gtk \
+    --disable-xen \
+    --disable-tpm \
+    --disable-libiscsi \
+    --disable-libnfs \
+    --disable-rbd \
+    --disable-vhdx
+
+  make
+}
+
+package() {
+  cd qemu-$version
+
+  make DESTDIR="$builddir" install
+
+  rmdir "$builddir/tools/var/run"
+  rmdir "$builddir/tools/var"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

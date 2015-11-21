@@ -47,7 +47,7 @@ x86_64)
   ;;
 quark)
   #-cpu qemu32,+pae,+pbe,+nx,+smep,-mce,-sep,-pge,-cmov,-fxsr,-mmx,-sse,-sse2,-pni,-popcnt
-  cmd=(qemu-system-quark -machine pc
+  cmd=(qemu-system-i386 -machine pc
     -cpu pentium,+pae,+pbe,+nx,+smep,-mce,-mmx
     -smp 1 -m 512
     -smbios type=0,uefi=on
