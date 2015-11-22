@@ -20,12 +20,25 @@ parts=(
   systemd-ask-password
   systemd-vconsole-setup
   systemd-logind
+  systemd-rfkill
+  libnss_myhostname
   systemd-cgls
+  systemd-cgtop
+  systemd-cat
+  systemd-delta
+  systemd-detect-virt
+  systemd-escape
+  systemd-inhibit
+  systemd-notify
+  systemd-path
+  systemd-run
+  systemd-stdio-bridge
+  busctl
   systemd-bash-completion
   systemd-zsh-completion
 )
 version=227
-release=5
+release=6
 sources=("https://github.com/systemd/systemd/archive/v${version}.tar.gz")
 sha1sum=('ee92ac467bd2fada5495d46e21228851227f4164')
 makedepends=(
@@ -38,7 +51,6 @@ makedepends=(
   'libmount-devel'
   'libidn-devel'
   'libcurl-devel'
-  'libdbus-1-devel'
 )
 case "$ARCH" in
 quark)
@@ -470,10 +482,92 @@ config-systemd-boot() {
   files=('usr/bin/bootctl' 'usr/lib/systemd/boot/**')
 }
 
+config-systemd-rfkill() {
+  description='Systemd rfkill utilities'
+  depends=()
+  files=(
+    'usr/lib/systemd/system/systemd-rfkill.service'
+    'usr/lib/systemd/system/systemd-rfkill.socket'
+    'usr/lib/systemd/systemd-rfkill'
+  )
+}
+
+config-libnss_myhostname() {
+  description='Provide hostname resolution for the locally configured system hostname'
+  depends=('libcap' 'libseccomp' 'libidn')
+  files=('usr/lib/libnss_myhostname.so.2')
+}
+
 config-systemd-cgls() {
   description='Recursively show control group contents'
   depends=('glibc')
   files=('usr/bin/systemd-cgls')
+}
+
+config-systemd-cgtop() {
+  description='Show top control groups by their resource usage'
+  depends=('glibc')
+  files=('usr/bin/systemd-cgtop')
+}
+
+config-systemd-cat() {
+  description="Connect a pipeline or program's output with the journal"
+  depends=('glibc')
+  files=('usr/bin/systemd-cat')
+}
+
+config-systemd-delta() {
+  description='Find overridden configuration files'
+  depends=('glibc')
+  files=('usr/bin/systemd-delta')
+}
+
+config-systemd-detect-virt() {
+  description='Detect execution in a virtualized environment'
+  depends=('glibc')
+  files=('usr/bin/systemd-detect-virt')
+}
+
+config-systemd-escape() {
+  description='Escape strings for usage in system unit names'
+  depends=('glibc')
+  files=('usr/bin/systemd-escape')
+}
+
+config-systemd-inhibit() {
+  description='Execute a program with an inhibition lock taken'
+  depends=('glibc')
+  files=('usr/bin/systemd-inhibit')
+}
+
+config-systemd-notify() {
+  description='Notify systemd about status changes'
+  depends=('glibc')
+  files=('usr/bin/systemd-notify')
+}
+
+config-systemd-path() {
+  description='List and query system and user paths'
+  depends=('glibc')
+  files=('usr/bin/systemd-path')
+}
+
+config-systemd-run() {
+  description='Run programs in transient scope or service or timer units'
+  depends=('glibc')
+  files=('usr/bin/systemd-run')
+}
+
+config-systemd-stdio-bridge() {
+  description='Connect standard input/output to a given bus address'
+  depends=('glibc')
+  files=('usr/bin/systemd-stdio-bridge')
+}
+
+config-busctl() {
+  description='Introspect D-Bus'
+  depends=('glibc')
+  files=('usr/bin/busctl')
 }
 
 config-systemd-bash-completion() {
