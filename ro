@@ -40,6 +40,7 @@ usage() {
   echo
   echo '  update       - update repo information'
   echo '  install      - install package to sysroot'
+  echo '  remove       - uninstall package from sysroot'
   echo '  verify       - verify sysroot'
   echo '  list         - show installed packages in sysroot'
   echo '  leaves       - show packages not required by any other in sysroot'
@@ -60,6 +61,9 @@ while true; do
   in|install)
     export ROOT ARCH
     shift; exec "$ROOT/lib/ro/install" "$@";;
+  rm|remove)
+    export ROOT ARCH
+    shift; exec "$ROOT/lib/ro/remove" "$@";;
   ver|verify)
     export ROOT ARCH
     shift; exec "$ROOT/lib/ro/verify" "$@";;
