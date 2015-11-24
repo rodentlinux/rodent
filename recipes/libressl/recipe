@@ -61,10 +61,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../libressl-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -77,7 +73,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   install -dm733 "$pkgdir/usr/share/factory"

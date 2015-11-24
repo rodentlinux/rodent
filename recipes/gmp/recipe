@@ -35,10 +35,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   if [[ "$ARCH" = armv7hl ]]; then
     CFLAGS="$CFLAGS -marm"
     CXXFLAGS="$CXXFLAGS -marm"
@@ -55,7 +51,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   # remove info files

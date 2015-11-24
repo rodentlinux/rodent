@@ -7,10 +7,6 @@ sha1sum=('27c4651243ad885a2a3b35fe6d2532e6a7f0711e')
 description="Qemu for running $ARCH"
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   case "$ARCH" in
   armv7hl) target=arm-softmmu;;
   quark)   target=i386-softmmu;;
@@ -49,16 +45,16 @@ build() {
 host-package() {
   case "$ARCH" in
   armv7hl)
-    install -Dm755 build/arm-softmmu/qemu-system-arm tools/bin/qemu-system-arm
-    strip --strip-unneeded tools/bin/qemu-system-arm
+    install -Dm755 arm-softmmu/qemu-system-arm ../tools/bin/qemu-system-arm
+    strip --strip-unneeded ../tools/bin/qemu-system-arm
     ;;
   quark)
-    install -Dm755 build/i386-softmmu/qemu-system-i386 tools/bin/qemu-system-quark
-    strip --strip-unneeded tools/bin/qemu-system-quark
+    install -Dm755 i386-softmmu/qemu-system-i386 ../tools/bin/qemu-system-quark
+    strip --strip-unneeded ../tools/bin/qemu-system-quark
 
-    install -dm755 tools/share/qemu-$ARCH
+    install -dm755 ../tools/share/qemu-$ARCH
     for i in bios-256k.bin efi-virtio.rom kvmvapic.bin linuxboot.bin vgabios-stdvga.bin; do
-      install -m644 build/pc-bios/$i tools/share/qemu-$ARCH/$i
+      install -m644 pc-bios/$i ../tools/share/qemu-$ARCH/$i
     done
     ;;
   esac

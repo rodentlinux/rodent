@@ -27,7 +27,8 @@ config-libcap-utils() {
 }
 
 build() {
-  cd "libcap-$version"
+  cp -r --reflink ../libcap-$version/* .
+
   sed -i '/SBINDIR/s#sbin#bin#' Make.Rules
 
   make LIBATTR=no PAM_CAP=no \
@@ -40,8 +41,6 @@ build() {
 }
 
 package() {
-  cd "libcap-$version"
-
   make LIBATTR=no PAM_CAP=no \
     DESTDIR="$pkgdir" \
     prefix=/usr lib=/lib \

@@ -7,10 +7,6 @@ sha1sum=('1d597ae063e3947a5f61e23ceda8aebf78405fcd')
 description="GNU binutils for cross-compiling to $HOST"
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../binutils-$version/configure" \
     --target=$HOST \
     --prefix=/tools \
@@ -32,7 +28,8 @@ build() {
 }
 
 host-package() {
-  make -C build prefix="$srcdir/tools" install
+  make prefix="$srcdir/tools" install
+  cd ..
 
   # Create wrappers to set sysroot from environment
   mv tools/bin/$HOST-ld{,.orig}

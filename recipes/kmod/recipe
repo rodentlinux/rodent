@@ -57,10 +57,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../kmod-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -72,7 +68,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   for i in depmod insmod lsmod modinfo modprobe rmmod; do

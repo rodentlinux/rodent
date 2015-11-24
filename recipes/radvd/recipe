@@ -20,10 +20,6 @@ config-radvdump() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../radvd-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -36,7 +32,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   install -Dm644 "../radvd-$version/radvd.conf.example" "$pkgdir/usr/share/factory/etc/radvd.conf"

@@ -25,10 +25,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../findutils-$version/configure" \
     ac_cv_func_chown_works=yes \
     ac_cv_func_closedir_void=no \
@@ -62,7 +58,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   # Who uses oldfind?

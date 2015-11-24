@@ -45,10 +45,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   local bashconfig=(
     -DDEFAULT_PATH_VALUE=\'\"/usr/local/sbin:/usr/local/bin:/usr/bin\"\'
     -DSTANDARD_UTILS_PATH=\'\"/usr/bin\"\'
@@ -88,7 +84,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
   ln -s bash "$pkgdir/usr/bin/sh"
 

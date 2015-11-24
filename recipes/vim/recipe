@@ -110,7 +110,7 @@ config-vim-extra() {
 }
 
 build() {
-  cd "vim-$version"
+  cp -r --reflink ../vim-$version/* .
 
   STRIP=true \
   ./configure \
@@ -137,7 +137,6 @@ build() {
 }
 
 package() {
-  cd "vim-$version"
   unset MAKEFLAGS
   make DESTDIR="$pkgdir" VIMRCLOC=/etc install
 

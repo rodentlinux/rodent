@@ -269,10 +269,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../ncurses-$version/configure" \
     cf_cv_cpp_param_init=no \
     cf_cv_func_mkstemp=yes \
@@ -300,7 +296,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   # fool packages looking to link to non-wide-character ncurses libraries

@@ -64,10 +64,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../psmisc-$version/configure" \
     ac_cv_func_closedir_void=no \
     ac_cv_func_lstat_dereferences_slashed_symlink=yes \
@@ -87,7 +83,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir/usr/bin/pstree.x11"

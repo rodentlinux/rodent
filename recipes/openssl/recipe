@@ -57,7 +57,7 @@ prepare() {
 }
 
 build() {
-  cd "openssl-$version"
+  cp -r --reflink ../openssl-$version/* .
 
   unset MAKEFLAGS
 
@@ -83,9 +83,7 @@ build() {
 }
 
 package() {
-  cd "openssl-$version"
   unset MAKEFLAGS
-
   make INSTALL_PREFIX=$pkgdir MANDIR=/usr/share/man install
 
   install -dm733 "$pkgdir/usr/share/factory"

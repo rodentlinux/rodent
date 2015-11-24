@@ -12,10 +12,6 @@ config-grep() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../grep-$version/configure" \
     ac_cv_func_closedir_void=no \
     am_cv_func_iconv_works=yes \
@@ -70,7 +66,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/info"

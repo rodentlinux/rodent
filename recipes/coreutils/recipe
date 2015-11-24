@@ -123,10 +123,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../coreutils-$version/configure" \
     ac_cv_func_calloc_0_nonnull=yes \
     ac_cv_func_getgroups_works=yes \
@@ -259,7 +255,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
   rm -r "$pkgdir/usr/share"
 }

@@ -68,10 +68,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   local archflags
 
   case "$ARCH" in
@@ -140,7 +136,8 @@ build() {
 }
 
 host-package() {
-  make -C build DESTDIR="$srcdir" install
+  make DESTDIR="$srcdir" install
+  cd ..
 
   # Create wrappers to set sysroot from environment
   mv tools/bin/$HOST-cpp{,.orig}
@@ -179,7 +176,7 @@ EOF
 
 package() {
   install -dm755 "$pkgdir/usr/lib"
-  cp -a tools/$HOST/lib/*.so.* "$pkgdir/usr/lib"
+  cp -a ../tools/$HOST/lib/*.so.* "$pkgdir/usr/lib"
   rm "$pkgdir"/usr/lib/*.py
 }
 

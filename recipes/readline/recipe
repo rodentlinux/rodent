@@ -56,10 +56,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../readline-$_basever/configure" \
     ac_cv_func_strcoll_works=yes \
     bash_cv_must_reinstall_sighandlers=no \
@@ -76,7 +72,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rmdir "$pkgdir/usr/bin"

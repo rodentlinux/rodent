@@ -5,6 +5,9 @@
 . "$ROOT/lib/ro/download.sh"
 
 yesno() {
+  if [[ -n "$YES" ]]; then
+    return 0
+  fi
   local yn
   while true; do
     read -p "$1 [y/n] " yn

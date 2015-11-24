@@ -17,10 +17,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../htop-$version/configure" \
     ac_cv_file__proc_meminfo=yes \
     ac_cv_file__proc_stat=yes \
@@ -40,7 +36,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir"/usr/share/{applications,pixmaps}

@@ -17,13 +17,12 @@ prepare() {
 }
 
 build() {
-  cd "iw-$version"
+  cp -r --reflink ../iw-$version/* .
 
   make CC="$HOST-gcc"
 }
 
 package() {
-  cd "iw-$version"
   make DESTDIR="$pkgdir" SBINDIR=/usr/bin install
 }
 

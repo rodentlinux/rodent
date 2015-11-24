@@ -59,10 +59,6 @@ config-dbus() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../dbus-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -93,7 +89,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   install -dm755 "$pkgdir/usr/share/factory"

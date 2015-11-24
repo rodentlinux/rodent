@@ -19,10 +19,6 @@ config-libunwind() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../libunwind-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -33,7 +29,6 @@ build() {
 }
 
 package() {
-  cd build
   unset MAKEFLAGS
   make DESTDIR="$pkgdir" install
 

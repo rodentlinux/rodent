@@ -12,10 +12,6 @@ config-which() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../which-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -25,7 +21,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/info"

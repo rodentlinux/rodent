@@ -31,7 +31,7 @@ config-gpg-error() {
 }
 
 build() {
-  cd "libgpg-error-$version"
+  cp -r --reflink ../libgpg-error-$version/* .
 
   case $ARCH in
   armv7hl)
@@ -56,8 +56,6 @@ build() {
 }
 
 package() {
-  cd "libgpg-error-$version"
-
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la

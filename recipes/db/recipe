@@ -55,7 +55,8 @@ config-db-utils() {
 }
 
 build() {
-  cd "db-$version/build_unix"
+  cp -r --reflink ../db-$version/* .
+  cd build_unix
 
   ../dist/configure \
     --host=$HOST \
@@ -71,8 +72,7 @@ build() {
 }
 
 package() {
-  cd "db-$version/build_unix"
-
+  cd build_unix
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/docs"

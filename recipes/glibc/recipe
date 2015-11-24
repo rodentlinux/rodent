@@ -231,10 +231,6 @@ config-locale() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   {
     echo "slibdir=/usr/lib"
     echo "rtlddir=/usr/lib"
@@ -261,9 +257,7 @@ build() {
 }
 
 package() {
-  cd build
   unset MAKEFLAGS
-
   make install_root="$pkgdir" install
 
   install -dm755 "$pkgdir/usr/share/factory"

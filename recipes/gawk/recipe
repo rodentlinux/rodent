@@ -45,10 +45,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../gawk-$version/configure" \
     ac_cv_func_working_mktime=yes \
     --host=$HOST \
@@ -62,7 +58,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir/usr/bin/gawk-$version"

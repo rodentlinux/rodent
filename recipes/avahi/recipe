@@ -150,10 +150,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../avahi-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -184,7 +180,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   ln -s avahi-daemon.service "$pkgdir/usr/lib/systemd/system/dbus-org.freedesktop.Avahi.service"

@@ -421,10 +421,6 @@ config-util-linux-all() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../util-linux-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -448,9 +444,7 @@ build() {
 }
 
 package() {
-  cd build
   unset MAKEFLAGS
-
   make DESTDIR="$pkgdir" install
 
   mv "$pkgdir"{,/usr}/sbin/* "$pkgdir/usr/bin"

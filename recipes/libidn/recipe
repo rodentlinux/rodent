@@ -27,10 +27,6 @@ config-idn() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../libidn-$version/configure" \
     am_cv_func_iconv_works=yes \
     gl_cv_func_dup2_works=yes \
@@ -64,7 +60,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir"/usr/share/{emacs,info}

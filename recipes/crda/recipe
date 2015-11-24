@@ -36,7 +36,7 @@ prepare() {
 }
 
 build() {
-  cd "crda-$version"
+  cp -r --reflink ../crda-$version/* .
 
   make \
     CC="$HOST-gcc" \
@@ -44,8 +44,6 @@ build() {
 }
 
 package() {
-  cd "crda-$version"
-
   make \
     DESTDIR="$pkgdir" \
     UDEV_RULE_DIR=/usr/lib/udev/rules.d/ \

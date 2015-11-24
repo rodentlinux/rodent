@@ -7,8 +7,9 @@
 /settings
 /cache
 /tools
-/recipes/*/files
-/recipes/*/pkg
-/recipes/*/build
+/recipes/*/files.*
+/recipes/*/pkg.*
+/recipes/*/build.*
 /recipes/*/tools
 /recipes/*/sysroot.*
+/sysroot.*

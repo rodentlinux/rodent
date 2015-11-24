@@ -18,10 +18,6 @@ config-libdaemon() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../libdaemon-$version/configure" \
     ac_cv_func_setpgrp_void=yes \
     --host=$HOST \
@@ -34,7 +30,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share"

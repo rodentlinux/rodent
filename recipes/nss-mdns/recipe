@@ -14,10 +14,6 @@ for i in "${parts[@]}"; do
 done
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../nss-mdns-$version/configure" \
     ac_cv_func_malloc_0_nonnull=yes \
     --host=$HOST \
@@ -31,7 +27,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 }
 

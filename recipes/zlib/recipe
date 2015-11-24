@@ -20,14 +20,14 @@ config-libz() {
 }
 
 build() {
-  cd "zlib-$version"
+  cp -r --reflink ../zlib-$version/* .
+
   CHOST="$HOST" \
   ./configure --prefix=/usr
   make
 }
 
 package() {
-  cd "zlib-$version"
   make DESTDIR="$pkgdir" install
 }
 

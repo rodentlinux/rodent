@@ -12,15 +12,20 @@ usage() {
   echo
   echo 'Options:'
   echo ' -s SYSROOT  Use sysroot at SYSROOT'
+  echo ' -P          Stop after extracting and preparing sources'
   echo ' -E          Skip extracting and prepare sources'
   echo ' -R          Skip extracting and building'
+  echo " -d          Don't check and install make dependencies"
 }
 
 while true; do
   case "$1" in
   -s) SYSROOT="$(readlink -f "$2")"; shift 2;;
+  -P) PREPAREONLY=1; shift;;
   -E) NOEXTRACT=1; shift;;
   -R) NOEXTRACT=1; NOBUILD=1; shift;;
+  -d) NODEPS=1; shift;;
+  -y) YES=1; shift;;
   *) break;;
   esac
 done
@@ -52,7 +57,7 @@ fi
 RECIPE="$(readlink -f "$RECIPE")"
 
 srcdir="$(dirname "$RECIPE")"
-pkgdir="$srcdir/pkg"
+pkgdir="$srcdir/pkg.$ARCH"
 base="$(basename "$srcdir")"
 
 . "$RECIPE"
@@ -93,7 +98,7 @@ else
 fi
 
 . "$ROOT/lib/ro/deps_install.sh"
-deps_install "${makedepends[@]}"
+[[ -n $NODEPS ]] || deps_install "${makedepends[@]}"
 
 downloadall() {
   local noextract=0
@@ -144,8 +149,15 @@ if [[ -z "$NOEXTRACT" ]]; then
   fi
 fi
 
+if [[ -n "$PREPAREONLY" ]]; then
+  exit 0
+fi
+
 if [[ -z "$NOBUILD" && "$(type -t build)" = 'function' ]]; then
   cd "$srcdir"
+  rm -rf build.$ARCH
+  mkdir build.$ARCH
+  cd build.$ARCH
   echo 'Building..'
   set -x
   build
@@ -156,6 +168,7 @@ if [[ "$(type -t host-package)" = 'function' ]]; then
   cd "$srcdir"
   rm -rf tools
   mkdir tools
+  cd build.$ARCH
   echo "Packaging host files.."
   set -x
   host-package
@@ -169,8 +182,10 @@ if [[ "$(type -t host-package)" = 'function' ]]; then
 fi
 
 if [[ "$(type -t package)" = 'function' ]]; then
-  rm -rf "$pkgdir"
-  mkdir "$pkgdir"
+  cd "$srcdir"
+  rm -rf "pkg.$ARCH"
+  mkdir "pkg.$ARCH"
+  [[ ! -d build.$ARCH ]] || cd build.$ARCH
   echo 'Entering fakeroot'
   fakeroot -- "$ROOT/lib/ro/make-fakerooted" "$RECIPE"
   echo 'Exited fakeroot'
@@ -189,13 +204,13 @@ mkfiles() {
   for i in "$@"; do
     echo "$i"
   done \
-    | awk -f "$ROOT/lib/ro/make-patterns.awk" - "$srcdir/files" \
-    | awk -f "$ROOT/lib/ro/prefixes.awk" - "$srcdir/files" \
+    | awk -f "$ROOT/lib/ro/make-patterns.awk" - files.$ARCH \
+    | awk -f "$ROOT/lib/ro/prefixes.awk" - files.$ARCH \
     > "$out"
 }
 
-cd "$pkgdir"
-mkdir '#'
+cd "$srcdir"
+install -dm755 "pkg.$ARCH/#"
 for part in "${parts[@]}"; do
   version="$BASE_VERSION"
   provides=()
@@ -209,53 +224,53 @@ for part in "${parts[@]}"; do
 
   "config-$part"
 
-  mkfiles "#/$part-$version-${BASE_RELEASE}.files" "${files[@]}"
+  mkfiles "pkg.$ARCH/#/$part-$version-${BASE_RELEASE}.files" "${files[@]}"
   echo -e "$part=${version}-${BASE_RELEASE}\t$base=${BASE_VERSION}-${BASE_RELEASE}\t${provides[*]}\t${depends[*]}\t$description" \
-    >> '#/meta'
+    >> "pkg.$ARCH/#/meta"
 
   if [[ ${#devdepends[@]} != 0 || ${#devfiles[@]} != 0 ]]; then
-    mkfiles "#/$part-devel-$version-${BASE_RELEASE}.files" "${devfiles[@]}"
+    mkfiles "pkg.$ARCH/#/$part-devel-$version-${BASE_RELEASE}.files" "${devfiles[@]}"
     echo -e "$part-devel=$version-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${devdepends[*]}\tDevelopment files for $part" \
-      >> '#/meta'
+      >> "pkg.$ARCH/#/meta"
   fi
 
   if [[ ${#mandepends[@]} != 0 || ${#manfiles[@]} != 0 ]]; then
-    mkfiles "#/$part-man-$version-${BASE_RELEASE}.files" "${manfiles[@]}"
+    mkfiles "pkg.$ARCH/#/$part-man-$version-${BASE_RELEASE}.files" "${manfiles[@]}"
     echo -e "$part-man=$version-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${mandepends[*]}\tManual pages for $part" \
-      >> '#/meta'
+      >> "pkg.$ARCH/#/meta"
   fi
 done
 
-sort -u \#/*.files \
-  | comm -23 "$srcdir/files" - \
-  | awk -f "$ROOT/lib/ro/prefixes.awk" - "$srcdir/files" \
-  > "$srcdir/files.leftover"
+sort -u "pkg.${ARCH}/#"/*.files \
+  | comm -23 files.$ARCH - \
+  | awk -f "$ROOT/lib/ro/prefixes.awk" - files.$ARCH \
+  > files.${ARCH}.leftover
 
-if [[ -s "$srcdir/files.leftover" ]]; then
-  FILE="#/$base-extra-$BASE_VERSION-${BASE_RELEASE}.files"
+if [[ -s files.${ARCH}.leftover ]]; then
+  FILE="pkg.$ARCH/#/$base-extra-$BASE_VERSION-${BASE_RELEASE}.files"
   if [[ -f "$FILE" ]]; then
     echo "Package $base-extra already defined, but the following files are left over:"
-    awk -F'\t' '{print "- " $1}' "$srcdir/files.leftover"
+    awk -F'\t' '{print "- " $1}' files.${ARCH}.leftover
     exit 1
   fi
-  mv "$srcdir/files.leftover" "$FILE"
+  mv files.${ARCH}.leftover "$FILE"
   echo -e "$base-extra=$BASE_VERSION-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${BASE_DEPENDS[*]}\tExtra files from $base" \
-    >> '#/meta'
+    >> "pkg.$ARCH/#/meta"
 else
-  rm -f "$srcdir/files.leftover"
+  rm -f files.${ARCH}.leftover
 fi
 
 echo 'Pruning pseudo files'
-find "$pkgdir" -mindepth 1 -printf '%P\n' \
-  | awk -f "$ROOT/lib/ro/make-prune.awk" "$srcdir/files" - \
+find "pkg.$ARCH" -mindepth 1 -printf '%P\n' \
+  | awk -f "$ROOT/lib/ro/make-prune.awk" files.$ARCH - \
   | while read -r i; do
   echo "+ rm -rf $i"
-  rm -rf "$pkgdir/$i"
+  rm -rf "pkg.$ARCH/$i"
 done
 
 echo -n "Compressing ${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar.xz.. "
 [[ -d "$ROOT/cache/local" ]] || mkdir -p "$ROOT/cache/local"
-cd "$pkgdir"
+cd pkg.$ARCH
 tar -c -f "$ROOT/cache/local/${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar.xz" \
   -J --owner=root --group=root \
   --null --no-recursion -T <(
@@ -263,13 +278,13 @@ tar -c -f "$ROOT/cache/local/${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar
   for i in \#/*.files; do
     echo -ne "./$i\0"
   done
-  awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' "$srcdir/files" | tr '\n' '\0'
+  awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' ../files.$ARCH | tr '\n' '\0'
 )
 echo 'done.'
 
-echo -n "Updating local repo.. "
+echo -n 'Updating local repo.. '
 cd "$ROOT/cache/local"
 "$ROOT/bin/makerepo"
-echo "done."
+echo 'done.'
 
 # vim: set ft=sh ts=2 sw=2 et:

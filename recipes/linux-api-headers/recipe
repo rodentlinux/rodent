@@ -10,7 +10,7 @@ config-linux-api-headers() {
 }
 
 build() {
-  cd "linux-$version"
+  cp -r --reflink ../linux-$version/* .
 
   case "$ARCH" in
   armv7hl) KARCH=arm;;
@@ -26,8 +26,6 @@ build() {
 }
 
 package() {
-  cd "linux-$version"
-
   unset MAKEFLAGS
 
   case "$ARCH" in

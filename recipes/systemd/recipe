@@ -497,10 +497,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   local archopts
   case $ARCH in
   armv7hl) archopts=(--disable-efi --disable-gnuefi);;
@@ -550,8 +546,6 @@ build() {
 }
 
 package() {
-  cd build
-
   make DESTDIR="$pkgdir" install
 
   ln -sf 'multi-user.target' "$pkgdir/usr/lib/systemd/system/default.target"

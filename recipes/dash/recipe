@@ -21,10 +21,6 @@ config-dash-default() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../dash-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -36,7 +32,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   ln -s dash "$pkgdir/usr/bin/sh"

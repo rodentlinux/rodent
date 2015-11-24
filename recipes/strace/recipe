@@ -25,10 +25,6 @@ config-strace-graph() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../strace-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -38,7 +34,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 }
 

@@ -12,10 +12,6 @@ config-sed() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../sed-$version/configure" \
     gl_cv_double_slash_root=no \
     gl_cv_func_btowc_nul=yes \
@@ -55,7 +51,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/info"

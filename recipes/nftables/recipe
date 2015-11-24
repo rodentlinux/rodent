@@ -16,10 +16,6 @@ config-nft() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../nftables-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -30,7 +26,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   install -Dm755 ../nftables-reload "$pkgdir/usr/lib/systemd/scripts/nftables-reload"

@@ -26,10 +26,6 @@ config-xmlwf() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../expat-$version/configure" \
     --host=$HOST \
     --prefix=/usr \
@@ -39,7 +35,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la

@@ -156,10 +156,6 @@ prepare() {
 }
 
 build() {
-  rm -rf build
-  mkdir build
-  cd build
-
   "../procps-ng-$version/configure" \
     ac_cv_func_malloc_0_nonnull=yes \
     ac_cv_func_mmap_fixed_mapped=yes \
@@ -180,7 +176,6 @@ build() {
 }
 
 package() {
-  cd build
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/doc"
