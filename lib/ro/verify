@@ -24,14 +24,18 @@ if [[ ! -d "$SYSROOT" ]]; then
 fi
 
 cd "$SYSROOT"
-echo "Checking dependencies"
+echo 'Checking dependencies'
 awk -f "$ROOT/lib/ro/graphlib.awk" -f "$ROOT/lib/ro/verify-deps.awk" \#/installed
 
-echo "Checking new/removed files"
+echo 'Checking file lists'
+find '#' -mindepth 1 -maxdepth 1 -name '*.files' -printf '%P\n' \
+  | awk -f "$ROOT/lib/ro/verify-lists.awk" - \#/installed
+
+echo 'Checking new/removed files'
 find . -mindepth 1 -printf '%P\n' \
   | awk -f "$ROOT/lib/ro/verify-files.awk" - \#/*.files
 
-echo "Checking symlinks"
+echo 'Checking symlinks'
 awk -F'\t' '$2=="l"{print $1;print $6}' \#/*.files \
   | while read -r file; do
   read -r target
@@ -43,7 +47,7 @@ awk -F'\t' '$2=="l"{print $1;print $6}' \#/*.files \
   echo "+ $file -> $(readlink "$file")"
 done
 
-echo "Checking file content"
+echo 'Checking file content'
 awk -F'\t' '$2=="f"{print $6 "  " $1}' \#/*.files \
   | sha1sum -c --strict --quiet
 
