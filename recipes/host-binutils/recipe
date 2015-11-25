@@ -12,6 +12,7 @@ build() {
     --prefix=/tools \
     --libexecdir=/tools/lib \
     --enable-threads \
+    --enable-lto \
     --enable-ld=default \
     --enable-plugins \
     --enable-deterministic-archives \
