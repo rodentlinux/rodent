@@ -124,6 +124,7 @@ prepare() {
 
 build() {
   "../Linux-PAM-$version/configure" \
+    ac_cv_prog_lex_yytext_pointer=yes \
     --host=$HOST \
     --prefix=/usr \
     --libdir=/usr/lib \
