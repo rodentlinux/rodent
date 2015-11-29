@@ -1,9 +1,9 @@
 parts=(libdb libdb_cxx libdb_stl db-utils)
 version=5.3.28
-release=1
+release=2
 sources=("http://download.oracle.com/berkeley-db/db-${version}.tar.gz")
 sha1sum=('fa3f8a41ad5101f43d08bc0efb6241c9b6fc1ae9')
-makedepends=('glibc-devel')
+makedepends=('libnsl-devel')
 
 config-libdb() {
   description='The Berkeley DB embedded database system'
@@ -52,6 +52,11 @@ config-db-utils() {
   description='The Berkeley DB embedded database utilities'
   depends=("libdb=$version-$release")
   files=('usr/bin/*')
+}
+
+prepare() {
+  cd "db-$version"
+  patch -Np1 -i ../mmap_extend.patch
 }
 
 build() {

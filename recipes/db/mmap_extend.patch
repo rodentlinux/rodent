@@ -1,0 +1,12 @@
+diff -Naur db-5.3.28.orig/dist/configure db-5.3.28/dist/configure
+--- db-5.3.28.orig/dist/configure	2013-09-09 17:35:02.000000000 +0200
++++ db-5.3.28/dist/configure	2015-11-29 14:11:28.921000869 +0100
+@@ -24282,7 +24282,7 @@
+     db_cv_mmap_extend="no"
+ 
+     if test "$cross_compiling" = yes; then :
+-  db_cv_mmap_extend="no"
++  db_cv_mmap_extend="yes"
+ else
+   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
