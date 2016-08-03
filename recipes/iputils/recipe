@@ -1,0 +1,132 @@
+parts=(
+  iputils-arping
+  clockdiff
+  ninfod
+  iputils-ping
+  rarpd
+  rdisc
+  iputils-tftpd
+  tracepath
+  tracepath6
+  traceroute6
+)
+version=s20160308
+release=1
+sources=("https://github.com/iputils/iputils/archive/${version}.tar.gz")
+sha1sum=('bd9292647baafec6bd9ebe119923abf854e56e7f')
+makedepends=('libcap-devel' 'libidn-devel' 'libcrypto-devel')
+
+config-iputils-arping() {
+  description='Send ARP REQUEST to a neighbour host'
+  provides=('arping')
+  depends=('librt' 'libcap')
+  files=('usr/bin/arping')
+  manfiles=('usr/share/man/man8/arping.8')
+}
+
+config-clockdiff() {
+  description='Measure clock difference between hosts'
+  depends=('libcap')
+  files=('usr/bin/clockdiff')
+  manfiles=('usr/share/man/man8/clockdiff.8')
+}
+
+config-ninfod() {
+  description='Respond to IPv6 Node Information Queries'
+  depends=('libpthread' 'libcrypto' 'libcap')
+  files=('usr/bin/ninfod')
+  manfiles=('usr/share/man/man8/ninfod.8')
+}
+
+config-iputils-ping() {
+  description='Send IPv4 ICMP ECHO_REQUEST to network hosts'
+  provides=('ping')
+  depends=('libresolv' 'libcrypto' 'libidn' 'libcap')
+  files=('usr/bin/ping')
+  manfiles=('usr/share/man/man8/ping.8')
+}
+
+config-rarpd() {
+  description='Answer RARP REQUESTs'
+  depends=('libc')
+  files=('usr/bin/rarpd')
+  manfiles=('usr/share/man/man8/rarpd.8')
+}
+
+config-rdisc() {
+  description='Network router discovery daemon'
+  depends=('libc')
+  files=('usr/bin/rdisc')
+  manfiles=('usr/share/man/man8/rdisc.8')
+}
+
+config-iputils-tftpd() {
+  description='Trivial File Transfer Protocol server'
+  provides=('tftpd')
+  depends=('libc')
+  files=('usr/bin/tftpd')
+  manfiles=('usr/share/man/man8/tftpd.8')
+}
+
+config-tracepath() {
+  description='Traces path to an IPv4 network host discovering MTU along this path'
+  depends=('libc')
+  files=('usr/bin/tracepath')
+  manfiles=('usr/share/man/man8/tracepath.8')
+}
+
+config-tracepath6() {
+  description='Traces path to an IPv6 network host discovering MTU along this path'
+  depends=('libc')
+  files=('usr/bin/tracepath6')
+  mandepends=("tracepath-man=$version-$release")
+  manfiles=('usr/share/man/man8/tracepath6.8')
+}
+
+config-traceroute6() {
+  description='IPv6 version of traceroute'
+  depends=('libc')
+  files=('usr/bin/traceroute6')
+  manfiles=('usr/share/man/man8/traceroute6.8')
+}
+
+build() {
+  cd iputils-$version/ninfod
+
+  ./configure \
+    --host=$host \
+    --prefix=/usr
+  make
+
+  cd ..
+  make \
+    CC=${host}-gcc \
+    USE_CAP=yes \
+    USE_IDN=yes \
+    USE_NETTLE=no \
+    all
+
+  unset MAKEFLAGS
+
+  cd doc
+  sed -i 's/sgmlspl/sgmlspl.pl/' Makefile
+  make man
+}
+
+package() {
+  cd iputils-$version
+
+  install -dm755 "$pkgdir/usr/bin"
+  for i in arping clockdiff ping rarpd rdisc tftpd tracepath tracepath6 traceroute6; do
+    install -m755 "$i" "$pkgdir/usr/bin/$i"
+  done
+  install -m755 ninfod/ninfod "$pkgdir/usr/bin/"
+
+  install -dm755 "$pkgdir/usr/share/man/man8"
+  for i in arping clockdiff ninfod ping rarpd rdisc tftpd tracepath traceroute6; do
+    install -m755 "doc/${i}.8" "$pkgdir/usr/share/man/man8/${i}.8"
+  done
+  ln -s tracepath.8 "$pkgdir/usr/share/man/man8/tracepath6.8"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
