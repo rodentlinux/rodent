@@ -1,0 +1,249 @@
+diff --git a/src/basic/util.c b/src/basic/util.c
+index 9d66d28..6ea3cda 100644
+--- a/src/basic/util.c
++++ b/src/basic/util.c
+@@ -221,10 +221,6 @@ void execute_directories(const char* const* directories, usec_t timeout, char *a
+         wait_for_terminate_and_warn(name, executor_pid, true);
+ }
+ 
+-bool plymouth_running(void) {
+-        return access("/run/plymouth/pid", F_OK) >= 0;
+-}
+-
+ bool display_is_local(const char *display) {
+         assert(display);
+ 
+diff --git a/src/basic/util.h b/src/basic/util.h
+index 44497dc..8d4a5f0 100644
+--- a/src/basic/util.h
++++ b/src/basic/util.h
+@@ -63,8 +63,6 @@ static inline const char* one_zero(bool b) {
+ 
+ void execute_directories(const char* const* directories, usec_t timeout, char *argv[]);
+ 
+-bool plymouth_running(void);
+-
+ bool display_is_local(const char *display) _pure_;
+ int socket_from_display(const char *display, char **path);
+ 
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 4d84a0b..860f107 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -2251,54 +2251,6 @@ void manager_send_unit_audit(Manager *m, Unit *u, int type, bool success) {
+ 
+ }
+ 
+-void manager_send_unit_plymouth(Manager *m, Unit *u) {
+-        static const union sockaddr_union sa = PLYMOUTH_SOCKET;
+-        _cleanup_free_ char *message = NULL;
+-        _cleanup_close_ int fd = -1;
+-        int n = 0;
+-
+-        /* Don't generate plymouth events if the service was already
+-         * started and we're just deserializing */
+-        if (MANAGER_IS_RELOADING(m))
+-                return;
+-
+-        if (!MANAGER_IS_SYSTEM(m))
+-                return;
+-
+-        if (detect_container() > 0)
+-                return;
+-
+-        if (u->type != UNIT_SERVICE &&
+-            u->type != UNIT_MOUNT &&
+-            u->type != UNIT_SWAP)
+-                return;
+-
+-        /* We set SOCK_NONBLOCK here so that we rather drop the
+-         * message then wait for plymouth */
+-        fd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0);
+-        if (fd < 0) {
+-                log_error_errno(errno, "socket() failed: %m");
+-                return;
+-        }
+-
+-        if (connect(fd, &sa.sa, SOCKADDR_UN_LEN(sa.un)) < 0) {
+-
+-                if (!IN_SET(errno, EPIPE, EAGAIN, ENOENT, ECONNREFUSED, ECONNRESET, ECONNABORTED))
+-                        log_error_errno(errno, "connect() failed: %m");
+-                return;
+-        }
+-
+-        if (asprintf(&message, "U\002%c%s%n", (int) (strlen(u->id) + 1), u->id, &n) < 0) {
+-                log_oom();
+-                return;
+-        }
+-
+-        errno = 0;
+-        if (write(fd, message, n + 1) != n + 1)
+-                if (!IN_SET(errno, EPIPE, EAGAIN, ENOENT, ECONNREFUSED, ECONNRESET, ECONNABORTED))
+-                        log_error_errno(errno, "Failed to write Plymouth message: %m");
+-}
+-
+ int manager_open_serialization(Manager *m, FILE **_f) {
+         const char *path;
+         int fd = -1;
+diff --git a/src/core/manager.h b/src/core/manager.h
+index 6ed15c1..c20ff86 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -353,7 +353,6 @@ int manager_reload(Manager *m);
+ void manager_reset_failed(Manager *m);
+ 
+ void manager_send_unit_audit(Manager *m, Unit *u, int type, bool success);
+-void manager_send_unit_plymouth(Manager *m, Unit *u);
+ 
+ bool manager_unit_inactive_or_pending(Manager *m, const char *name);
+ 
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 4934a0e..7e2625d 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2009,9 +2009,6 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su
+                         u->in_audit = true;
+                 }
+ 
+-                if (!UNIT_IS_ACTIVE_OR_RELOADING(os))
+-                        manager_send_unit_plymouth(m, u);
+-
+         } else {
+ 
+                 /* We don't care about D-Bus here, since we'll get an
+diff --git a/units/console-getty.service.m4.in b/units/console-getty.service.m4.in
+index 413d940..a880172 100644
+--- a/units/console-getty.service.m4.in
++++ b/units/console-getty.service.m4.in
+@@ -8,7 +8,7 @@
+ [Unit]
+ Description=Console Getty
+ Documentation=man:agetty(8)
+-After=systemd-user-sessions.service plymouth-quit-wait.service
++After=systemd-user-sessions.service
+ ConditionPathExists=/dev/console
+ m4_ifdef(`HAVE_SYSV_COMPAT',
+ After=rc-local.service
+diff --git a/units/console-shell.service.m4.in b/units/console-shell.service.m4.in
+index a345ec2..5ff7fca 100644
+--- a/units/console-shell.service.m4.in
++++ b/units/console-shell.service.m4.in
+@@ -8,7 +8,7 @@
+ [Unit]
+ Description=Console Shell
+ Documentation=man:sulogin(8)
+-After=systemd-user-sessions.service plymouth-quit-wait.service
++After=systemd-user-sessions.service
+ m4_ifdef(`HAVE_SYSV_COMPAT',
+ After=rc-local.service
+ )m4_dnl
+diff --git a/units/container-getty@.service.m4.in b/units/container-getty@.service.m4.in
+index e126f3a..bd8436a 100644
+--- a/units/container-getty@.service.m4.in
++++ b/units/container-getty@.service.m4.in
+@@ -8,7 +8,7 @@
+ [Unit]
+ Description=Container Getty on /dev/pts/%I
+ Documentation=man:agetty(8) man:machinectl(1)
+-After=systemd-user-sessions.service plymouth-quit-wait.service
++After=systemd-user-sessions.service
+ m4_ifdef(`HAVE_SYSV_COMPAT',
+ After=rc-local.service
+ )m4_dnl
+diff --git a/units/emergency.service.in b/units/emergency.service.in
+index da68eb8..97ecf2e 100644
+--- a/units/emergency.service.in
++++ b/units/emergency.service.in
+@@ -17,7 +17,6 @@ Before=shutdown.target
+ [Service]
+ Environment=HOME=/root
+ WorkingDirectory=-/root
+-ExecStartPre=-/bin/plymouth --wait quit
+ ExecStartPre=-/bin/echo -e 'You are in emergency mode. After logging in, type "journalctl -xb" to view\\nsystem logs, "systemctl reboot" to reboot, "systemctl default" or ^D to\\ntry again to boot into default mode.'
+ ExecStart=-/bin/sh -c "@SULOGIN@; @SYSTEMCTL@ --job-mode=fail --no-block default"
+ Type=idle
+diff --git a/units/getty@.service.m4 b/units/getty@.service.m4
+index 5b82c13..7640a65 100644
+--- a/units/getty@.service.m4
++++ b/units/getty@.service.m4
+@@ -9,7 +9,7 @@
+ Description=Getty on %I
+ Documentation=man:agetty(8) man:systemd-getty-generator(8)
+ Documentation=http://0pointer.de/blog/projects/serial-console.html
+-After=systemd-user-sessions.service plymouth-quit-wait.service
++After=systemd-user-sessions.service
+ m4_ifdef(`HAVE_SYSV_COMPAT',
+ After=rc-local.service
+ )m4_dnl
+diff --git a/units/rescue.service.in b/units/rescue.service.in
+index 5feff69..f64b5e9 100644
+--- a/units/rescue.service.in
++++ b/units/rescue.service.in
+@@ -10,13 +10,12 @@ Description=Rescue Shell
+ Documentation=man:sulogin(8)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+-After=sysinit.target plymouth-start.service
++After=sysinit.target
+ Before=shutdown.target
+ 
+ [Service]
+ Environment=HOME=/root
+ WorkingDirectory=-/root
+-ExecStartPre=-/bin/plymouth --wait quit
+ ExecStartPre=-/bin/echo -e 'You are in rescue mode. After logging in, type "journalctl -xb" to view\\nsystem logs, "systemctl reboot" to reboot, "systemctl default" or ^D to\\nboot into default mode.'
+ ExecStart=-/bin/sh -c "@SULOGIN@; @SYSTEMCTL@ --job-mode=fail --no-block default"
+ Type=idle
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index 4522d0d..6a3b857 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -10,7 +10,7 @@ Description=Serial Getty on %I
+ Documentation=man:agetty(8) man:systemd-getty-generator(8)
+ Documentation=http://0pointer.de/blog/projects/serial-console.html
+ BindsTo=dev-%i.device
+-After=dev-%i.device systemd-user-sessions.service plymouth-quit-wait.service
++After=dev-%i.device systemd-user-sessions.service
+ m4_ifdef(`HAVE_SYSV_COMPAT',
+ After=rc-local.service
+ )m4_dnl
+diff --git a/units/systemd-ask-password-console.path b/units/systemd-ask-password-console.path
+index 2949635..85b088d 100644
+--- a/units/systemd-ask-password-console.path
++++ b/units/systemd-ask-password-console.path
+@@ -10,9 +10,7 @@ Description=Dispatch Password Requests to Console Directory Watch
+ Documentation=man:systemd-ask-password-console.service(8)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+-After=plymouth-start.service
+ Before=paths.target shutdown.target
+-ConditionPathExists=!/run/plymouth/pid
+ 
+ [Path]
+ DirectoryNotEmpty=/run/systemd/ask-password
+diff --git a/units/systemd-ask-password-console.service.in b/units/systemd-ask-password-console.service.in
+index a24fa51..309071e 100644
+--- a/units/systemd-ask-password-console.service.in
++++ b/units/systemd-ask-password-console.service.in
+@@ -10,9 +10,8 @@ Description=Dispatch Password Requests to Console
+ Documentation=man:systemd-ask-password-console.service(8)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+-After=plymouth-start.service systemd-vconsole-setup.service
++After=systemd-vconsole-setup.service
+ Before=shutdown.target
+-ConditionPathExists=!/run/plymouth/pid
+ 
+ [Service]
+ ExecStart=@rootbindir@/systemd-tty-ask-password-agent --watch --console
+diff --git a/units/systemd-ask-password-wall.service.in b/units/systemd-ask-password-wall.service.in
+index 0eaa274..4e34082 100644
+--- a/units/systemd-ask-password-wall.service.in
++++ b/units/systemd-ask-password-wall.service.in
+@@ -11,5 +11,5 @@ Documentation=man:systemd-ask-password-console.service(8)
+ After=systemd-user-sessions.service
+ 
+ [Service]
+-ExecStartPre=-@SYSTEMCTL@ stop systemd-ask-password-console.path systemd-ask-password-console.service systemd-ask-password-plymouth.path systemd-ask-password-plymouth.service
++ExecStartPre=-@SYSTEMCTL@ stop systemd-ask-password-console.path systemd-ask-password-console.service
+ ExecStart=@rootbindir@/systemd-tty-ask-password-agent --wall

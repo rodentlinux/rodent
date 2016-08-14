@@ -1,9 +1,16 @@
-diff -Naur systemd-227.orig/units/ldconfig.service systemd-227/units/ldconfig.service
---- systemd-227.orig/units/ldconfig.service	2015-10-07 17:06:22.000000000 +0200
-+++ systemd-227/units/ldconfig.service	2015-11-05 15:35:30.676694275 +0100
-@@ -12,10 +12,8 @@
+commit 1887be55401c10e83a6e240473ccb99c863c78fe (HEAD -> ldconfig)
+Author: Emil Renner Berthing <systemd@esmil.dk>
+Date:   Sun Aug 14 18:46:05 2016 +0200
+
+    units/ldconfig.service: fix for Rodent Linux
+
+diff --git a/units/ldconfig.service b/units/ldconfig.service
+index d7b78ba..eb71a08 100644
+--- a/units/ldconfig.service
++++ b/units/ldconfig.service
+@@ -12,10 +12,8 @@ DefaultDependencies=no
  Conflicts=shutdown.target
- After=systemd-remount-fs.service
+ After=local-fs.target
  Before=sysinit.target shutdown.target systemd-update-done.service
 -ConditionNeedsUpdate=|/etc
 -ConditionFileNotEmpty=|!/etc/ld.so.cache

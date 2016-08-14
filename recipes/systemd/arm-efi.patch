@@ -1,0 +1,46 @@
+diff --git a/Makefile.am b/Makefile.am
+index 0c27f81..67cbd80 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2825,6 +2825,10 @@ efi_ldflags = \
+ 
+ # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary' instead,
+ # and add required symbols manually.
++if ARCH_ARM
++efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
++EFI_FORMAT = -O binary
++else
+ if ARCH_AARCH64
+ efi_ldflags += --defsym=EFI_SUBSYSTEM=0xa
+ EFI_FORMAT = -O binary
+@@ -2833,6 +2837,7 @@ EFI_FORMAT = --target=efi-app-$(EFI_ARCH)
+ endif
+ endif
+ endif
++endif
+ 
+ # ------------------------------------------------------------------------------
+ systemd_boot_headers = \
+diff --git a/configure.ac b/configure.ac
+index cf595e6..0a86a1d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -57,6 +57,7 @@ AS_IF([test "x$enable_largefile" = "xno"], [AC_MSG_ERROR([--disable-largefile is
+ SET_ARCH(X86_64, x86_64*)
+ SET_ARCH(IA32, i*86*)
+ SET_ARCH(MIPS, mips*)
++SET_ARCH(ARM, arm*)
+ SET_ARCH(AARCH64, aarch64*)
+ 
+ # i18n stuff for the PolicyKit policy files, heck whether intltool can be found, disable NLS otherwise
+@@ -1218,6 +1219,10 @@ AM_COND_IF(ARCH_IA32, [
+ AM_COND_IF(ARCH_X86_64, [
+         EFI_MACHINE_TYPE_NAME=x64])
+ 
++AM_COND_IF(ARCH_ARM, [
++        EFI_ARCH=arm
++        EFI_MACHINE_TYPE_NAME=arm])
++
+ AM_COND_IF(ARCH_AARCH64, [
+         EFI_MACHINE_TYPE_NAME=aa64])
+ 

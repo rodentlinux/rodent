@@ -1,0 +1,10 @@
+group tty 5
+group disk 6
+group lp 7
+group kmem 8
+group input 10
+group audio 11
+group video 12
+group cdrom 13
+group tape 14
+group dialout 15

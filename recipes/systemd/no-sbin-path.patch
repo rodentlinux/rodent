@@ -1,6 +1,13 @@
-diff -Naur systemd-226.orig/src/basic/path-util.h systemd-226.patched/src/basic/path-util.h
---- systemd-226.orig/src/basic/path-util.h	2015-09-08 14:03:22.000000000 +0200
-+++ systemd-226.patched/src/basic/path-util.h	2015-10-03 00:59:47.763870406 +0200
+commit b7ffdc07c515a2e630c380f6db92c4c23836e7c4 (HEAD -> no-sbin-path)
+Author: Emil Renner Berthing <systemd@esmil.dk>
+Date:   Sun Aug 14 12:48:55 2016 +0200
+
+    Don't include /usr/sbin in default path
+
+diff --git a/src/basic/path-util.h b/src/basic/path-util.h
+index a27c13f..82a98a8 100644
+--- a/src/basic/path-util.h
++++ b/src/basic/path-util.h
 @@ -26,7 +26,7 @@
  #include "macro.h"
  #include "time-util.h"

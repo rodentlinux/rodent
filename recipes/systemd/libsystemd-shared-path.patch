@@ -1,0 +1,19 @@
+commit ca129b4fb445ceb0a6733afc70aa38fdfa771bf4 (HEAD -> libsystemd-shared-path)
+Author: Emil Renner Berthing <systemd@esmil.dk>
+Date:   Sun Aug 21 14:24:20 2016 +0200
+
+    Install libsystemd-shared in /usr/lib like other libraries
+
+diff --git a/Makefile.am b/Makefile.am
+index 0c27f81..2072a05 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1087,7 +1087,7 @@ libshared_la_LIBADD = \
+ 	$(LIBIDN_LIBS) \
+ 	$(SECCOMP_LIBS)
+ 
+-rootlibexec_LTLIBRARIES += \
++lib_LTLIBRARIES += \
+ 	libsystemd-shared.la
+ 
+ libsystemd_shared_la_SOURCES = \

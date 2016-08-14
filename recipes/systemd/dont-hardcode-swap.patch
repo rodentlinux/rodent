@@ -1,8 +1,14 @@
+commit f22154ab465a7778bb9083f48902d3dbde7180a9 (HEAD -> dont-hardcode-swap)
+Author: Emil Renner Berthing <systemd@esmil.dk>
+Date:   Sun Aug 14 12:47:05 2016 +0200
+
+    units: don't hardcode swap.target
+
 diff --git a/Makefile.am b/Makefile.am
-index 8646e55..db99631 100644
+index 0c27f81..f6a63bb 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -262,7 +262,7 @@ LOCAL_FS_TARGET_WANTS =
+@@ -267,7 +267,7 @@ LOCAL_FS_TARGET_WANTS =
  MULTI_USER_TARGET_WANTS =
  GRAPHICAL_TARGET_WANTS =
  RESCUE_TARGET_WANTS =

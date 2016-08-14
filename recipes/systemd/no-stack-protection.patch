@@ -1,7 +1,14 @@
-diff -Naur systemd-227.orig/configure.ac systemd-227/configure.ac
---- systemd-227.orig/configure.ac	2015-10-07 17:06:22.000000000 +0200
-+++ systemd-227/configure.ac	2015-10-12 18:30:12.565241195 +0200
-@@ -190,10 +190,7 @@
+commit 66931df2ff5aa4d461199760ffb57466e8cb7a8a (HEAD -> no-stack-protection)
+Author: Emil Renner Berthing <systemd@esmil.dk>
+Date:   Sun Aug 14 12:51:36 2016 +0200
+
+    Don't use -fstack-proctor and friends
+
+diff --git a/configure.ac b/configure.ac
+index cf595e6..8f4b013 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -189,10 +189,7 @@ CC_CHECK_FLAGS_APPEND([with_cflags], [CFLAGS], [\
          -fdiagnostics-show-option \
          -fno-strict-aliasing \
          -fvisibility=hidden \
@@ -13,7 +20,7 @@ diff -Naur systemd-227.orig/configure.ac systemd-227/configure.ac
  
  CC_CHECK_FLAG_APPEND([with_cflags], [CFLAGS], [-Werror=shadow], [
  #include <time.h>
-@@ -218,10 +215,6 @@
+@@ -217,10 +214,6 @@ AS_CASE([$CFLAGS], [*-O[[12345sz\ ]]*],
          [AC_MSG_RESULT([skipping -flto, optimization not enabled])])
  AC_SUBST([OUR_CFLAGS], "$with_cflags $sanitizer_cflags")
  
