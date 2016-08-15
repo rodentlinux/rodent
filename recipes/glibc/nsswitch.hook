@@ -1,0 +1,39 @@
+[[ ! -e etc/nsswitch.conf ]] || exit 0
+
+local snippets=(\#/nsswitch.d/*.sh)
+case ${#snippets[@]} in
+0) exit 0;;
+1) [[ -f "${snippets[0]}" ]] || exit 0;;
+esac
+
+unset passwd group initgroups shadow gshadow
+unset host networks
+unset protocols services ethers rpc
+unset netgroup
+
+for i in "${snippets[@]}"; do
+  . "$i"
+done
+
+{
+  echo "passwd:		${passwd# }"
+  echo "group:		${group# }"
+  echo "initgroups:	${initgroups# }"
+  echo "shadow:		${shadow# }"
+  echo "gshadow:	${gshadow# }"
+  echo
+  echo "hosts:		${hosts# }"
+  echo "networks:	${networks# }"
+  echo
+  echo "protocols:	${protocols# }"
+  echo "services:	${services# }"
+  echo "ethers:		${ethers# }"
+  echo "rpc:		${rpc# }"
+  echo
+  echo "netgroup:	${netgroup# }"
+} > 'etc/nsswitch.conf'
+
+echo 'etc'
+echo 'etc/nsswitch.conf'
+
+# vim: set ft=sh ts=2 sw=2 et:

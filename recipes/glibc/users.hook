@@ -1,0 +1,73 @@
+[[ ! -e etc/passwd  && ! -e etc/group ]] || exit 0
+
+unset shell nologin home
+
+declare -A passwd
+declare -A passwd_home
+declare -A passwd_shell
+declare -A group
+declare -A group_members
+user() {
+  local name="$1"
+  local uid="$2"
+  local gid="$3"
+  local comment="${4:-$name}"
+  passwd_home["$name"]="${5:-/}"
+  passwd_shell["$name"]="${6:-nologin}"
+  local pw="${7:-x}"
+  passwd["$name"]="${pw}:${uid}:${gid}:${comment}"
+}
+group() {
+  local name="$1"
+  local gid="$2"
+  local pw="${3:-x}"
+  group["$name"]="${pw}:${gid}"
+}
+members() {
+  local group="$1"
+  local list="$2"
+  group_members["$group"]="$list"
+}
+member() {
+  local group="$1"
+  local user="$2"
+  group_members["$group"]+=",$user"
+}
+for i in \#/users.d/*.sh; do
+  . "$i"
+done
+echo etc
+if [[ ! -e etc/passwd ]]; then
+  for user in "${!passwd[@]}"; do
+    line="${passwd["$user"]}"
+    uid="${line#*:}"
+    uid="${uid%%:*}"
+    _home="${passwd_home["$user"]}"
+    case "$_home" in
+    home) _home="${home//%n/$user}";;
+    esac
+    _shell="${passwd_shell["$user"]}"
+    case "$_shell" in
+    shell)   _shell="$shell";;
+    nologin) _shell="$nologin";;
+    esac
+    printf "%05d:${user}:${line}:${_home}:${_shell}\n" "$uid"
+  done | sort | while read -r res; do
+    echo "${res#*:}"
+  done > etc/passwd
+  echo 'etc/passwd'
+fi
+if [[ ! -e etc/group ]]; then
+  for name in "${!group[@]}"; do
+    line="${group[$name]}"
+    gid="${line#*:}"
+    gid="${gid%%:*}"
+    mem="${group_members[$name]}"
+    printf "%05d:${name}:${line}:${mem#,}\n" "$gid"
+  done | sort | while read -r res; do
+    echo "${res#*:}"
+  done > etc/group
+  echo 'etc/group'
+fi
+
+# vim: set ft=sh ts=2 sw=2 et:

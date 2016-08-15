@@ -1,0 +1,45 @@
+[[ ! -e usr/lib/locale/locale-archive ]] || exit 0
+
+for i in \#/locales.d/*; do
+  conf="$i"
+done
+[[ "$conf" != '#/locales.d/*' ]] || exit 0
+
+install -dm755 usr
+install -dm755 usr/lib
+install -dm755 usr/lib/locale
+
+while read locale charset; do
+  case $locale in
+  '#'*)
+    continue;;
+  '')
+    continue;;
+  *@*)
+    input="${locale%%.*}@${locale##*@}";;
+  *)
+    input="${locale%%.*}";;
+  esac
+  if [[ -z "$charset" ]]; then
+    echo "Bad entry '$locale $charset', skipping." >&2
+    continue
+  fi
+
+  if [[ ! -d "#/locales/generated/$locale" ]]; then
+    #echo -n "Generating ${locale}.. "
+    mkdir -p "#/locales/generated"
+    localedef \
+      -i "#/locales/locales/$input" \
+      -f <(gunzip -c "#/locales/charmaps/$charset") \
+      "#/locales/generated/$locale" > /dev/null
+    #echo ' done'
+  fi
+  localedef --prefix="$PWD" --add-to-archive "#/locales/generated/$locale" > /dev/null
+done < "$conf"
+
+echo 'usr'
+echo 'usr/lib'
+echo 'usr/lib/locale'
+echo 'usr/lib/locale/locale-archive'
+
+# vim: set ft=sh ts=2 sw=2 et:

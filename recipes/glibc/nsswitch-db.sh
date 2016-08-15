@@ -1,0 +1,6 @@
+passwd+=' db'
+group+=' db'
+shadow+=' db'
+services+=' db'
+protocols+=' db'
+rpc+=' db'
