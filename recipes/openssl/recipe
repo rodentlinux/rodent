@@ -1,13 +1,13 @@
-parts=(libcrypto libssl openssl-engines openssl-devel-man openssl)
-version=1.0.2d
+parts=(libcrypto libssl openssl-engines openssl c_rehash)
+version=1.0.2h
 release=1
 sources=("https://www.openssl.org/source/openssl-${version}.tar.gz")
-sha1sum=('d01d17b44663e8ffa6a33a5a30053779d9593c3d')
+sha1sum=('577585f5f5d299c44dd3c993d3c0ac7a219e4949')
 makedepends=('libz-devel')
 
 config-libcrypto() {
   description='OpenSSL Crypto Library'
-  depends=('libz')
+  depends=('libdl' 'libz')
   devdepends=('glibc-devel' "libcrypto=$version-$release")
   files=('usr/lib/libcrypto.so.*')
   devfiles=(
@@ -16,6 +16,7 @@ config-libcrypto() {
     'usr/lib/libcrypto.so'
     'usr/lib/pkgconfig/libcrypto.pc'
   )
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 config-libssl() {
@@ -29,7 +30,7 @@ config-libssl() {
     'usr/lib/pkgconfig/libssl.pc'
     'usr/lib/pkgconfig/openssl.pc'
   )
-  manfiles=('usr/share/man/man5/**')
+  manfiles=('usr/share/man/man5/*.5')
 }
 
 config-openssl-engines() {
@@ -38,44 +39,104 @@ config-openssl-engines() {
   files=('usr/lib/engines/**')
 }
 
-config-openssl-devel-man() {
-  description='Development manual pages from openssl'
-  files=('usr/share/man/man3/**')
-}
-
 config-openssl() {
   description='OpenSSL openssl utility'
   depends=("libssl=$version-$release")
   files=('usr/bin/openssl')
-  manfiles=('usr/share/man/man1/**' 'usr/share/man/man7/**')
+  manfiles=(
+    'usr/share/man/man1/asn1parse.1'
+    'usr/share/man/man1/ca.1'
+    'usr/share/man/man1/ciphers.1'
+    'usr/share/man/man1/cms.1'
+    'usr/share/man/man1/crl.1'
+    'usr/share/man/man1/crl2pkcs7.1'
+    'usr/share/man/man1/dgst.1'
+    'usr/share/man/man1/dhparam.1'
+    'usr/share/man/man1/dsa.1'
+    'usr/share/man/man1/dsaparam.1'
+    'usr/share/man/man1/dss1.1'
+    'usr/share/man/man1/ec.1'
+    'usr/share/man/man1/ecparam.1'
+    'usr/share/man/man1/enc.1'
+    'usr/share/man/man1/errstr.1'
+    'usr/share/man/man1/gendsa.1'
+    'usr/share/man/man1/genpkey.1'
+    'usr/share/man/man1/genrsa.1'
+    'usr/share/man/man1/md2.1'
+    'usr/share/man/man1/md4.1'
+    'usr/share/man/man1/md5.1'
+    'usr/share/man/man1/mdc2.1'
+    'usr/share/man/man1/nseq.1'
+    'usr/share/man/man1/ocsp.1'
+    'usr/share/man/man1/openssl.1'
+    'usr/share/man/man1/passwd.1'
+    'usr/share/man/man1/pkcs12.1'
+    'usr/share/man/man1/pkcs7.1'
+    'usr/share/man/man1/pkcs8.1'
+    'usr/share/man/man1/pkey.1'
+    'usr/share/man/man1/pkeyparam.1'
+    'usr/share/man/man1/pkeyutl.1'
+    'usr/share/man/man1/rand.1'
+    'usr/share/man/man1/req.1'
+    'usr/share/man/man1/ripemd160.1'
+    'usr/share/man/man1/rsa.1'
+    'usr/share/man/man1/rsautl.1'
+    'usr/share/man/man1/s_client.1'
+    'usr/share/man/man1/s_server.1'
+    'usr/share/man/man1/s_time.1'
+    'usr/share/man/man1/sess_id.1'
+    'usr/share/man/man1/sha.1'
+    'usr/share/man/man1/sha1.1'
+    'usr/share/man/man1/sha224.1'
+    'usr/share/man/man1/sha256.1'
+    'usr/share/man/man1/sha384.1'
+    'usr/share/man/man1/sha512.1'
+    'usr/share/man/man1/smime.1'
+    'usr/share/man/man1/speed.1'
+    'usr/share/man/man1/spkac.1'
+    'usr/share/man/man1/ts.1'
+    'usr/share/man/man1/tsget.1'
+    'usr/share/man/man1/verify.1'
+    'usr/share/man/man1/version.1'
+    'usr/share/man/man1/x509.1'
+    'usr/share/man/man7/*.7'
+  )
 }
 
-prepare() {
-  cd "openssl-$version"
-  patch -Np0 -i ../ca-dir.patch
-  patch -Np0 -i ../no-rpath.patch
+config-c_rehash() {
+  description='Create symbolic links to files named by the hash values'
+  depends=('perl' "openssl=$version-$release")
+  files=('usr/bin/c_rehash')
+  manfiles=('usr/share/man/man1/c_rehash.1')
 }
 
 build() {
-  cp -r --reflink ../openssl-$version/* .
+  cd openssl-$version
+  patch -Np0 -i "$srcdir/ca-dir.patch"
+  patch -Np0 -i "$srcdir/no-rpath.patch"
+  patch -Np1 -i "$srcdir/mips.patch"
 
   unset MAKEFLAGS
 
   local archopts
-  case $ARCH in
+  case $arch in
   armv7hl) archopts=(linux-armv4);;
-  quark)   archopts=(linux-elf);;
+  rpi)     archopts=(linux-armv4);;
+  x86_64)  archopts=(linux-x86_64);;
+  quark)   archopts=(linux-elf no-sse2);;
+  mips)    archopts=(linux-mips32);;
+  mipsel)  archopts=(linux-mips32);;
   *)
-    echo "Unknown architecture '$ARCH'."
+    echo "Unknown architecture '$arch'."
     exit 1;;
   esac
 
   ./Configure \
-    --cross-compile-prefix=$HOST- \
+    --cross-compile-prefix=${host}- \
     --prefix=/usr \
     --openssldir=/etc/ssl \
     --libdir=lib  \
-    shared zlib "${archopts[@]}" \
+    threads shared zlib no-ssl3-method "${archopts[@]}" \
     "-Wa,--noexecstack $CPPFLAGS $CFLAGS $LDFLAGS"
 
   make
@@ -83,8 +144,9 @@ build() {
 }
 
 package() {
+  cd openssl-$version
   unset MAKEFLAGS
-  make INSTALL_PREFIX=$pkgdir MANDIR=/usr/share/man install
+  make INSTALL_PREFIX="$pkgdir" MANDIR=/usr/share/man install
 
   install -dm733 "$pkgdir/usr/share/factory"
   mv "$pkgdir/etc" "$pkgdir/usr/share/factory"

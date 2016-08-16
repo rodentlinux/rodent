@@ -1,0 +1,16 @@
+diff -Naur openssl-1.0.2d.orig/Configure openssl-1.0.2d/Configure
+--- openssl-1.0.2d.orig/Configure	2015-07-09 13:57:15.000000000 +0200
++++ openssl-1.0.2d/Configure	2015-11-20 19:59:21.365125218 +0100
+@@ -1267,12 +1267,6 @@
+ 	$shared_ldflag =~ s/\-mno\-cygwin\s*//;
+ 	}
+ 
+-if ($target =~ /linux.*\-mips/ && !$no_asm && $flags !~ /\-m(ips|arch=)/) {
+-	# minimally required architecture flags for assembly modules
+-	$cflags="-mips2 $cflags" if ($target =~ /mips32/);
+-	$cflags="-mips3 $cflags" if ($target =~ /mips64/);
+-}
+-
+ my $no_shared_warn=0;
+ my $no_user_cflags=0;
+ 
