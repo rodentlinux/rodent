@@ -1,13 +1,13 @@
 parts=(libcap libcap-utils)
-version=2.24
+version=2.25
 release=1
 sources=("https://www.kernel.org/pub/linux/libs/security/linux-privs/libcap2/libcap-${version}.tar.xz")
-sha1sum=('b2754cddb614567de445ffdaac7a00b9671b858a')
+sha1sum=('f0b102e4a68e1bbdcb6b143b63c34a250e473088')
 makedepends=('glibc-devel')
 
 config-libcap() {
   description='POSIX 1003.1e capability library'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libcap=$version-$release")
   files=('usr/lib/libcap.so.*')
   devfiles=(
@@ -16,18 +16,18 @@ config-libcap() {
     'usr/lib/libcap.so'
     'usr/lib/pkgconfig/libcap.pc'
   )
-  manfiles=('usr/share/man/man3/**')
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 config-libcap-utils() {
   description='POSIX 1003.1e capability utilities'
   depends=("libcap=$version-$release")
   files=('usr/bin/*')
-  manfiles=('usr/share/man/man1/capsh.1')
+  manfiles=('usr/share/man/man1/*.1')
 }
 
 build() {
-  cp -r --reflink ../libcap-$version/* .
+  cd libcap-$version
 
   sed -i '/SBINDIR/s#sbin#bin#' Make.Rules
 
@@ -35,12 +35,14 @@ build() {
     KERNEL_HEADERS="$SYSROOT/usr/include" \
     BUILD_CC=gcc \
     BUILD_CFLAGS='-O2' \
-    CC="$HOST-gcc" \
-    AR="$HOST-ar" \
-    RANLIB="$HOST-ranlib"
+    CC=${host}-gcc \
+    AR=${host}-ar \
+    RANLIB=${host}-ranlib
 }
 
 package() {
+  cd libcap-$version
+
   make LIBATTR=no PAM_CAP=no \
     DESTDIR="$pkgdir" \
     prefix=/usr lib=/lib \
