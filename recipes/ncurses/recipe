@@ -1,5 +1,5 @@
 parts=(
-  libncurses libncurses-devel
+  libncurses
   libform
   libmenu
   libpanel
@@ -12,23 +12,18 @@ parts=(
   ncurses-tabs
 )
 version=6.0
-release=2
-sources=("ftp://invisible-island.net/ncurses/ncurses-${version/_/-}.tar.gz")
+release=3
+sources=("ftp://invisible-island.net/ncurses/ncurses-${version}.tar.gz")
 sha1sum=('acd606135a5124905da770803c05f1f20dd3b21c')
-makedepends=('libutil-devel')
+makedepends=('glibc-devel')
 
 config-libncurses() {
   description='System V Release 4.0 curses emulation library'
   provides=('libcurses')
-  depends=('glibc')
+  depends=('libc')
+  devdepends=('glibc-devel' "libncurses=$version-$release")
   files=('usr/lib/libncursesw.so.*')
-  manfiles=('usr/share/man/man3/**')
-}
-
-config-libncurses-devel() {
-  description='Development files for libncurses'
-  depends=('glibc-devel' "libncurses=$version-$release")
-  files=(
+  devfiles=(
     'usr/bin/ncursesw6-config'
     'usr/include/curses.h'
     'usr/include/cursesw.h'
@@ -48,7 +43,10 @@ config-libncurses-devel() {
     'usr/lib/pkgconfig/ncurses.pc'
     'usr/lib/pkgconfig/ncursesw.pc'
   )
-  manfiles=('usr/share/man/man1/ncursesw6-config.1')
+  devmanfiles=(
+    'usr/share/man/man1/ncursesw6-config.1'
+    'usr/share/man/man3/*.3x'
+  )
 }
 
 config-libform() {
@@ -263,20 +261,18 @@ config-ncurses-tabs() {
   manfiles=('usr/share/man/man1/tabs.1')
 }
 
-prepare() {
-  cd "ncurses-$version"
-  patch -Np1 -i ../configure.patch
-}
-
 build() {
-  "../ncurses-$version/configure" \
+  cd ncurses-$version
+  patch -Np1 -i "$srcdir/configure.patch"
+
+  ./configure \
     cf_cv_cpp_param_init=no \
     cf_cv_func_mkstemp=yes \
     cf_cv_func_nanosleep=yes \
     cf_cv_link_dataonly=yes \
     cf_cv_link_funcs=' link symlink' \
     cf_cv_working_poll=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --with-pkg-config-libdir=/usr/lib/pkgconfig \
     --enable-pc-files \
@@ -296,6 +292,7 @@ build() {
 }
 
 package() {
+  cd ncurses-$version
   make DESTDIR="$pkgdir" install
 
   # fool packages looking to link to non-wide-character ncurses libraries
