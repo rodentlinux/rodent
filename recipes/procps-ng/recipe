@@ -16,15 +16,15 @@ parts=(
   w
   watch
 )
-version=3.3.11
+version=3.3.12
 release=1
-sources=("http://downloads.sourceforge.net/project/procps-ng/Production/procps-ng-${version}.tar.xz")
-sha1sum=('1bdca65547df9ed019bd83649b0f8b8eaa017e25')
+sources=("https://downloads.sourceforge.net/project/procps-ng/Production/procps-ng-${version}.tar.xz")
+sha1sum=('82c0745f150f1385ca01fe7d24f05f74e31c94c6')
 makedepends=('libncurses-devel' 'libsystemd-devel')
 
 config-libprocps() {
   description='Library for reading information in /proc'
-  depends=('libsystemd')
+  depends=('libdl' 'libsystemd')
   devdepends=("libprocps=$version-$release")
   files=('usr/lib/libprocps.so.*')
   devfiles=(
@@ -33,7 +33,7 @@ config-libprocps() {
     'usr/lib/libprocps.so'
     'usr/lib/pkgconfig/libprocps.pc'
   )
-  manfiles=('usr/share/man/man3/**')
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 config-procps-ng-kill() {
@@ -61,7 +61,7 @@ config-free() {
 
 config-pgrep() {
   description='Look up or signal processes based on name or other attributes'
-  provides=('pkill')
+  provides=("pkill=$version-$release")
   depends=("libprocps=$version-$release")
   files=('usr/bin/pgrep' 'usr/bin/pkill')
   manfiles=(
@@ -93,21 +93,21 @@ config-ps() {
 
 config-pwdx() {
   description='Report current working directory of a process'
-  depends=("libprocps=$version-$release")
+  depends=('libc')
   files=('usr/bin/pwdx')
   manfiles=('usr/share/man/man1/pwdx.1')
 }
 
 config-slabtop() {
   description='Display kernel slab cache information in real time'
-  depends=("libprocps=$version-$release" 'libncurses')
+  depends=('libncurses' "libprocps=$version-$release")
   files=('usr/bin/slabtop')
   manfiles=('usr/share/man/man1/slabtop.1')
 }
 
 config-sysctl() {
   description='Configure kernel parameters at runtime'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/sysctl')
   manfiles=(
     'usr/share/man/man8/sysctl.8'
@@ -124,7 +124,7 @@ config-tload() {
 
 config-top() {
   description='Display Linux processes'
-  depends=("libprocps=$version-$release" 'libncurses')
+  depends=('libncurses' "libprocps=$version-$release")
   files=('usr/bin/top')
   manfiles=('usr/share/man/man1/top.1')
 }
@@ -150,18 +150,16 @@ config-watch() {
   manfiles=('usr/share/man/man1/watch.1')
 }
 
-prepare() {
-  cd "procps-ng-$version"
-  patch -Np1 -i ../ncurses.patch
-}
-
 build() {
-  "../procps-ng-$version/configure" \
+  cd procps-ng-$version
+  patch -Np1 -i "$srcdir/ncurses.patch"
+
+  ./configure \
     ac_cv_func_malloc_0_nonnull=yes \
     ac_cv_func_mmap_fixed_mapped=yes \
     ac_cv_func_realloc_0_nonnull=yes \
     ac_cv_func_strtod=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --sysconfdir=/etc \
     --sbindir=/usr/bin \
@@ -176,7 +174,12 @@ build() {
 }
 
 package() {
+  cd procps-ng-$version
   make DESTDIR="$pkgdir" install
+
+  # dedup pgrep/pkill
+  rm -f "$pkgdir/usr/bin/pkill"
+  ln -s pgrep "$pkgdir/usr/bin/pkill"
 
   rm -r "$pkgdir/usr/share/doc"
   rm "$pkgdir"/usr/lib/*.la
