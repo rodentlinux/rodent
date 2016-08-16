@@ -1,41 +1,44 @@
-version=1.0.3
-release=2
-sources=("http://hisham.hm/htop/releases/$version/htop-${version}.tar.gz")
-sha1sum=('261492274ff4e741e72db1ae904af5766fc14ef4')
+version=2.0.2
+release=1
+sources=("https://hisham.hm/htop/releases/$version/htop-${version}.tar.gz")
+sha1sum=('201f793f13dce2448e36047079875b9bd5bba75a')
 makedepends=('libncurses-devel')
 
 config-htop() {
   description='Interactive process viewer'
-  depends=('libncurses')
+  depends=('libm' 'libncurses')
   files=('usr/bin/htop')
   manfiles=('usr/share/man/man1/htop.1')
 }
 
-prepare() {
-  cd "htop-$version"
-  sed -i 's|ncursesw/curses.h|curses.h|' RichString.[ch] configure
-}
-
 build() {
-  "../htop-$version/configure" \
+  cd htop-$version
+  sed -i 's|ncursesw/curses.h|curses.h|' RichString.[ch] configure
+
+  ./configure \
     ac_cv_file__proc_meminfo=yes \
     ac_cv_file__proc_stat=yes \
     ac_cv_func_closedir_void=no \
     ac_cv_func_lstat_dereferences_slashed_symlink=yes \
     ac_cv_func_stat_empty_string_bug=no \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --sysconfdir=/etc \
+    --enable-proc \
     --enable-cgroup \
     --enable-taskstats \
     --enable-unicode \
-    --enable-oom \
-    --with-gnu-ld
+    --enable-linux-affinity \
+    --disable-vserver \
+    --disable-ancient-vserver \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
   make
 }
 
 package() {
+  cd htop-$version
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir"/usr/share/{applications,pixmaps}
