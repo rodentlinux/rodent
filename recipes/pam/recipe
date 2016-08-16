@@ -1,5 +1,10 @@
-parts=(libpam libpam_misc libpamc pam-man
+parts=(
+  libpam
+  libpam_misc
+  libpamc
+  pam_env
   pam_filter
+  pam_lastlog
   pam_mkhomedir
   pam_tally
   pam_tally2
@@ -7,19 +12,20 @@ parts=(libpam libpam_misc libpamc pam-man
   pam_unix
   pam_pwhistory
 )
-_basic=(access debug deny echo env exec faildelay ftp group issue keyinit lastlog limits listfile localuser loginuid mail motd namespace nologin permit rhosts rootok securetty shells stress succeed_if time umask warn wheel xauth)
-for i in "${_basic[@]}"; do
+_basic=(debug deny echo exec faildelay ftp issue keyinit listfile localuser loginuid mail motd nologin permit rhosts rootok securetty shells stress succeed_if umask warn wheel xauth)
+_conf=(access group limits namespace time)
+for i in "${_basic[@]}" "${_conf[@]}"; do
   parts+=("pam_$i")
 done
-version=1.2.1
+version=1.3.0
 release=1
 sources=("http://linux-pam.org/library/Linux-PAM-${version}.tar.bz2")
-sha1sum=('3620ab5f5e02272825c426622761a19a1a2facca')
-makedepends=('libutil-devel' 'libcrypt-devel')
+sha1sum=('e956252e81d824c35a60c9b50919ca0767f8a8ec')
+makedepends=('glibc-devel')
 
 config-libpam() {
   description='PAM library'
-  depends=('glibc')
+  depends=('libdl')
   devdepends=('glibc-devel' "libpam=$version-$release")
   files=('usr/lib/libpam.so.*')
   devfiles=(
@@ -27,7 +33,13 @@ config-libpam() {
     'usr/lib/libpam.a'
     'usr/lib/libpam.so'
   )
-  manfiles=('usr/share/man/man3/**')
+  manfiles=(
+    'usr/share/man/man5/pam.conf.5'
+    'usr/share/man/man5/pam.d.5'
+    'usr/share/man/man8/PAM.8'
+    'usr/share/man/man8/pam.8'
+  )
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 config-libpam_misc() {
@@ -43,7 +55,7 @@ config-libpam_misc() {
 
 config-libpamc() {
   description='PAM pamc library'
-  depends=('glibc')
+  depends=('libc')
   devdepends=("libpam-devel=$version-$release" "libpamc=$version-$release")
   files=('usr/lib/libpamc.so.*')
   devfiles=(
@@ -52,9 +64,17 @@ config-libpamc() {
   )
 }
 
-config-pam-man() {
-  description='PAM manual pages'
-  files=('usr/share/man/man5/**' 'usr/share/man/man8/**')
+config-pam_env() {
+  description='PAM env module'
+  depends=("libpam=$version-$release")
+  devdepends=("libpam-devel=$version-$release" "pam_env=$version-$release")
+  files=('usr/lib/security/pam_env.so')
+  devfiles=('usr/lib/security/pam_env.a')
+  manfiles=(
+    'usr/share/man/man5/environment.5'
+    'usr/share/man/man5/pam_env.conf.5'
+    'usr/share/man/man8/pam_env.8'
+  )
 }
 
 config-pam_filter() {
@@ -63,6 +83,16 @@ config-pam_filter() {
   devdepends=("libpam-devel=$version-$release" "pam_filter=$version-$release")
   files=('usr/lib/security/pam_filter/*' 'usr/lib/security/pam_filter.so')
   devfiles=('usr/lib/security/pam_filter.a')
+  manfiles=('usr/share/man/man8/pam_filter.8')
+}
+
+config-pam_lastlog() {
+  description='PAM lastlog module'
+  depends=("libpam=$version-$release" 'libutil')
+  devdepends=("libpam-devel=$version-$release" "pam_lastlog=$version-$release")
+  files=('usr/lib/security/pam_lastlog.so')
+  devfiles=('usr/lib/security/pam_lastlog.a')
+  manfiles=('usr/share/man/man8/pam_lastlog.8')
 }
 
 config-pam_mkhomedir() {
@@ -71,6 +101,7 @@ config-pam_mkhomedir() {
   devdepends=("libpam-devel=$version-$release" "pam_mkhomedir=$version-$release")
   files=('usr/bin/mkhomedir_helper' 'usr/lib/security/pam_mkhomedir.so')
   devfiles=('usr/lib/security/pam_mkhomedir.a')
+  manfiles=('usr/share/man/man8/mkhomedir_helper.8' 'usr/share/man/man8/pam_mkhomedir.8')
 }
 
 config-pam_timestamp() {
@@ -79,6 +110,7 @@ config-pam_timestamp() {
   devdepends=("libpam-devel=$version-$release" "pam_timestamp=$version-$release")
   files=('usr/bin/pam_timestamp_check' 'usr/lib/security/pam_timestamp.so')
   devfiles=('usr/lib/security/pam_timestamp.a')
+  manfiles=('usr/share/man/man8/pam_timestamp_check.8' 'usr/share/man/man8/pam_timestamp.8')
 }
 
 config-pam_tally() {
@@ -87,6 +119,7 @@ config-pam_tally() {
   devdepends=("libpam-devel=$version-$release" "pam_tally=$version-$release")
   files=('usr/bin/pam_tally' 'usr/lib/security/pam_tally.so')
   devfiles=('usr/lib/security/pam_tally.a')
+  manfiles=('usr/share/man/man8/pam_tally.8')
 }
 
 config-pam_tally2() {
@@ -95,37 +128,43 @@ config-pam_tally2() {
   devdepends=("libpam-devel=$version-$release" "pam_tally2=$version-$release")
   files=('usr/bin/pam_tally2' 'usr/lib/security/pam_tally2.so')
   devfiles=('usr/lib/security/pam_tally2.a')
+  manfiles=('usr/share/man/man8/pam_tally2.8')
 }
 
 config-pam_unix() {
   description='PAM unix module'
-  depends=("libpam=$version-$release" 'libcrypt')
+  depends=('libcrypt' "libpam=$version-$release")
   devdepends=("libpam-devel=$version-$release" "pam_unix=$version-$release")
   files=('usr/bin/unix_chkpwd' 'usr/lib/security/pam_unix.so')
   devfiles=('usr/lib/security/pam_unix.a')
+  manfiles=('usr/share/man/man8/unix_chkpwd.8' 'usr/share/man/man8/pam_unix.8')
 }
 
 config-pam_pwhistory() {
   description='PAM pwhistory module'
-  depends=("libpam=$version-$release" 'libcrypt')
+  depends=('libcrypt' "libpam=$version-$release")
   devdepends=("libpam-devel=$version-$release" "pam_pwhistory=$version-$release")
   files=('usr/lib/security/pam_pwhistory.so')
   devfiles=('usr/lib/security/pam_pwhistory.a')
+  manfiles=('usr/share/man/man8/pam_pwhistory.8')
 }
 
 for i in "${_basic[@]}"; do
-  eval "config-pam_$i() { description='PAM $i module'; depends=(\"libpam=\$version-\$release\"); devdepends=(\"libpam-devel=\$version-\$release\" \"pam_${i}=\$version-\$release\"); files=('usr/lib/security/pam_${i}.so'); devfiles=('usr/lib/security/pam_${i}.a'); }"
+  eval "config-pam_$i() { description='PAM $i module'; depends=(\"libpam=\$version-\$release\"); devdepends=(\"libpam-devel=\$version-\$release\" \"pam_${i}=\$version-\$release\"); files=('usr/lib/security/pam_${i}.so'); devfiles=('usr/lib/security/pam_${i}.a'); manfiles=('usr/share/man/man8/pam_${i}.8'); }"
 done
 
-prepare() {
-  cd "Linux-PAM-$version"
-  patch -Np1 -i ../libtool.patch
-}
+for i in "${_conf[@]}"; do
+  eval "config-pam_$i() { description='PAM $i module'; depends=(\"libpam=\$version-\$release\"); devdepends=(\"libpam-devel=\$version-\$release\" \"pam_${i}=\$version-\$release\"); files=('usr/lib/security/pam_${i}.so'); devfiles=('usr/lib/security/pam_${i}.a'); manfiles=('usr/share/man/man5/${i}.conf.5' 'usr/share/man/man8/pam_${i}.8'); }"
+done
 
 build() {
-  "../Linux-PAM-$version/configure" \
-    ac_cv_prog_lex_yytext_pointer=yes \
-    --host=$HOST \
+  cd Linux-PAM-$version
+  patch -Np1 -i "$srcdir/libtool.patch"
+
+  ./configure \
+    ac_cv_func_memcmp_working=yes \
+    ac_cv_prog_cc_gcc_c_o=yes \
+    --host=$host \
     --prefix=/usr \
     --libdir=/usr/lib \
     --sbindir=/usr/bin \
@@ -145,6 +184,7 @@ build() {
 }
 
 package() {
+  cd Linux-PAM-$version
   make DESTDIR="$pkgdir" install
 
   install -dm755 "$pkgdir/usr/share/factory"
@@ -152,6 +192,7 @@ package() {
 
   # this shouldn't be needed when selinux is disabled
   rm "$pkgdir/usr/bin/unix_update"
+  rm "$pkgdir/usr/share/man/man8/unix_update.8"
 
   rm -r "$pkgdir/usr/share/doc"
   rm "$pkgdir"/usr/lib/{,security/}*.la
