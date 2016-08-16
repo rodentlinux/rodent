@@ -3,4 +3,5 @@ Name=enp*
 
 [Network]
 DHCP=v4
-LinkLocalAddressing=true
+LinkLocalAddressing=yes
+DNSSEC=no

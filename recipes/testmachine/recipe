@@ -7,17 +7,18 @@ makedepends=()
 config-testmachine() {
   description='A test configuration'
   depends=(
-    'systemd' 'bash-default'
-    'libnss_files' 'libnss_dns'
+    'bash-default'
+    'libnss_files'
     'util-linux-kill'
     'cat' 'ls' 'mkdir' 'rmdir' 'rm' 'mv' 'cp' 'ln' 'touch'
     'swap-utils' 'sed' # to enable swap on zram0
     'ldd' 'getent'
+    'dd' 'blkid' 'fdisk'
     'ncurses-utils'
     'less'
     'ip' 'ss'
     'htop'
-    'terminfo-xterm'
+    'locale' 'locales' 'terminfo-xterm'
     'systemd-init'
     'systemd-ldconfig'
     'systemd-hostname'
@@ -31,9 +32,9 @@ config-testmachine() {
     'openssh-client'
     'openssh-scp'
     'pam_unix' 'pam_nologin'
-    'avahi-browse' 'libnss_mdns'
+    'avahi-browse' 'libnss_mdns_minimal'
     'free' 'procps-ng-uptime' 'ps'
-    'uname' 'date'
+    'uname' 'date' 'lspci'
     'strace' 'vim'
   )
   files=('**')
@@ -48,6 +49,9 @@ package() {
   cp -a "$srcdir/root" "$pkgdir"
 
   chmod 600 "$pkgdir"/etc/ssh/ssh_host_*_key
+
+  install -dm755 "$pkgdir/#/locales.d"
+  echo 'en_US.utf8 UTF-8' > "$pkgdir/#/locales.d/99-testmachine"
 }
 
 # vim: set ft=sh ts=2 sw=2 et:

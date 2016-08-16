@@ -4,16 +4,13 @@ set -e
 
 num_present_cpus() {
   local num_cpus=0
-  for item in $(sed -e 's/,/ /g' /sys/devices/system/cpu/present); do
-    case $item in
-    *-*)
-      local first=${item%-*}
-      local last=${item#*-}
-      num_cpus=$((num_cpus + last - first + 1))
-      ;;
-    *)
-      num_cpus=$((num_cpus + 1))
-      ;;
+  local line
+  read -r line < /sys/devices/system/cpu/present
+  local i
+  for i in ${line//,/ }; do
+    case $i in
+    *-*) num_cpus=$((num_cpus + ${i#*-} - ${i%-*} + 1));;
+    *)   num_cpus=$((num_cpus + 1));;
     esac
   done
   echo $num_cpus
@@ -23,7 +20,17 @@ dev=${2#/dev/}
 case $1 in
 up)
   # get the amount of memory in the machine (in 4k blocks)
-  size=$(sed -ne 's/^MemTotal: *\([0-9]*\) kB/\1/p' /proc/meminfo)
+  while read -r line; do
+    if [[ "${line%%:*}" = 'MemTotal' ]]; then
+      size="${line#MemTotal:}"
+      size="${size% kB}"
+      break
+    fi
+  done < /proc/meminfo
+  if [[ -z "$size" ]]; then
+    echo 'Error parsing /proc/meminfo.' >&2
+    exit 1
+  fi
   size=$(((size / 4) * 4096))
 
   # initialize the device
