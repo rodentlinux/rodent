@@ -1,12 +1,12 @@
-version=1.0.3
+version=1.0.4
 release=1
 sources=("http://www.netfilter.org/projects/libmnl/files/libmnl-${version}.tar.bz2")
-sha1sum=('c27e25f67c6422ebf893fc3a844af8085a1c5b63')
+sha1sum=('2db40dea612e88c62fd321906be40ab5f8f1685a')
 makedepends=('glibc-devel')
 
 config-libmnl() {
   description='Minimalistic user-space library oriented to Netlink developers'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libmnl=$version-$release")
   files=('usr/lib/libmnl.so.*')
   devfiles=(
@@ -18,8 +18,10 @@ config-libmnl() {
 }
 
 build() {
-  "../libmnl-$version/configure" \
-    --host=$HOST \
+  cd libmnl-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --enable-static \
     --with-gnu-ld \
@@ -29,6 +31,7 @@ build() {
 }
 
 package() {
+  cd libmnl-$version
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la
