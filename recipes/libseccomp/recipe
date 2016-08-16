@@ -1,13 +1,13 @@
 parts=(libseccomp scmp_sys_resolver)
-version=2.2.3
+version=2.3.1
 release=1
 sources=("https://github.com/seccomp/libseccomp/releases/download/v${version}/libseccomp-${version}.tar.gz")
-sha1sum=('a2abb98d506d6a2b8a5fadc35496905e98d999ee')
+sha1sum=('065b0061924152a9df3eacc0d7ec209c7fc2ee05')
 makedepends=('glibc-devel')
 
 config-libseccomp() {
   description='Enhanced seccomp library'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libseccomp=$version-$release")
   files=('usr/lib/libseccomp.so.*')
   devfiles=(
@@ -16,25 +16,31 @@ config-libseccomp() {
     'usr/lib/libseccomp.so'
     'usr/lib/pkgconfig/libseccomp.pc'
   )
-  manfiles=('usr/share/man/man3/**')
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 config-scmp_sys_resolver() {
   description='Tool to resolve system calls from libseccomp'
-  depends=("libseccomp=${version}-${release}")
+  depends=('libc')
   files=('usr/bin/scmp_sys_resolver')
   manfiles=('usr/share/man/man1/scmp_sys_resolver.1')
 }
 
 build() {
-  "../libseccomp-$version/configure" \
-    --host=$HOST \
+  cd libseccomp-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
   make
 }
 
 package() {
+  cd libseccomp-$version
+
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la
