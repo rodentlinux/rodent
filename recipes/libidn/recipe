@@ -1,13 +1,13 @@
 parts=(libidn idn)
-version=1.32
-release=2
+version=1.33
+release=1
 sources=("http://ftp.gnu.org/gnu/libidn/libidn-${version}.tar.gz")
-sha1sum=('ddd018611b98af7c67d434aa42d15d39f45129f5')
+sha1sum=('57872fdc665dcc585e16f4ac0bb35374b1103f7e')
 makedepends=('glibc-devel')
 
 config-libidn() {
   description='Implementation of the Stringprep, Punycode and IDNA specifications'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libidn=$version-$release")
   files=('usr/lib/libidn.so.*')
   devfiles=(
@@ -16,7 +16,7 @@ config-libidn() {
     'usr/lib/libidn.so'
     'usr/lib/pkgconfig/libidn.pc'
   )
-  manfiles=('usr/share/man/man3/**')
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 config-idn() {
@@ -27,7 +27,9 @@ config-idn() {
 }
 
 build() {
-  "../libidn-$version/configure" \
+  cd libidn-$version
+
+  ./configure \
     am_cv_func_iconv_works=yes \
     gl_cv_func_dup2_works=yes \
     gl_cv_func_fdopen_works=yes \
@@ -49,17 +51,18 @@ build() {
     gl_cv_func_working_strerror=yes \
     gl_cv_have_weak=yes \
     gl_cv_header_working_fcntl_h=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --disable-nls \
     --disable-rpath \
-    --with-threads=posix \
-    --with-gnu-ld
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
   make
 }
 
 package() {
+  cd libidn-$version
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir"/usr/share/{emacs,info}
