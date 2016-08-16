@@ -1,12 +1,12 @@
-diff -Naur avahi-0.6.31.orig/configure avahi-0.6.31/configure
---- avahi-0.6.31.orig/configure	2012-02-14 23:36:33.221047221 +0100
-+++ avahi-0.6.31/configure	2015-10-07 10:31:16.231289131 +0200
-@@ -19379,7 +19379,7 @@
+diff -Naur avahi-0.6.32.orig/configure avahi-0.6.32/configure
+--- avahi-0.6.32.orig/configure	2016-02-16 03:16:07.593116883 +0100
++++ avahi-0.6.32/configure	2016-08-15 20:02:13.996215700 +0200
+@@ -20036,7 +20036,7 @@
  
      fi
    fi
 -     USE_NLS=yes
-+     #USE_NLS=yes
++     USE_NLS=no
  
  
      gt_cv_have_gettext=no

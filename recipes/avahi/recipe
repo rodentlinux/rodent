@@ -10,15 +10,15 @@ parts=(
   avahi-resolve
   avahi-set-host-name
 )
-version=0.6.31
-release=2
-sources=("http://www.avahi.org/download/avahi-${version}.tar.gz")
-sha1sum=('7e05bd78572c9088b03b1207a0ad5aba38490684')
+version=0.6.32
+release=1
+sources=("https://github.com/lathiat/avahi/releases/download/v${version}/avahi-${version}.tar.gz")
+sha1sum=('1c6d234058fd7883b3a4515e99216fdc8f71b223')
 makedepends=('libexpat-devel' 'libdaemon-devel' 'libdbus-1-devel')
 
 config-libavahi-common() {
   description='Multicast DNS-SD / Zeroconf common library'
-  depends=('glibc')
+  depends=('libpthread')
   devdepends=('glibc-devel' "libavahi-common=$version-$release")
   files=('usr/lib/libavahi-common.so.*')
   devfiles=(
@@ -43,7 +43,7 @@ config-libavahi-core() {
 
 config-libavahi-client() {
   description='Multicast DNS-SD / Zeroconf client library'
-  depends=("libavahi-common=$version-$release" 'libdbus-1')
+  depends=('libdl' "libavahi-common=$version-$release" 'libdbus-1')
   devdepends=('glibc-devel' "libavahi-client=$version-$release")
   files=('usr/lib/libavahi-client.so.*')
   devfiles=(
@@ -56,8 +56,9 @@ config-libavahi-client() {
 
 config-avahi-daemon() {
   description='Multicast DNS-SD / Zeroconf daemon'
-  depends=('libexpat' 'libdaemon' "libavahi-core=$version-$release" 'libdbus-1')
+  depends=('libdl' 'libexpat' 'libdaemon' "libavahi-core=$version-$release" 'libdbus-1')
   files=(
+    '#/users.d/10-avahi-daemon.sh'
     'usr/bin/avahi-daemon'
     'usr/lib/systemd/system/avahi-daemon.service'
     'usr/lib/systemd/system/avahi-daemon.socket'
@@ -76,7 +77,10 @@ config-avahi-daemon() {
 config-avahi-autoipd() {
   description='IPv4LL network address configuration daemon'
   depends=('libdaemon')
-  files=('usr/bin/avahi-autoipd')
+  files=(
+    '#/users.d/10-avahi-autoipd.sh'
+    'usr/bin/avahi-autoipd'
+  )
   manfiles=(
     'usr/share/man/man8/avahi-autoipd.8'
     'usr/share/man/man8/avahi-autoipd.action.8'
@@ -140,18 +144,16 @@ config-avahi-set-host-name() {
   manfiles=('usr/share/man/man1/avahi-set-host-name.1')
 }
 
-prepare() {
-  cd "avahi-$version"
-  #patch -Np1 -i ../avahi-v0.6.31-8-g147cdce.patch
-  patch -Np1 -i ../libtool.patch
-  patch -Np1 -i ../runtime_dir.patch
-  patch -Np1 -i ../no-nls.patch
-  patch -Np1 -i ../after-resolved.patch
-}
-
 build() {
-  "../avahi-$version/configure" \
-    --host=$HOST \
+  cd avahi-$version
+
+  patch -Np1 -i "$srcdir/libtool.patch"
+  patch -Np1 -i "$srcdir/runtime_dir.patch"
+  patch -Np1 -i "$srcdir/no-nls.patch"
+  patch -Np1 -i "$srcdir/after-resolved.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --sbindir=/usr/bin \
     --sysconfdir=/etc \
@@ -168,11 +170,14 @@ build() {
     --disable-mono \
     --disable-monodoc \
     --disable-nls \
-    --with-distro=archlinux \
+    --with-distro=none \
     --with-dbus-sys=/usr/share/dbus-1/system.d \
-    --with-dbus-system-address=unix:path=/run/dbus/system_bus_socket \
-    --with-autoipd-user=avahi \
-    --with-autoipd-group=avahi \
+    --with-dbus-system-socket=/run/dbus/system_bus_socket \
+    --with-avahi-user=avahi-daemon \
+    --with-avahi-group=avahi-daemon \
+    --with-avahi-priv-access-group=avahi-admin \
+    --with-autoipd-user=avahi-autoipd \
+    --with-autoipd-group=avahi-autoipd \
     --with-gnu-ld \
     --with-sysroot="$SYSROOT"
 
@@ -180,19 +185,22 @@ build() {
 }
 
 package() {
+  cd avahi-$version
   make DESTDIR="$pkgdir" install
 
   ln -s avahi-daemon.service "$pkgdir/usr/lib/systemd/system/dbus-org.freedesktop.Avahi.service"
-  rm -r "$pkgdir/etc/rc.d"
 
   install -dm755 "$pkgdir/usr/share/factory"
   mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
 
   rmdir "$pkgdir/usr/lib/avahi"
-  rmdir "$pkgdir/usr/share/applications"
   rm -r "$pkgdir/var"
 
   rm "$pkgdir"/usr/lib/*.la
+
+  install -dm755 "$pkgdir/#/users.d"
+  install -m644 "$srcdir/users-avahi-daemon.sh"  "$pkgdir/#/users.d/10-avahi-daemon.sh"
+  install -m644 "$srcdir/users-avahi-autoipd.sh" "$pkgdir/#/users.d/10-avahi-autoipd.sh"
 }
 
 # vim: set ft=sh ts=2 sw=2 et:

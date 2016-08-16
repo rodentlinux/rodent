@@ -1,12 +1,12 @@
-diff -Naur avahi-0.6.31.orig/ltmain.sh avahi-0.6.31/ltmain.sh
---- avahi-0.6.31.orig/ltmain.sh	2015-10-07 00:45:19.097425171 +0200
-+++ avahi-0.6.31/ltmain.sh	2012-02-14 23:36:26.650024761 +0100
-@@ -6918,7 +6918,7 @@
+diff -Naur avahi-0.6.32.orig/ltmain.sh avahi-0.6.32/ltmain.sh
+--- avahi-0.6.32.orig/ltmain.sh	2016-02-16 03:16:05.477176137 +0100
++++ avahi-0.6.32/ltmain.sh	2016-08-15 19:40:11.165701700 +0200
+@@ -8367,7 +8367,7 @@
  	      fi
  	    else
  	      # We cannot seem to hardcode it, guess we'll fake it.
--	      add_dir="-L$libdir"
-+	      add_dir="-L=$libdir"
+-	      add_dir=-L$libdir
++	      add_dir=-L=$libdir
  	      # Try looking first in the location we're being installed to.
  	      if test -n "$inst_prefix_dir"; then
  		case $libdir in

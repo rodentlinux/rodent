@@ -1,7 +1,7 @@
-diff -Naur avahi-0.6.31.orig/configure avahi-0.6.31/configure
---- avahi-0.6.31.orig/configure	2012-02-14 23:36:33.221047221 +0100
-+++ avahi-0.6.31/configure	2015-10-07 10:23:53.283385955 +0200
-@@ -22710,7 +22710,7 @@
+diff -Naur avahi-0.6.32.orig/configure avahi-0.6.32/configure
+--- avahi-0.6.32.orig/configure	2016-02-16 03:16:07.593116883 +0100
++++ avahi-0.6.32/configure	2016-08-15 20:04:17.781552323 +0200
+@@ -23403,7 +23403,7 @@
  #
  # Avahi runtime dir
  #
