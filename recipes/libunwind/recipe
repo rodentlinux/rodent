@@ -1,36 +1,42 @@
 version=1.1
-release=1
-sources=("http://download.savannah.gnu.org/releases/libunwind/libunwind-${version}.tar.gz")
+release=2
+sources=("https://download.savannah.gnu.org/releases/libunwind/libunwind-${version}.tar.gz")
 sha1sum=('aa04e6a7164aef754415b3b5e9453985741dd99e')
 makedepends=('glibc-devel')
 
 config-libunwind() {
   description='C API to determine the call-chain of a program'
-  depends=('glibc')
+  depends=('libgcc')
   devdepends=('glibc-devel' "libunwind=$version-$release")
   files=('usr/lib/libunwind*.so.*')
   devfiles=(
     'usr/include/**'
     'usr/lib/libunwind*.a'
     'usr/lib/libunwind*.so'
-    'usr/lib/pkgconfig/**'
+    'usr/lib/pkgconfig/*.pc'
   )
-  manfiles=('usr/share/man/man3/**')
+  devmanfiles=('usr/share/man/man3/*.3')
 }
 
 build() {
-  "../libunwind-$version/configure" \
-    --host=$HOST \
+  cd libunwind-$version
+  patch -Np1 -i "$srcdir/001-invalid-dwarf-opcodes-can-cause-references-beyond.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
-  patch -Np1 -i ../libtool.patch libtool
+  patch -Np1 -i "$srcdir/libtool.patch" libtool
 
-  make
+  make SUBDIRS='src doc'
 }
 
 package() {
+  cd libunwind-$version
   unset MAKEFLAGS
-  make DESTDIR="$pkgdir" install
+  make SUBDIRS='src doc' DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la
 }
