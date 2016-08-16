@@ -1,8 +1,8 @@
 parts=(strace strace-log-merge strace-graph)
-version=4.10
+version=4.13
 release=1
-sources=("http://downloads.sourceforge.net/strace/strace-${version}.tar.xz")
-sha1sum=('5c3ec4c5a9eeb440d7ec70514923c2e7e7f9ab6c')
+sources=("https://downloads.sourceforge.net/strace/strace-${version}.tar.xz")
+sha1sum=('7e1fc622e2b166cb74799a14c23d6bfde9ddbc3c')
 makedepends=('libunwind-devel')
 
 config-strace() {
@@ -14,7 +14,7 @@ config-strace() {
 
 config-strace-log-merge() {
   description='Log merging utility from strace'
-  depends=('sh' 'cat' 'sed')
+  depends=('sh' 'cat' 'sed' 'sort')
   files=('usr/bin/strace-log-merge')
 }
 
@@ -25,8 +25,10 @@ config-strace-graph() {
 }
 
 build() {
-  "../strace-$version/configure" \
-    --host=$HOST \
+  cd strace-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --with-libunwind
 
@@ -34,6 +36,7 @@ build() {
 }
 
 package() {
+  cd strace-$version
   make DESTDIR="$pkgdir" install
 }
 
