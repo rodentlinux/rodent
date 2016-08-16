@@ -1,18 +1,20 @@
 version=4.2.2
-release=2
-sources=("ftp://ftp.gnu.org/pub/gnu/sed/sed-${version}.tar.gz")
+release=3
+sources=("https://ftp.gnu.org/pub/gnu/sed/sed-${version}.tar.gz")
 sha1sum=('2f24b4624d1a3080626b11610053996ec30ba0f1')
 makedepends=('glibc-devel')
 
 config-sed() {
   description='GNU Stream Editor'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/sed')
   manfiles=('usr/share/man/man1/sed.1')
 }
 
 build() {
-  "../sed-$version/configure" \
+  cd sed-$version
+
+  ./configure \
     gl_cv_double_slash_root=no \
     gl_cv_func_btowc_nul=yes \
     gl_cv_func_getopt_gnu=yes \
@@ -39,7 +41,7 @@ build() {
     gl_cv_header_working_fcntl_h=yes \
     sed_cv_fopen_rt=yes \
     sed_cv_libcp_needed=no \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --disable-acl \
     --disable-nls \
@@ -51,6 +53,7 @@ build() {
 }
 
 package() {
+  cd sed-$version
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/info"
