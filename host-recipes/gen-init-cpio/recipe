@@ -1,0 +1,15 @@
+version=1.0
+release=1
+sources=()
+sha1sum=()
+
+build() {
+  gcc -std=gnu99 -O2 -Wall -Wextra "$srcdir/gen_init_cpio.c" -o gen_init_cpio
+}
+
+package() {
+  install -dm744 tools/bin
+  install -m744 gen_init_cpio tools/bin/gen_init_cpio
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
