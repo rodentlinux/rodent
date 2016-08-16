@@ -1,0 +1,10 @@
+[Unit]
+Description=Secure Shell socket
+Conflicts=sshd.service
+
+[Socket]
+ListenStream=22
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

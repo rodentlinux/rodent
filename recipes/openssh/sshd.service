@@ -1,5 +1,6 @@
 [Unit]
-Description=OpenSSH Daemon
+Description=OpenSSH daemon
+Documentation=man:sshd(8)
 After=network.target
 
 [Service]

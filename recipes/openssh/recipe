@@ -4,32 +4,30 @@ parts=(
   openssh-scp
   openssh-sftp
   openssh-sftp-server
+  openssh-keysign
   openssh-agent
+  openssh-pkcs11-helper
   openssh-keygen
+  openssh-keyscan
 )
-version=7.1p1
-release=2
+version=7.3p1
+release=1
 sources=("http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-${version}.tar.gz")
-sha1sum=('ed22af19f962262c493fcc6ed8c8826b2761d9b6')
+sha1sum=('bfade84283fcba885e2084343ab19a08c7d123a5')
 makedepends=(
-  'libutil-devel'
-  'libnsl-devel'
-  'libcrypt-devel'
   'libz-devel'
   'libcap-devel'
   'libpam-devel'
-  'libncurses-devel'
   'libcrypto-devel'
 )
 
 config-openssh-client() {
   description='OpenSSH Client'
   provides=('ssh-client')
-  depends=('libz' 'libcrypto')
-  files=('usr/bin/ssh' 'usr/bin/slogin')
+  depends=('libresolv' 'libcrypto') # libz required by libcrypto
+  files=('usr/bin/ssh')
   manfiles=(
     'usr/share/man/man1/ssh.1'
-    'usr/share/man/man1/slogin.1'
     'usr/share/man/man5/ssh_config.5'
   )
 }
@@ -37,9 +35,11 @@ config-openssh-client() {
 config-openssh-server() {
   description='OpenSSH Server'
   provides=('ssh-server')
-  depends=('libutil' 'libz' 'libpam' 'libcrypto')
+  depends=('libutil' 'libcrypt' 'libpam' 'libcrypto') # libz required by libcrypto
   files=(
     'usr/bin/sshd'
+    'usr/lib/systemd/system/sshd.socket'
+    'usr/lib/systemd/system/sshd@.service'
     'usr/lib/systemd/system/sshd.service'
     'usr/lib/tmpfiles.d/sshd.conf'
   )
@@ -51,80 +51,116 @@ config-openssh-server() {
 }
 
 config-openssh-scp() {
-  description='OpenSSH Secure Copy'
+  description='OpenSSH secure copy'
   provides=('scp')
-  depends=('ssh-client')
+  depends=('libc' 'ssh-client')
   files=('usr/bin/scp')
   manfiles=('usr/share/man/man1/scp.1')
 }
 
 config-openssh-sftp() {
-  description='OpenSSH Secure FTP Client'
-  depends=('libncurses' 'ssh-client')
+  description='OpenSSH Secure FTP client'
+  depends=('libc' 'ssh-client')
   files=('usr/bin/sftp')
   manfiles=('usr/share/man/man1/sftp.1')
 }
 
 config-openssh-sftp-server() {
-  description='OpenSSH Secure FTP Server'
+  description='OpenSSH Secure FTP server'
   depends=('ssh-server')
   files=('usr/lib/ssh/sftp-server')
   manfiles=('usr/share/man/man8/sftp-server.8')
 }
 
+config-openssh-keysign() {
+  description='OpenSSH helper program for host-based authentication'
+  depends=('libcrypto' 'ssh-client') # libz required by libcrypto
+  files=('usr/lib/ssh/ssh-keysign')
+  manfiles=('usr/share/man/man8/ssh-keysign.8')
+}
+
 config-openssh-agent() {
-  description='OpenSSH Key Agent'
+  description='OpenSSH authentication agent'
   provides=('ssh-agent')
-  depends=('libz' 'libcrypto')
+  depends=('libcrypto')
   files=('usr/bin/ssh-add' 'usr/bin/ssh-agent')
   manfiles=('usr/share/man/man1/ssh-add.1' 'usr/share/man/man1/ssh-agent.1')
+}
+
+config-openssh-pkcs11-helper() {
+  description='OpenSSH ssh-agent helper program for PKCS#11 support'
+  provides=('ssh-pkcs11-helper')
+  depends=('libcrypto' 'ssh-agent')
+  files=('usr/lib/ssh/ssh-pkcs11-helper')
+  manfiles=('usr/share/man/man8/ssh-pkcs11-helper.8')
 }
 
 config-openssh-keygen() {
   description='OpenSSH Key Generation Tool'
   provides=('ssh-keygen')
-  depends=('libz' 'libcrypto')
+  depends=('libresolv' 'libcrypto')
   files=('usr/bin/ssh-keygen')
   manfiles=('usr/share/man/man1/ssh-keygen.1')
 }
 
+config-openssh-keyscan() {
+  description='Gather ssh public keys'
+  provides=('ssh-keyscan')
+  depends=('libcrypto') # libz required by libcrypto
+  files=('usr/bin/ssh-keyscan')
+  manfiles=('usr/share/man/man1/ssh-keyscan.1')
+}
+
 build() {
-  "../openssh-$version/configure" \
-    --host=$HOST \
+  cd openssh-$version
+
+  ./configure \
+    ac_cv_file___dev_ptc_=no \
+    --host=$host \
     --prefix=/usr \
     --sbindir=/usr/bin \
     --libexecdir=/usr/lib/ssh \
     --sysconfdir=/etc/ssh \
     --disable-strip \
+    --disable-etc-default-login \
+    --disable-lastlog \
     --disable-utmp \
     --disable-utmpx \
     --disable-wtmp \
     --disable-wtmpx \
-    --disable-lastlog \
+    --disable-pututline \
+    --disable-pututxline \
     --with-ssl-engine \
     --with-pam \
     --with-privsep-user=nobody \
-    --with-pid-dir=/run \
+    --with-sandbox=seccomp_filter \
+    --with-mantype=man \
     --with-default-path=/usr/local/bin:/usr/bin \
     --with-superuser-path=/usr/local/sbin:/usr/local/bin:/usr/bin \
-    --with-gnu-ld \
+    --with-pid-dir=/run \
     --without-ssh1 \
     --without-stackprotect \
     --without-hardening \
     --without-rpath
 
-  patch -Np1 -i ../config.patch config.h
+  # may fail to apply if configure script
+  # detects the correct values
+  patch -Np1 -i "$srcdir/config.patch" config.h || true
+
   make
 }
 
 package() {
+  cd openssh-$version
   make DESTDIR="$pkgdir" install
 
   install -dm755 "$pkgdir/usr/lib/systemd/system"
-  install -m644 ../sshd.service "$pkgdir/usr/lib/systemd/system/sshd.service"
+  install -m644 "$srcdir/sshd.socket"   "$pkgdir/usr/lib/systemd/system/sshd.socket"
+  install -m644 "$srcdir/sshd@.service" "$pkgdir/usr/lib/systemd/system/sshd@.service"
+  install -m644 "$srcdir/sshd.service"  "$pkgdir/usr/lib/systemd/system/sshd.service"
 
   install -dm755 "$pkgdir/usr/lib/tmpfiles.d"
-  install -m644 ../sshd.conf "$pkgdir/usr/lib/tmpfiles.d/sshd.conf"
+  install -m644 "$srcdir/sshd.conf" "$pkgdir/usr/lib/tmpfiles.d/sshd.conf"
 
   install -dm755 "$pkgdir/usr/share/factory"
   mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
