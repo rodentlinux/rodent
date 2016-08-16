@@ -1,0 +1,12 @@
+diff -Naur iproute2-4.7.0.orig/include/xtables.h iproute2-4.7.0/include/xtables.h
+--- iproute2-4.7.0.orig/include/xtables.h	2016-08-08 17:58:39.000000000 +0200
++++ iproute2-4.7.0/include/xtables.h	2016-08-16 20:13:46.142879868 +0200
+@@ -31,8 +31,6 @@
+ #define IPPROTO_UDPLITE	136
+ #endif
+ 
+-#include <xtables-version.h>
+-
+ struct in_addr;
+ 
+ /*
