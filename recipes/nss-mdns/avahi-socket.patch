@@ -1,0 +1,12 @@
+diff -Naur nss-mdns-0.10.orig/src/Makefile.in nss-mdns-0.10/src/Makefile.in
+--- nss-mdns-0.10.orig/src/Makefile.in	2007-05-12 16:55:34.000000000 +0200
++++ nss-mdns-0.10/src/Makefile.in	2016-08-19 18:11:14.391960424 +0200
+@@ -409,7 +409,7 @@
+ # This cool debug trap works on i386/gcc only
+ AM_CFLAGS = -DMDNS_ALLOW_FILE=\"$(sysconfdir)/mdns.allow\" \
+ 	-DRESOLV_CONF_FILE=\"$(sysconfdir)/resolv.conf\" \
+-	-DAVAHI_SOCKET=\"$(localstatedir)/run/avahi-daemon/socket\" \
++	-DAVAHI_SOCKET=\"/run/avahi-daemon/socket\" \
+ 	'-DDEBUG_TRAP=__asm__("int $$3")'
+ AM_LDFLAGS = -avoid-version -module -export-dynamic
+ lib_LTLIBRARIES = $(am__append_1) $(am__append_2)

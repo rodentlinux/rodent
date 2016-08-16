@@ -1,22 +1,22 @@
-parts=(
-  libnss_mdns  libnss_mdns_minimal
-  libnss_mdns4 libnss_mdns4_minimal
-  libnss_mdns6 libnss_mdns6_minimal
-)
+parts=(libnss_mdns{,4,6}{,_minimal})
 version=0.10
-release=1
+release=2
 sources=("http://0pointer.de/lennart/projects/nss-mdns/nss-mdns-${version}.tar.gz")
 sha1sum=('d8610950b8b209e29129a70765449b820bcda1a0')
 makedepends=('glibc-devel')
 
-for i in "${parts[@]}"; do
-  eval "config-$i() { description='glibc plugin providing host name resolution via mDNS'; depends=('avahi-daemon'); files=('usr/lib/${i}.so.*'); }"
+for i in '' 4 6; do
+  eval "config-libnss_mdns${i}() { description='glibc plugin for host name resolution via mDNS'; depends=('libc' 'avahi-daemon'); files=('#/nsswitch.d/60-mdns${i}.sh' 'usr/lib/libnss_mdns${i}.so.*'); }"
+  eval "config-libnss_mdns${i}_minimal() { description='glibc plugin for host name resolution of .local via mDNS'; depends=('avahi-daemon'); files=('#/nsswitch.d/20-mdns${i}_minimal.sh' 'usr/lib/libnss_mdns${i}_minimal.so.*'); }"
 done
 
 build() {
-  "../nss-mdns-$version/configure" \
+  cd nss-mdns-$version
+  patch -Np1 -i "$srcdir/avahi-socket.patch"
+
+  ./configure \
     ac_cv_func_malloc_0_nonnull=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --enable-avahi \
     --disable-legacy \
@@ -27,7 +27,15 @@ build() {
 }
 
 package() {
+  cd nss-mdns-$version
+
   make DESTDIR="$pkgdir" install
+
+  install -dm755 "$pkgdir/#/nsswitch.d"
+  for i in '' 4 6; do
+    echo "hosts+=' mdns${i}_minimal [NOTFOUND=return]'" > "$pkgdir/#/nsswitch.d/20-mdns${i}_minimal.sh"
+    echo "hosts+=' mdns${i}'" > "$pkgdir/#/nsswitch.d/60-mdns${i}.sh"
+  done
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
