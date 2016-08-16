@@ -1,21 +1,16 @@
-parts=(libcurl libcurl-devel curl)
-version=7.44.0
+parts=(libcurl curl)
+version=7.50.1
 release=1
-sources=("http://curl.haxx.se/download/curl-${version}.tar.gz")
-sha1sum=('4dc36d2f3310585cc1f9211b5f5c71327c86fb61')
+sources=("https://curl.haxx.se/download/curl-${version}.tar.gz")
+sha1sum=('c8db732c280059f570fc39c6b49ae5c1f19ee5ef')
 makedepends=('libz-devel' 'libidn-devel' 'libssl-devel')
 
 config-libcurl() {
   description='A URL retrieval library'
-  depends=('libz' 'libidn' 'libssl')
+  depends=('libpthread' 'libz' 'libidn' 'libssl')
+  devdepends=('glibc-devel' "libcurl=$version-$release")
   files=('usr/lib/libcurl.so.*')
-  manfiles=('usr/share/man/man3/**')
-}
-
-config-libcurl-devel() {
-  description='Development files for libcurl'
-  depends=('glibc-devel' "libcurl=$version-$release")
-  files=(
+  devfiles=(
     'usr/include/**'
     'usr/bin/curl-config'
     'usr/lib/libcurl.a'
@@ -23,7 +18,10 @@ config-libcurl-devel() {
     'usr/lib/pkgconfig/libcurl.pc'
     'usr/share/aclocal/libcurl.m4'
   )
-  manfiles=('usr/share/man/man1/curl-config.1')
+  devmanfiles=(
+    'usr/share/man/man1/curl-config.1'
+    'usr/share/man/man3/*.3'
+  )
 }
 
 config-curl() {
@@ -34,8 +32,10 @@ config-curl() {
 }
 
 build() {
-  "../curl-$version/configure" \
-    --host=$HOST \
+  cd curl-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --enable-ipv6 \
     --disable-ldap \
@@ -52,6 +52,7 @@ build() {
 }
 
 package() {
+  cd curl-$version
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la
