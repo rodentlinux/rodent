@@ -1,13 +1,13 @@
 parts=(libz)
 version=1.2.8
-release=2
+release=3
 sources=("http://zlib.net/current/zlib-${version}.tar.gz")
 sha1sum=('a4d316c404ff54ca545ea71a27af7dbc29817088')
 makedepends=('glibc-devel')
 
 config-libz() {
   description='Compression library implementing the deflate compression method found in gzip and PKZIP'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libz=$version-$release")
   files=('usr/lib/libz.so.*')
   devfiles=(
@@ -16,18 +16,20 @@ config-libz() {
     'usr/lib/libz.a'
     'usr/lib/pkgconfig/zlib.pc'
   )
-  manfiles=('usr/share/man/man3/zlib.3')
+  devmanfiles=('usr/share/man/man3/zlib.3')
 }
 
 build() {
-  cp -r --reflink ../zlib-$version/* .
+  cd zlib-$version
 
-  CHOST="$HOST" \
+  CHOST=$host \
   ./configure --prefix=/usr --uname=Linux
   make
 }
 
 package() {
+  cd zlib-$version
+
   make DESTDIR="$pkgdir" install
 }
 
