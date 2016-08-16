@@ -1,19 +1,19 @@
 parts=(bash bashbug bash-default)
 _basever=4.3
-_patchlevel=42
+_patchlevel=46
 version=$_basever.$_patchlevel
-release=2
-sources=("http://ftp.gnu.org/gnu/bash/bash-${_basever}.tar.gz")
+release=1
+sources=("https://ftp.gnu.org/gnu/bash/bash-${_basever}.tar.gz")
 sha1sum=('45ac3c5727e7262334f4dfadecdf601b39434e84')
 for (( i=1; i <= $_patchlevel; i++ )); do
-  sources+=("noextract:http://ftp.gnu.org/gnu/bash/bash-$_basever-patches/bash${_basever//./}-$(printf "%03d" $i)")
+  sources+=("noextract:https://ftp.gnu.org/gnu/bash/bash-$_basever-patches/bash${_basever//./}-$(printf "%03d" $i)")
   sha1sum+=('SKIP')
 done
 makedepends=('libncurses-devel' 'libhistory-devel' 'libreadline-devel')
 
 config-bash() {
   description='GNU Bourne Again shell'
-  depends=('libreadline')
+  depends=('libdl' 'libreadline')
   files=('usr/bin/bash')
   manfiles=('usr/share/man/man1/bash.1')
 }
@@ -29,22 +29,28 @@ config-bash-default() {
   description='Use Bash as default /bin/sh'
   provides=('sh')
   depends=("bash=$version-$release")
-  files=('usr/bin/sh')
-}
-
-prepare() {
-  cd "bash-$_basever"
-  set +x
-  for (( i=1; i <= $_patchlevel; i++ )); do
-    echo "Applying level $i:"
-    patch -Np0 -i "../bash${_basever//./}-$(printf "%03d" $i)"
-  done
-
-  # http://hmarco.org/bugs/bash_4.3-setuid-bug.html (FS#40663)
-  patch -Np0 -i ../bash_4.3-fix-setuid.patch
+  files=(
+    '#/users.d/10-bash-default.sh'
+    'usr/bin/sh'
+  )
 }
 
 build() {
+  cd bash-$_basever
+
+  set +x
+  for (( i=1; i <= $_patchlevel; i++ )); do
+    echo "Applying level $i:"
+    patch -Np0 -i "$srcdir/bash${_basever//./}-$(printf "%03d" $i)"
+  done
+  set -x
+
+  # http://hmarco.org/bugs/bash_4.3-setuid-bug.html (FS#40663)
+  patch -Np0 -i "$srcdir/bash_4.3-fix-setuid.patch"
+
+  # https://bugs.archlinux.org/task/45891
+  patch -Np1 -i "$srcdir/bash-4.3-old-memleak.patch"
+
   local bashconfig=(
     -DDEFAULT_PATH_VALUE=\'\"/usr/local/sbin:/usr/local/bin:/usr/bin\"\'
     -DSTANDARD_UTILS_PATH=\'\"/usr/bin\"\'
@@ -53,7 +59,7 @@ build() {
   )
   export CFLAGS="$CFLAGS ${bashconfig[@]}"
 
-  "../bash-$_basever/configure" \
+  ./configure \
     ac_cv_func_mmap_fixed_mapped=yes \
     ac_cv_func_strcoll_works=yes \
     ac_cv_func_working_mktime=yes \
@@ -70,7 +76,7 @@ build() {
     bash_cv_wcwdith_broken=no \
     bash_cv_wexitstatus_offset=8 \
     gt_cv_int_divbyzero_sigfpe=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --enable-readline \
     --disable-nls \
@@ -80,14 +86,19 @@ build() {
     --with-gnu-ld \
     --without-afs \
     --without-bash-malloc
+
   make
 }
 
 package() {
+  cd bash-$_basever
   make DESTDIR="$pkgdir" install
   ln -s bash "$pkgdir/usr/bin/sh"
 
   rm -r "$pkgdir"/usr/share/{doc,info}
+
+  install -dm755 "$pkgdir/#/users.d"
+  install -m644 "$srcdir/users-bash-default.sh" "$pkgdir/#/users.d/10-bash-default.sh"
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
