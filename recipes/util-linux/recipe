@@ -5,9 +5,8 @@ _libs=(
   libmount
   libfdisk
 )
-_simple=(
+_libc=(
   addpart
-  blkdiscard
   blockdev
   chcpu
   chrt
@@ -17,11 +16,8 @@ _simple=(
   column
   ctrlaltdel
   delpart
-  dmesg
   fallocate
   fdformat
-  findmnt
-  flock
   fsck.minix
   fsfreeze
   getopt
@@ -32,11 +28,7 @@ _simple=(
   ipcrm
   ipcs
   isosize
-  last
-  lastb
   ldattach
-  linux32
-  linux64
   look
   mcookie
   mesg
@@ -55,16 +47,51 @@ _simple=(
   rtcwake
   pivot_root
   scriptreplay
-  setarch
   setsid
   switch_root
   tailf
   taskset
-  uname26
   unshare
   utmpdump
   wall
   whereis
+)
+_librt=(
+  blkdiscard
+  dmesg
+  flock
+)
+_libsmartcols=(
+  losetup
+  lscpu
+  lsipc
+  lsns
+  prlimit
+  wdctl
+  zramctl
+)
+_libblkid=(
+  blkid
+  findfs
+  wipefs
+)
+_libmount=(
+  eject
+  mountpoint
+)
+_libncurses=(
+  cal
+  more
+  pg
+  setterm
+  ul
+)
+_libpam_misc=(
+  chfn
+  chsh
+  login
+  runuser
+  su
 )
 _manual=(
   uuidd
@@ -72,50 +99,53 @@ _manual=(
   mount
   fdisk
   cfdisk
-  wipefs
   fstrim
+  findmnt
   partx
-  eject
+  setarch
   sulogin
-  login
-  su
   agetty
   util-linux-kill
-  zramctl
-  blkid
   lsblk
   util-linux-fsck
   cramfs-utils
   swap-utils
-  losetup
-  wdctl
-  setterm
+  util-linux-logger
+  last
+  lslocks
+  lslogins
+  script
 )
 parts=(
   "${_libs[@]}"
-  "${_simple[@]}"
+  "${_libc[@]}"
+  "${_librt[@]}"
+  "${_libsmartcols[@]}"
+  "${_libblkid[@]}"
+  "${_libmount[@]}"
+  "${_libncurses[@]}"
+  "${_libpam_misc[@]}"
   "${_manual[@]}"
   util-linux-bash-completions
   util-linux-man
   util-linux-all
 )
-version=2.27
-release=4
-sources=("https://www.kernel.org/pub/linux/utils/util-linux/v$version/util-linux-${version}.tar.xz")
-sha1sum=('0549760ba1d2eb0e48b41b926d54ac55533369af')
+version=2.28.1
+release=1
+sources=("https://www.kernel.org/pub/linux/utils/util-linux/v${version%.*}/util-linux-${version}.tar.xz")
+sha1sum=('3e894c4b76a5b10a83a60dece16ab83670dcbaa7')
 makedepends=(
-  'libutil-devel'
-  'libcrypt-devel'
   'libz-devel'
   'libpam_misc-devel'
   'libncurses-devel'
   'libreadline-devel'
+  'libudev-devel'
   'libsystemd-devel'
 )
 
 config-libuuid() {
   description='uuid library from util-linux'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libuuid=$version-$release")
   files=('usr/lib/libuuid.so.*')
   devfiles=(
@@ -124,12 +154,12 @@ config-libuuid() {
     'usr/lib/libuuid.a'
     'usr/lib/pkgconfig/uuid.pc'
   )
-  manfiles=('usr/share/man/man3/uuid*')
+  devmanfiles=('usr/share/man/man3/uuid*.3')
 }
 
 config-libsmartcols() {
   description='smartcols library from util-linux'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libsmartcols=$version-$release")
   files=('usr/lib/libsmartcols.so.*')
   devfiles=(
@@ -151,12 +181,12 @@ config-libblkid() {
     'usr/lib/libblkid.a'
     'usr/lib/pkgconfig/blkid.pc'
   )
-  manfiles=('usr/share/man/man3/libblkid.3')
+  devmanfiles=('usr/share/man/man3/libblkid.3')
 }
 
 config-libmount() {
   description='mount library from util-linux'
-  depends=("libblkid=$version-$release")
+  depends=('librt' "libblkid=$version-$release")
   devdepends=('glibc-devel' "libblkid-devel=$version-$release" "libmount=$version-$release")
   files=('usr/lib/libmount.so.*')
   devfiles=(
@@ -180,8 +210,32 @@ config-libfdisk() {
   )
 }
 
-for i in "${_simple[@]}"; do
-  eval "config-$i() { description='$i from util-linux'; depends=('glibc'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+for i in "${_libc[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=('libc'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
+for i in "${_librt[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=('librt'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
+for i in "${_libsmartcols[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=(\"libsmartcols=\$version-\$release\"); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
+for i in "${_libblkid[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=(\"libblkid=\$version-\$release\"); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
+for i in "${_libmount[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=(\"libmount=\$version-\$release\"); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
+for i in "${_libncurses[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=('libncurses'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
+done
+
+for i in "${_libpam_misc[@]}"; do
+  eval "config-$i() { description='$i from util-linux'; depends=('libpam_misc'); files=('usr/bin/$i'); manfiles=('usr/share/man/man?/${i}.?'); }"
 done
 
 config-uuidd() {
@@ -207,23 +261,21 @@ config-mount() {
 
 config-fdisk() {
   description='fdisk utilities from util-linux'
-  depends=("libfdisk=$version-$release" "libsmartcols=$version-$release")
+  depends=('libreadline' "libsmartcols=$version-$release" "libfdisk=$version-$release")
   files=('usr/bin/fdisk' 'usr/bin/sfdisk')
   manfiles=('usr/share/man/man8/fdisk.8' 'usr/share/man/man8/sfdisk.8')
 }
 
 config-cfdisk() {
   description='cfdisk utility from util-linux'
-  depends=('libncurses' "libfdisk=$version-$release" "libsmartcols=$version-$release")
+  depends=(
+    'libncurses'
+    "libsmartcols=$version-$release"
+    "libmount=$version-$release"
+    "libfdisk=$version-$release"
+  )
   files=('usr/bin/cfdisk')
   manfiles=('usr/share/man/man8/cfdisk.8')
-}
-
-config-wipefs() {
-  description='wipefs utility from util-linux'
-  depends=("libblkid=$version-$release")
-  files=('usr/bin/wipefs')
-  manfiles=('usr/share/man/man8/wipefs.8')
 }
 
 config-fstrim() {
@@ -233,18 +285,58 @@ config-fstrim() {
   manfiles=('usr/share/man/man8/fstrim.8')
 }
 
+config-findmnt() {
+  description='findmnt utility from util-linux'
+  depends=('libudev' "libsmartcols=$version-$release" "libmount=$version-$release")
+  files=('usr/bin/findmnt')
+  manfiles=('usr/share/man/man8/findmnt.8')
+}
+
 config-partx() {
   description='partx utility from util-linux'
-  depends=("libblkid=$version-$release" "libsmartcols=$version-$release")
+  depends=("libsmartcols=$version-$release" "libblkid=$version-$release")
   files=('usr/bin/partx')
   manfiles=('usr/share/man/man8/partx.8')
 }
 
-config-eject() {
-  description='eject utility from util-linux'
-  depends=("libmount=$version-$release")
-  files=('usr/bin/eject')
-  manfiles=('usr/share/man/man1/eject.1')
+config-setarch() {
+  description='setarch utility from util-linux'
+  provides=(
+    "linux32=$version-$release"
+    "linux64=$version-$release"
+    "uname26=$version-$release"
+  )
+  depends=('libc')
+  files=(
+    'usr/bin/setarch'
+    'usr/bin/linux32'
+    'usr/bin/linux64'
+    'usr/bin/uname26'
+  )
+  manfiles=(
+    'usr/share/man/man8/setarch.8'
+    'usr/share/man/man8/linux32.8'
+    'usr/share/man/man8/linux64.8'
+    'usr/share/man/man8/uname26.8'
+  )
+  case $arch in
+  x86_64)
+    files+=('usr/bin/i386' 'usr/bin/x86_64')
+    manfiles+=('usr/share/man/man8/i386.8' 'usr/share/man/man8/x86_64.8')
+    ;;
+  quark)
+    files+=('usr/bin/i386')
+    manfiles+=('usr/share/man/man8/i386.8')
+    ;;
+  mips|mipsel)
+    files+=('usr/bin/mips' 'usr/bin/mips32' 'usr/bin/mips64')
+    manfiles+=(
+      'usr/share/man/man8/mips.8'
+      'usr/share/man/man8/mips32.8'
+      'usr/share/man/man8/mips64.8'
+    )
+    ;;
+  esac
 }
 
 config-sulogin() {
@@ -254,23 +346,9 @@ config-sulogin() {
   manfiles=('usr/share/man/man8/sulogin.8')
 }
 
-config-login() {
-  description='login utility from util-linux'
-  depends=('libpam_misc')
-  files=('usr/bin/login')
-  manfiles=('usr/share/man/man1/login.1')
-}
-
-config-su() {
-  description='su utility from util-linux'
-  depends=('libpam_misc')
-  files=('usr/bin/su')
-  manfiles=('usr/share/man/man1/su.1')
-}
-
 config-agetty() {
   description='agetty utility from util-linux'
-  depends=('login')
+  depends=('libc' 'login')
   files=('usr/bin/agetty')
   manfiles=('usr/share/man/man8/agetty.8')
 }
@@ -278,28 +356,14 @@ config-agetty() {
 config-util-linux-kill() {
   description='kill utility from util-linux'
   provides=('kill')
-  depends=('login')
+  depends=('libc')
   files=('usr/bin/kill')
   manfiles=('usr/share/man/man1/kill.1')
 }
 
-config-zramctl() {
-  description='zramctl utility from util-linux'
-  depends=("libsmartcols=$version-$release")
-  files=('usr/bin/zramctl')
-  manfiles=('usr/share/man/man8/zramctl.8')
-}
-
-config-blkid() {
-  description='blkid utility from util-linux'
-  depends=("libblkid=$version-$release")
-  files=('usr/bin/blkid')
-  manfiles=('usr/share/man/man8/blkid.8')
-}
-
 config-lsblk() {
   description='lsblk utility from util-linux'
-  depends=("libmount=$version-$release" "libsmartcols=$version-$release")
+  depends=('libudev' "libsmartcols=$version-$release" "libmount=$version-$release")
   files=('usr/bin/lsblk')
   manfiles=('usr/share/man/man8/lsblk.8')
 }
@@ -336,43 +400,84 @@ config-swap-utils() {
   )
 }
 
-config-losetup() {
-  description='losetup utility from util-linux'
-  depends=("libsmartcols=$version-$release")
-  files=('usr/bin/losetup')
-  manfiles=('usr/share/man/man8/losetup.8')
+config-util-linux-logger() {
+  description='logger utility from util-linux'
+  provides=('logger')
+  depends=('libsystemd')
+  files=('usr/bin/logger')
+  manfiles=('usr/share/man/man1/logger.1')
 }
 
-config-wdctl() {
-  description='wdctl utility from util-linux'
-  depends=("libsmartcols=$version-$release")
-  files=('usr/bin/wdctl')
-  manfiles=('usr/share/man/man8/wdctl.8')
+config-last() {
+  description='last utility from util-linux'
+  provides=("lastb=$version-$release")
+  depends=('librt')
+  files=('usr/bin/last' 'usr/bin/lastb')
+  manfiles=('usr/share/man/man1/last.1' 'usr/share/man/man1/lastb.1')
 }
 
-config-setterm() {
-  description='setterm utility from util-linux'
-  depends=('libncurses')
-  files=('usr/bin/setterm')
-  manfiles=('usr/share/man/man1/setterm.1')
+config-lslocks() {
+  description='lslocks utility from util-linux'
+  depends=("libsmartcols=$version-$release" "libmount=$version-$release")
+  files=('usr/bin/lslocks')
+  manfiles=('usr/share/man/man8/lslocks.8')
+}
+
+config-lslogins() {
+  description='lslogins utility from util-linux'
+  depends=("libsmartcols=$version-$release" 'libsystemd')
+  files=('usr/bin/lslogins')
+  manfiles=('usr/share/man/man1/lslogins.1')
+}
+
+config-script() {
+  description='script utility from util-linux'
+  depends=('librt' 'libutil')
+  files=('usr/bin/script')
+  manfiles=('usr/share/man/man1/script.1')
 }
 
 config-util-linux-bash-completions() {
   description='bash completions for util-linux'
+  depends=('bash')
   files=('usr/share/bash-completion/**')
 }
 
 config-util-linux-man() {
   description='Miscelaneous manual pages from using util-linux'
-  files=('usr/share/man/man5/**')
+  files=('usr/share/man/man5/*.5')
 }
 
 config-util-linux-all() {
   description='Miscellaneous system utilities for Linux'
-  depends=('libncurses')
+  depends=()
   mandepends=("util-linux-man=$version-$release")
 
-  for i in "${_simple[@]}"; do
+  for i in "${_libc[@]}"; do
+    depends+=("$i=$version-$release")
+    mandepends+=("$i-man=$version-$release")
+  done
+  for i in "${_librt[@]}"; do
+    depends+=("$i=$version-$release")
+    mandepends+=("$i-man=$version-$release")
+  done
+  for i in "${_libsmartcols[@]}"; do
+    depends+=("$i=$version-$release")
+    mandepends+=("$i-man=$version-$release")
+  done
+  for i in "${_libblkid[@]}"; do
+    depends+=("$i=$version-$release")
+    mandepends+=("$i-man=$version-$release")
+  done
+  for i in "${_libmount[@]}"; do
+    depends+=("$i=$version-$release")
+    mandepends+=("$i-man=$version-$release")
+  done
+  for i in "${_libncurses[@]}"; do
+    depends+=("$i=$version-$release")
+    mandepends+=("$i-man=$version-$release")
+  done
+  for i in "${_libpam_misc[@]}"; do
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
@@ -380,57 +485,24 @@ config-util-linux-all() {
     depends+=("$i=$version-$release")
     mandepends+=("$i-man=$version-$release")
   done
-  files=(
-    'usr/bin/cal' # libncurses
-    'usr/bin/chfn' # libpam_misc
-    'usr/bin/chsh' # libpam_misc
-    'usr/bin/findfs' # libblkid
-    'usr/bin/logger' # libsystemd
-    'usr/bin/lscpu' # libsmartcols
-    'usr/bin/lsipc' # libsmartcols
-    'usr/bin/lslocks' # libmount libsmartcols
-    'usr/bin/lslogins' #libsystemd libsmartcols
-    'usr/bin/more' # libncurses
-    'usr/bin/mountpoint' # libmount
-    'usr/bin/pg' # libncurses
-    'usr/bin/prlimit' # libsmartcols
-    'usr/bin/runuser' # libpam_misc
-    'usr/bin/script' # libutil
-    'usr/bin/ul' # libncurses
-  )
-  manfiles=(
-    'usr/share/man/man1/cal.1'
-    'usr/share/man/man1/chfn.1'
-    'usr/share/man/man1/chsh.1'
-    'usr/share/man/man1/fallocate.1'
-    'usr/share/man/man1/logger.1'
-    'usr/share/man/man1/login.1'
-    'usr/share/man/man1/lscpu.1'
-    'usr/share/man/man1/lsipc.1'
-    'usr/share/man/man1/lslogins.1'
-    'usr/share/man/man1/more.1'
-    'usr/share/man/man1/mountpoint.1'
-    'usr/share/man/man1/pg.1'
-    'usr/share/man/man1/prlimit.1'
-    'usr/share/man/man1/runuser.1'
-    'usr/share/man/man1/script.1'
-    'usr/share/man/man1/ul.1'
-    'usr/share/man/man8/findfs.8'
-    'usr/share/man/man8/lslocks.8'
-  )
 }
 
 build() {
-  "../util-linux-$version/configure" \
-    --host=$HOST \
+  cd util-linux-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --libdir=/usr/lib \
     --bindir=/usr/bin \
+    --sbindir=/usr/sbin \
     --localstatedir=/run \
     --enable-fs-paths-default=/usr/bin \
     --enable-libmount-force-mountinfo \
+    --enable-usrdir-path \
     --disable-nls \
     --disable-rpath \
+    --with-btrfs \
     --with-systemd \
     --with-readline \
     --with-gnu-ld \
@@ -439,16 +511,17 @@ build() {
     --without-python \
     --with-sysroot="$SYSROOT"
 
-  patch -Np1 -i ../libtool.patch libtool
+  patch -Np1 -i "$srcdir/libtool.patch" libtool
   make DESTDIR="$pkgdir"
 }
 
 package() {
+  cd util-linux-$version
   unset MAKEFLAGS
   make DESTDIR="$pkgdir" install
 
-  mv "$pkgdir"{,/usr}/sbin/* "$pkgdir/usr/bin"
-  rmdir "$pkgdir"{,/usr}/sbin
+  mv "$pkgdir"/usr/sbin/* "$pkgdir/usr/bin"
+  rmdir "$pkgdir"/usr/sbin
 
   rm -r "$pkgdir/usr/share/doc"
   rm "$pkgdir"/usr/lib/*.la
