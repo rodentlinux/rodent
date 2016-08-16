@@ -1,13 +1,13 @@
 parts=(libexpat xmlwf)
-version=2.1.0
+version=2.2.0
 release=1
-sources=("http://downloads.sourceforge.net/sourceforge/expat/expat-${version}.tar.gz")
-sha1sum=('b08197d146930a5543a7b99e871cba3da614f6f0')
+sources=("https://downloads.sourceforge.net/sourceforge/expat/expat-${version}.tar.bz2")
+sha1sum=('8453bc52324be4c796fd38742ec48470eef358b3')
 makedepends=('glibc-devel')
 
 config-libexpat() {
   description='An XML parser library'
-  depends=('libgcc' 'glibc')
+  depends=('libgcc')
   devdepends=('glibc-devel' "libexpat=$version-$release")
   files=('usr/lib/libexpat.so.*')
   devfiles=(
@@ -26,15 +26,20 @@ config-xmlwf() {
 }
 
 build() {
-  "../expat-$version/configure" \
-    --host=$HOST \
+  cd expat-$version
+  patch -Np2 -i "$srcdir/expat-2.2.0-CVE-2016-0718-regression.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
-    --with-gnu-ld
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
   make
 }
 
 package() {
+  cd expat-$version
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la
