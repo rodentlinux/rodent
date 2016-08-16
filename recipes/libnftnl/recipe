@@ -1,7 +1,7 @@
-version=1.0.5
+version=1.0.6
 release=1
 sources=("http://netfilter.org/projects/libnftnl/files/libnftnl-${version}.tar.bz2")
-sha1sum=('2ae3172251574ee36077af760933ec0369960a17')
+sha1sum=('453f1c2d99d219baeca4ba42aa874f02d2ddf2f7')
 makedepends=('libmnl-devel')
 
 config-libnftnl() {
@@ -18,8 +18,10 @@ config-libnftnl() {
 }
 
 build() {
-  "../libnftnl-$version/configure" \
-    --host=$HOST \
+  cd libnftnl-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --enable-static \
     --with-gnu-ld \
@@ -29,6 +31,7 @@ build() {
 }
 
 package() {
+  cd libnftnl-$version
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir"/usr/lib/*.la
