@@ -2,7 +2,7 @@ parts=(libreadline libhistory)
 _basever=6.3
 _patchlevel=8
 version=$_basever.$_patchlevel
-release=1
+release=2
 sources=("http://ftp.gnu.org/gnu/readline/readline-${_basever}.tar.gz")
 sha1sum=('017b92dc7fd4e636a2b5c9265a77ccc05798c9e1')
 for (( i=1; i <= $_patchlevel; i++ )); do
@@ -27,12 +27,12 @@ config-libreadline() {
     'usr/lib/libreadline.a'
     'usr/lib/libreadline.so'
   )
-  manfiles=('usr/share/man/man3/readline.3')
+  devmanfiles=('usr/share/man/man3/readline.3')
 }
 
 config-libhistory() {
   description='GNU history library'
-  depends=('glibc')
+  depends=('libc')
   devdepends=("libreadline-devel=$version-$release" "libhistory=$version-$release")
   files=('usr/lib/libhistory.so.*')
   devfiles=(
@@ -40,30 +40,26 @@ config-libhistory() {
     'usr/lib/libhistory.a'
     'usr/lib/libhistory.so'
   )
-  manfiles=('usr/share/man/man3/history.3')
+  devmanfiles=('usr/share/man/man3/history.3')
 }
 
-prepare() {
-  cd "readline-$_basever"
-  set +x
+build() {
+  cd readline-$_basever
   for (( i=1; i <= $_patchlevel; i++ )); do
     echo "Applying level $i:"
-    patch -Np0 -i "../readline${_basever//./}-$(printf "%03d" $i)"
+    patch -Np0 -i "$srcdir/readline${_basever//./}-$(printf "%03d" $i)"
   done
 
   # remove RPATH from shared objects (FS#14366)
   sed -i 's|-Wl,-rpath,$(libdir) ||g' support/shobj-conf
-}
-
-build() {
-  "../readline-$_basever/configure" \
+  ./configure \
     ac_cv_func_strcoll_works=yes \
     bash_cv_must_reinstall_sighandlers=no \
     bash_cv_func_sigsetjmp=present \
     bash_cv_func_ctype_nonascii=no \
     bash_cv_func_strcoll_broken=no \
     bash_cv_wcwidth_broken=no \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --enable-multibyte \
     --with-curses
@@ -72,6 +68,7 @@ build() {
 }
 
 package() {
+  cd readline-$_basever
   make DESTDIR="$pkgdir" install
 
   rmdir "$pkgdir/usr/bin"
