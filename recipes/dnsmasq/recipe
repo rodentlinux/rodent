@@ -1,13 +1,14 @@
-version=2.75
+version=2.76
 release=1
 sources=("http://www.thekelleys.org.uk/dnsmasq/dnsmasq-${version}.tar.xz")
-sha1sum=('e3312377f2ce75ebae1408fee41414a6fc03458f')
-makedepends=('libdbus-1-devel')
+sha1sum=('db42d7297dc0a05d51588baa2f298ebb42fcef99')
+makedepends=('libdbus-1-devel' 'libidn-devel')
 
 config-dnsmasq() {
   description='Lightweight, easy to configure DNS forwarder and DHCP server'
-  depends=('libdbus-1')
+  depends=('libidn' 'libdbus-1')
   files=(
+    '#/users.d/10-dnsmasq.sh'
     'usr/bin/dnsmasq'
     'usr/lib/systemd/system/dnsmasq.service'
     'usr/share/dbus-1/system.d/dnsmasq.conf'
@@ -15,38 +16,41 @@ config-dnsmasq() {
   manfiles=('usr/share/man/man8/dnsmasq.8')
 }
 
-build_options='-DHAVE_DBUS'
-
 build() {
-  cd "dnsmasq-$version"
+  cd dnsmasq-$version
+  patch -Np1 -i "$srcdir/config.patch"
 
   make \
-    CC=$HOST-gcc \
-    LD=$HOST-ld \
-    AR=$HOST-ar \
+    CC=${host}-gcc \
+    LD=${host}-ld \
+    AR=${host}-ar \
     CFLAGS="$CPPFLAGS $CFLAGS" \
-    LDFLAGS="$LDFLAGS" \
-    COPTS="$build_options"
+    LDFLAGS="$LDFLAGS"
 }
 
 package() {
-  cd "dnsmasq-$version"
+  cd dnsmasq-$version
 
   make \
     DESTDIR="$pkgdir" \
-    CC=$HOST-gcc \
-    LD=$HOST-ld \
-    AR=$HOST-ar \
+    CC=${host}-gcc \
+    LD=${host}-ld \
+    AR=${host}-ar \
     CFLAGS="$CPPFLAGS $CFLAGS" \
     LDFLAGS="$LDFLAGS" \
-    COPTS="$build_options" \
     PREFIX=/usr \
     BINDIR=/usr/bin \
     install
 
-  install -Dm644 dbus/dnsmasq.conf "$pkgdir/usr/share/dbus-1/system.d/dnsmasq.conf"
-  install -Dm644 dnsmasq.conf.example "$pkgdir/usr/share/factory/etc/dnsmasq.conf"
-  install -Dm644 ../dnsmasq.service "$pkgdir/usr/lib/systemd/system/dnsmasq.service"
+  install -dm755 "$pkgdir/usr/share/dbus-1/system.d"
+  install -m644 dbus/dnsmasq.conf "$pkgdir/usr/share/dbus-1/system.d/dnsmasq.conf"
+  install -dm755 "$pkgdir/usr/share/factory/etc"
+  install -m644 dnsmasq.conf.example "$pkgdir/usr/share/factory/etc/dnsmasq.conf"
+  install -dm755 "$pkgdir/usr/lib/systemd/system"
+  install -m644 "$srcdir/dnsmasq.service" "$pkgdir/usr/lib/systemd/system/dnsmasq.service"
+
+  install -dm755 "$pkgdir/#/users.d"
+  install -m644 "$srcdir/users-dnsmasq.sh" "$pkgdir/#/users.d/10-dnsmasq.sh"
 }
 
 # vim: set ft=sh ts=2 sw=2 et:

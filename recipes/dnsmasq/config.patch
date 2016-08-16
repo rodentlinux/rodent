@@ -1,0 +1,25 @@
+diff -Naur dnsmasq-2.76.orig/src/config.h dnsmasq-2.76/src/config.h
+--- dnsmasq-2.76.orig/src/config.h	2016-05-18 16:51:54.000000000 +0200
++++ dnsmasq-2.76/src/config.h	2016-08-19 03:38:44.194482911 +0200
+@@ -40,8 +40,8 @@
+ #define HOSTSFILE "/etc/hosts"
+ #define ETHERSFILE "/etc/ethers"
+ #define DEFLEASE 3600 /* default lease time, 1 hour */
+-#define CHUSER "nobody"
+-#define CHGRP "dip"
++#define CHUSER "dnsmasq"
++#define CHGRP "dnsmasq"
+ #define TFTP_MAX_CONNECTIONS 50 /* max simultaneous connections */
+ #define LOG_MAX 5 /* log-queue length */
+ #define RANDFILE "/dev/urandom"
+@@ -162,6 +162,10 @@
+ #define HAVE_AUTH
+ #define HAVE_IPSET 
+ #define HAVE_LOOP
++#define HAVE_DBUS
++#define HAVE_IDN
++#define LEASEFILE "/run/dnsmasq.leases"
++#define RUNFILE "/run/dnsmasq.pid"
+ 
+ /* Build options which require external libraries.
+    
