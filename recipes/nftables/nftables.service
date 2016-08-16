@@ -6,10 +6,10 @@ Before=network-pre.target
 
 [Service]
 Type=oneshot
+RemainAfterExit=yes
 ExecStart=/usr/bin/nft -f /etc/nftables.conf
 ExecReload=/usr/bin/nft -f /usr/lib/systemd/scripts/nftables-reload
 ExecStop=/usr/bin/nft flush ruleset
-RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

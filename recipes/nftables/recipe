@@ -1,13 +1,13 @@
 parts=(nft)
-version=0.5
+version=0.6
 release=1
 sources=("http://netfilter.org/projects/nftables/files/nftables-${version}.tar.bz2")
-sha1sum=('34cfe1daa33d7fd7087dd63199f64854dfb54064')
+sha1sum=('c0f90a208e0ab5d43d3e638350a4fe58e6f4366f')
 makedepends=('libgmp-devel' 'libmnl-devel' 'libnftnl-devel' 'libncurses-devel' 'libreadline-devel' 'libhistory-devel')
 
 config-nft() {
   description='Netfilter tables userspace tool'
-  depends=('libgmp' 'libmnl' 'libnftnl' 'libreadline')
+  depends=('libgmp' 'libnftnl' 'libreadline') # libmnl is required by libnftnl
   files=(
     'usr/bin/nft'
     'usr/lib/systemd/scripts/nftables-reload'
@@ -16,8 +16,11 @@ config-nft() {
 }
 
 build() {
-  "../nftables-$version/configure" \
-    --host=$HOST \
+  cd nftables-$version
+  patch -Np1 -i "$srcdir/01-payload-don-t-update-protocol-context-if-we-can-t-fi.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --sbindir=/usr/bin \
     --sysconfdir=/etc
@@ -26,10 +29,13 @@ build() {
 }
 
 package() {
+  cd nftables-$version
   make DESTDIR="$pkgdir" install
 
-  install -Dm755 ../nftables-reload "$pkgdir/usr/lib/systemd/scripts/nftables-reload"
-  install -Dm644 ../nftables.service "$pkgdir/usr/lib/systemd/system/nftables.service"
+  install -dm755 "$pkgdir/usr/lib/systemd/scripts"
+  install -m755 "$srcdir/nftables-reload" "$pkgdir/usr/lib/systemd/scripts/nftables-reload"
+  install -dm755 "$pkgdir/usr/lib/systemd/system"
+  install -m644 "$srcdir/nftables.service" "$pkgdir/usr/lib/systemd/system/nftables.service"
 
   install -dm755 "$pkgdir/usr/share/factory"
   mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
