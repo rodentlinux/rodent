@@ -1,13 +1,13 @@
 parts=(libdbus-1 dbus-daemon dbus-utils dbus-test-tool dbus)
-version=1.10.2
+version=1.11.2
 release=1
-sources=("http://dbus.freedesktop.org/releases/dbus/dbus-${version}.tar.gz")
-sha1sum=('a7bb0e44bb3551b2e607c5a1f927244bec5b8f0a')
+sources=("https://dbus.freedesktop.org/releases/dbus/dbus-${version}.tar.gz")
+sha1sum=('e1d3dedd1d2b7305464d6892579fee3ad9639355')
 makedepends=('libexpat-devel' 'libsystemd-devel')
 
 config-libdbus-1() {
   description='Freedesktop.org DBus library'
-  depends=('libsystemd')
+  depends=('libpthread' 'libsystemd')
   devdepends=('glibc-devel' "libdbus-1=$version-$release")
   files=('usr/lib/libdbus-1.so.*')
   devfiles=(
@@ -23,6 +23,7 @@ config-dbus-daemon() {
   description='Freedesktop.org DBus daemon'
   depends=('libexpat' "libdbus-1=$version-$release")
   files=(
+    '#/users.d/10-dbus.sh'
     'usr/bin/dbus-daemon'
     'usr/lib/dbus-1.0/dbus-daemon-launch-helper'
     'usr/lib/systemd/**'
@@ -32,22 +33,22 @@ config-dbus-daemon() {
 
 config-dbus-utils() {
   description='Freedesktop.org DBus utilities'
-  depends=("libdbus-1=$version-$release" 'libsystemd')
+  depends=("libdbus-1=$version-$release")
   files=(
-    usr/bin/dbus-cleanup-sockets
-    usr/bin/dbus-launch
-    usr/bin/dbus-run-session
-    usr/bin/dbus-uuidgen
-    usr/bin/dbus-update-activation-environment
-    usr/bin/dbus-monitor
-    usr/bin/dbus-send
+    'usr/bin/dbus-cleanup-sockets'
+    'usr/bin/dbus-launch'
+    'usr/bin/dbus-run-session'
+    'usr/bin/dbus-uuidgen'
+    'usr/bin/dbus-update-activation-environment'
+    'usr/bin/dbus-monitor'
+    'usr/bin/dbus-send'
   )
 }
 
 config-dbus-test-tool() {
   description='Freedesktop.org DBus test tool'
-  depends=("libdbus-1=$version-$release" 'libsystemd')
-  files=(usr/bin/dbus-test-tool)
+  depends=("libdbus-1=$version-$release")
+  files=('usr/bin/dbus-test-tool')
 }
 
 config-dbus() {
@@ -59,8 +60,10 @@ config-dbus() {
 }
 
 build() {
-  "../dbus-$version/configure" \
-    --host=$HOST \
+  cd dbus-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --sysconfdir=/etc \
     --localstatedir=/var \
@@ -89,7 +92,10 @@ build() {
 }
 
 package() {
+  cd dbus-$version
   make DESTDIR="$pkgdir" install
+
+  chown 0:80 "$pkgdir/usr/lib/dbus-1.0/dbus-daemon-launch-helper"
 
   install -dm755 "$pkgdir/usr/share/factory"
   mv "$pkgdir/etc" "$pkgdir/usr/share/factory"
@@ -98,6 +104,9 @@ package() {
   rm -r "$pkgdir/var"
 
   rm "$pkgdir"/usr/lib/*.la
+
+  install -dm755 "$pkgdir/#/users.d"
+  install -m644 "$srcdir/users-dbus.sh" "$pkgdir/#/users.d/10-dbus.sh"
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
