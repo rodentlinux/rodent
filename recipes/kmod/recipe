@@ -1,13 +1,13 @@
 parts=(libkmod kmod kmod-legacy kmod-bash-completion)
-version=21
+version=23
 release=1
-sources=("ftp://ftp.kernel.org/pub/linux/utils/kernel/kmod/kmod-${version}.tar.xz")
-sha1sum=('b2c1a0a1f2979fd29c7b0825ed19254c332246b4')
+sources=("http://ftp.kernel.org/pub/linux/utils/kernel/kmod/kmod-${version}.tar.xz")
+sha1sum=('ca9647241d174aa3334950fce2a4ad7d0596b2e1')
 makedepends=('glibc-devel')
 
 config-libkmod() {
   description='Linux kernel module handling library'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libkmod=$version-$release")
   files=('usr/lib/libkmod.so.*')
   devfiles=(
@@ -19,9 +19,9 @@ config-libkmod() {
 
 config-kmod() {
   description='Linux kernel module handling'
-  depends=("libkmod=$version-$release")
+  depends=('libc')
   files=('usr/bin/kmod')
-  manfiles=('usr/share/man/man5/**' 'usr/share/man/man8/kmod.8')
+  manfiles=('usr/share/man/man5/*.5' 'usr/share/man/man8/kmod.8')
 }
 
 config-kmod-legacy() {
@@ -51,16 +51,14 @@ config-kmod-bash-completion() {
   files=('usr/share/bash-completion/**')
 }
 
-prepare() {
-  cd "kmod-$version"
-  patch -Np1 -i ../0001-libkmod-module-fix-return-code-in-error-path.patch
-}
-
 build() {
-  "../kmod-$version/configure" \
-    --host=$HOST \
+  cd kmod-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --sysconfdir=/etc \
+    --disable-test-modules \
     --with-gnu-ld \
     --with-sysroot="$SYSROOT"
 
@@ -68,6 +66,8 @@ build() {
 }
 
 package() {
+  cd kmod-$version
+
   make DESTDIR="$pkgdir" install
 
   for i in depmod insmod lsmod modinfo modprobe rmmod; do
