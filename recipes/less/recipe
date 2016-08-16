@@ -1,6 +1,6 @@
 parts=(less less-utils)
 version=481
-release=2
+release=3
 sources=("http://www.greenwoodsoftware.com/less/less-${version}.tar.gz")
 sha1sum=('58e7e62a760a9ca3636349de8e3357f7102aea1d')
 makedepends=('libncurses-devel')
@@ -14,7 +14,7 @@ config-less() {
 
 config-less-utils() {
   description='Utilities for the less pager'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/lessecho' 'usr/bin/lesskey')
   manfiles=(
     'usr/share/man/man1/lessecho.1'
@@ -23,8 +23,10 @@ config-less-utils() {
 }
 
 build() {
-  "../less-$version/configure" \
-    --host=$HOST \
+  cd less-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --sysconfdir=/etc \
     --with-regex=posix
@@ -33,6 +35,7 @@ build() {
 }
 
 package() {
+  cd less-$version
   make DESTDIR="$pkgdir" install
 }
 
