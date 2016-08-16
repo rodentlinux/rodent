@@ -1,7 +1,34 @@
-diff -Naur coreutils-8.24.orig/Makefile.in coreutils-8.24/Makefile.in
---- coreutils-8.24.orig/Makefile.in	2015-07-03 23:23:13.000000000 +0200
-+++ coreutils-8.24/Makefile.in	2015-09-24 23:28:52.201035752 +0200
-@@ -3853,7 +3853,7 @@
+diff -Naur coreutils-8.25.orig/Makefile.in coreutils-8.25/Makefile.in
+--- coreutils-8.25.orig/Makefile.in	2016-08-13 11:20:33.940034779 +0200
++++ coreutils-8.25/Makefile.in	2016-08-13 11:26:35.853463094 +0200
+@@ -2323,7 +2323,7 @@
+   }
+ man1dir = $(mandir)/man1
+ NROFF = nroff
+-MANS = $(man1_MANS)
++MANS =
+ HEADERS = $(noinst_HEADERS)
+ RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
+   distclean-recursive maintainer-clean-recursive
+@@ -2647,7 +2647,7 @@
+ EOVERFLOW_VALUE = @EOVERFLOW_VALUE@
+ ERRNO_H = @ERRNO_H@
+ EXEEXT = @EXEEXT@
+-EXTRA_MANS = @EXTRA_MANS@
++EXTRA_MANS =
+ FLOAT_H = @FLOAT_H@
+ FNMATCH_H = @FNMATCH_H@
+ GETADDRINFO_LIB = @GETADDRINFO_LIB@
+@@ -3463,7 +3463,7 @@
+ LTLIBPTH = @LTLIBPTH@
+ LTLIBTHREAD = @LTLIBTHREAD@
+ MAKEINFO = @MAKEINFO@
+-MAN = @MAN@
++MAN =
+ MKDIR_P = @MKDIR_P@
+ MSGFMT = @MSGFMT@
+ MSGFMT_015 = @MSGFMT_015@
+@@ -3871,7 +3871,7 @@
  lispdir = @lispdir@
  localedir = @localedir@
  localstatedir = @localstatedir@
@@ -10,7 +37,7 @@ diff -Naur coreutils-8.24.orig/Makefile.in coreutils-8.24/Makefile.in
  mandir = @mandir@
  mkdir_p = @mkdir_p@
  oldincludedir = @oldincludedir@
-@@ -4994,7 +4994,7 @@
+@@ -5027,7 +5027,7 @@
  
  @HAVE_PERL_FALSE@run_help2man = $(SHELL) $(srcdir)/man/dummy-man
  @HAVE_PERL_TRUE@run_help2man = $(PERL) -- $(srcdir)/man/help2man
@@ -19,17 +46,63 @@ diff -Naur coreutils-8.24.orig/Makefile.in coreutils-8.24/Makefile.in
  
  # Dependencies common to all man pages.  Updated below.
  
-@@ -14248,25 +14248,7 @@
- 	     test) prog='['; argv='[';;					\
- 		*) prog=$$name; argv=$$prog;;				\
- 	esac;								\
+@@ -11247,38 +11247,6 @@
+ 	  rm -f $$i $$i-[0-9] $$i-[0-9][0-9] $$i_i[0-9] $$i_i[0-9][0-9]; \
+ 	done
+ install-man1: $(man1_MANS)
+-	@$(NORMAL_INSTALL)
+-	@list1='$(man1_MANS)'; \
+-	list2=''; \
+-	test -n "$(man1dir)" \
+-	  && test -n "`echo $$list1$$list2`" \
+-	  || exit 0; \
+-	echo " $(MKDIR_P) '$(DESTDIR)$(man1dir)'"; \
+-	$(MKDIR_P) "$(DESTDIR)$(man1dir)" || exit 1; \
+-	{ for i in $$list1; do echo "$$i"; done;  \
+-	if test -n "$$list2"; then \
+-	  for i in $$list2; do echo "$$i"; done \
+-	    | sed -n '/\.1[a-z]*$$/p'; \
+-	fi; \
+-	} | while read p; do \
+-	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
+-	  echo "$$d$$p"; echo "$$p"; \
+-	done | \
+-	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
+-	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
+-	sed 'N;N;s,\n, ,g' | { \
+-	list=; while read file base inst; do \
+-	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
+-	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man1dir)/$$inst'"; \
+-	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man1dir)/$$inst" || exit $$?; \
+-	  fi; \
+-	done; \
+-	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
+-	while read files; do \
+-	  test -z "$$files" || { \
+-	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man1dir)'"; \
+-	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man1dir)" || exit $$?; }; \
+-	done; }
+ 
+ uninstall-man1:
+ 	@$(NORMAL_UNINSTALL)
+@@ -14385,32 +14353,6 @@
+ @SINGLE_BINARY_FALSE@man/yes.1:       src/yes$(EXEEXT)
+ 
+ .x.1:
+-	$(AM_V_GEN)name=`echo $@ | sed 's|.*/||; s|\.1$$||'` || exit 1;	\
+-	case $$name in							\
+-	  install) prog='ginstall'; argv=$$name;;			\
+-	     test) prog='['; argv='[';;					\
+-		*) prog=$$name; argv=$$prog;;				\
+-	esac;								\
 -	rm -f $@ $@-t							\
 -	  && t=$*.td							\
 -	  && rm -rf $$t							\
 -	  && $(MKDIR_P) $$t						\
 -	  && (cd $$t && $(LN_S) '$(abs_top_builddir)/src/'$$prog$(EXEEXT) \
 -				$$argv$(EXEEXT))			\
--	  && $(run_help2man)						\
+-	&& : $${SOURCE_DATE_EPOCH=`cat $(srcdir)/.timestamp 2>/dev/null || :`} \
+-	&& export SOURCE_DATE_EPOCH && $(run_help2man)			\
 -		     --source='$(PACKAGE_STRING)'			\
 -		     --include=$(srcdir)/man/$$name.x			\
 -		     --output=$$t/$$name.1				\
@@ -42,7 +115,6 @@ diff -Naur coreutils-8.24.orig/Makefile.in coreutils-8.24/Makefile.in
 -	  && rm -rf $$t							\
 -	  && chmod a-w $@-t						\
 -	  && mv $@-t $@
-+
  .PHONY: check-root
  check-root:
  	$(MAKE) check TESTS='$(root_tests)' SUBDIRS=.

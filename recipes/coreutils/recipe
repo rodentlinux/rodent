@@ -1,5 +1,6 @@
-_bins=(
+_simple=(
   '['
+  'base32'
   'base64'
   'basename'
   'cat'
@@ -16,7 +17,6 @@ _bins=(
   'date'
   'dd'
   'df'
-  'dir'
   'dircolors'
   'dirname'
   'du'
@@ -38,7 +38,6 @@ _bins=(
   'link'
   'ln'
   'logname'
-  'ls'
   'md5sum'
   'mkdir'
   'mkfifo'
@@ -73,7 +72,6 @@ _bins=(
   'shred'
   'shuf'
   'sleep'
-  'sort'
   'split'
   'stat'
   'stty'
@@ -83,7 +81,6 @@ _bins=(
   'tail'
   'tee'
   'test'
-  'timeout'
   'touch'
   'tr'
   'true'
@@ -96,34 +93,53 @@ _bins=(
   'unlink'
   'uptime'
   'users'
-  'vdir'
   'wc'
   'who'
   'whoami'
   'yes'
 )
-parts=()
-for i in "${_bins[@]}"; do
+_libcap=(
+  'dir'
+  'ls'
+  'vdir'
+)
+parts=('coreutils-sort' 'coreutils-timeout')
+for i in "${_simple[@]}" "${_libcap[@]}"; do
   parts+=("coreutils-$i")
 done
-version=8.24
-release=2
-sources=("ftp://ftp.gnu.org/gnu/coreutils/coreutils-${version}.tar.xz")
-sha1sum=('cf3d9983461c2b0c074a76804c18464e9a474883')
+version=8.25
+release=1
+sources=("https://ftp.gnu.org/gnu/coreutils/coreutils-${version}.tar.xz")
+sha1sum=('301f186c24afb882a3ca73d19a102a2ce6f456c3')
 makedepends=('libcap-devel')
-devdepends=('glibc')
 
-for i in "${_bins[@]}"; do
-  eval "config-coreutils-$i() { description='coreutils - $i'; provides=('$i'); depends=('glibc'); files=('usr/bin/$i'); }"
-done
-
-prepare() {
-  cd "coreutils-$version"
-  patch -Np1 -i ../man.patch
+config-coreutils-sort() {
+  description='coreutils - sort'
+  provides=('sort')
+  depends=('libpthread')
+  files=('usr/bin/sort')
 }
 
+config-coreutils-timeout() {
+  description='coreutils - timeout'
+  provides=('timeout')
+  depends=('librt')
+  files=('usr/bin/timeout')
+}
+
+for i in "${_simple[@]}"; do
+  eval "config-coreutils-$i() { description='coreutils - $i'; provides=('$i'); depends=('libc'); files=('usr/bin/$i'); }"
+done
+
+for i in "${_libcap[@]}"; do
+  eval "config-coreutils-$i() { description='coreutils - $i'; provides=('$i'); depends=('libcap'); files=('usr/bin/$i'); }"
+done
+
 build() {
-  "../coreutils-$version/configure" \
+  cd coreutils-$version
+  patch -Np1 -i "$srcdir/man.patch"
+
+  ./configure \
     ac_cv_func_calloc_0_nonnull=yes \
     ac_cv_func_getgroups_works=yes \
     am_cv_func_iconv_works=yes \
@@ -237,7 +253,7 @@ build() {
     gl_cv_header_working_fcntl_h=yes \
     gl_cv_pipes_are_fifos='yes (1)' \
     gl_cv_struct_dirent_d_ino=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --enable-threads=posix \
     --enable-no-install-program=stdbuf \
@@ -249,12 +265,14 @@ build() {
     --disable-xattr \
     --with-tty-group=tty \
     --with-gnu-ld \
-    --without-selinux
+    --without-selinux \
+    --without-included-regex
 
   make
 }
 
 package() {
+  cd coreutils-$version
   make DESTDIR="$pkgdir" install
   rm -r "$pkgdir/usr/share"
 }
