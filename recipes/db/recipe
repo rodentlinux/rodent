@@ -1,50 +1,50 @@
 parts=(libdb libdb_cxx libdb_stl db-utils)
 version=5.3.28
-release=2
+release=3
 sources=("http://download.oracle.com/berkeley-db/db-${version}.tar.gz")
 sha1sum=('fa3f8a41ad5101f43d08bc0efb6241c9b6fc1ae9')
-makedepends=('libnsl-devel')
+makedepends=('glibc-devel')
 
 config-libdb() {
   description='The Berkeley DB embedded database system'
-  depends=('glibc')
+  depends=('libpthread')
   devdepends=('glibc-devel' "libdb=$version-$release")
   files=('usr/lib/libdb-5.3.so')
   devfiles=(
     'usr/include/db.h'
     'usr/include/db_185.h'
-    'usr/lib/libdb-5.3.a' 
-    'usr/lib/libdb.a' 
-    'usr/lib/libdb-5.so' 
-    'usr/lib/libdb.so' 
+    'usr/lib/libdb-5.3.a'
+    'usr/lib/libdb.a'
+    'usr/lib/libdb-5.so'
+    'usr/lib/libdb.so'
   )
 }
 
 config-libdb_cxx() {
   description='The Berkeley DB embedded database system for C++'
-  depends=('libstdc++')
+  depends=('libpthread' 'libstdc++')
   devdepends=('glibc-devel' "libdb_cxx=$version-$release")
   files=('usr/lib/libdb_cxx-5.3.so')
   devfiles=(
     'usr/include/db_cxx.h'
-    'usr/lib/libdb_cxx-5.3.a' 
-    'usr/lib/libdb_cxx.a' 
-    'usr/lib/libdb_cxx-5.so' 
-    'usr/lib/libdb_cxx.so' 
+    'usr/lib/libdb_cxx-5.3.a'
+    'usr/lib/libdb_cxx.a'
+    'usr/lib/libdb_cxx-5.so'
+    'usr/lib/libdb_cxx.so'
   )
 }
 
 config-libdb_stl() {
   description='The Berkeley DB embedded database system for STL'
-  depends=('libstdc++')
+  depends=('libpthread' 'libstdc++')
   devdepends=('glibc-devel' "libdb_stl=$version-$release")
   files=('usr/lib/libdb_stl-5.3.so')
   devfiles=(
     'usr/include/dbstl*.h'
-    'usr/lib/libdb_stl-5.3.a' 
-    'usr/lib/libdb_stl.a' 
-    'usr/lib/libdb_stl-5.so' 
-    'usr/lib/libdb_stl.so' 
+    'usr/lib/libdb_stl-5.3.a'
+    'usr/lib/libdb_stl.a'
+    'usr/lib/libdb_stl-5.so'
+    'usr/lib/libdb_stl.so'
   )
 }
 
@@ -54,30 +54,30 @@ config-db-utils() {
   files=('usr/bin/*')
 }
 
-prepare() {
-  cd "db-$version"
-  patch -Np1 -i ../mmap_extend.patch
-}
-
 build() {
-  cp -r --reflink ../db-$version/* .
+  cd db-$version
+  patch -Np1 -i "$srcdir/mmap_extend.patch"
+
   cd build_unix
 
   ../dist/configure \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --enable-compat185 \
     --enable-shared \
     --enable-static \
     --enable-cxx \
     --enable-dbm \
-    --enable-stl
+    --enable-stl \
+    --enable-o_direct \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
   make
 }
 
 package() {
-  cd build_unix
+  cd db-$version/build_unix
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/docs"
