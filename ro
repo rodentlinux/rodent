@@ -23,6 +23,8 @@ usage() {
   echo '  remove       - uninstall package from sysroot'
   echo '  verify       - verify sysroot'
   echo '  list         - show installed packages in sysroot'
+  echo '  whatprovides - find packages that provide something'
+  echo '  whatdepends  - find packages that depend on something'
   echo '  leaves       - show packages not required by any other in sysroot'
   echo '  files        - show files in an installed packages'
   echo '  make         - build new package'
@@ -50,6 +52,10 @@ while true; do
     exec "$RODENT/lib/ro/verify" "${ARCH%%,*}" "$@";;
   ls|list)
     exec "$RODENT/lib/ro/list" "${ARCH%%,*}" "$@";;
+  wp|whatprovides)
+    exec "$RODENT/lib/ro/whatprovides" "${ARCH%%,*}" "$@";;
+  wd|whatdepends)
+    exec "$RODENT/lib/ro/whatdepends" "${ARCH%%,*}" "$@";;
   leaves)
     exec "$RODENT/lib/ro/leaves" "${ARCH%%,*}" "$@";;
   files)
