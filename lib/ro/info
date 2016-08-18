@@ -1,0 +1,47 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2016 Emil Renner Berthing
+
+set -e
+
+readonly arch="$1"
+shift
+
+. "$RODENT/settings"
+
+usage() {
+  echo 'halp!'
+}
+
+while true; do
+  case "$1" in
+  -s) SYSROOT="$2"; shift 2;;
+  -i) installed=1; shift;;
+  -h|help)
+    usage
+    exit 0;;
+  *) break;;
+  esac
+done
+
+if [[ -n "$installed" ]]; then
+  [[ -n "$SYSROOT" ]] || SYSROOT="$RODENT/sysroot.$arch"
+  if [[ ! -d "$SYSROOT" ]]; then
+    echo "Sysroot '$SYSROOT' not found."
+    exit 1
+  fi
+fi
+
+cd "$RODENT/lib/ro"
+export WHAT="$1"
+if [[ -n "$installed" ]]; then
+  awk '{print "installed\t" $0}' "$SYSROOT/#/installed"
+else
+  for i in "${REPOS[@]}"; do
+    repo="${i%%:*}"
+    file="$RODENT/cache/$repo/repo.${arch}.xz"
+    [[ ! -f "$file" ]] || xz -cd "$file" | awk "{print \"$repo\\t\" \$0}"
+  done
+fi | awk -f graphlib.awk -f info.awk -
+
+# vim: set ft=sh ts=2 sw=2 et:
