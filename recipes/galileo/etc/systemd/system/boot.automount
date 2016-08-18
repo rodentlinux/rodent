@@ -1,5 +1,0 @@
-[Unit]
-Before=local-fs.target
-
-[Automount]
-Where=/boot
