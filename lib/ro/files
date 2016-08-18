@@ -31,7 +31,7 @@ fi
 
 while read -r pkg rest; do
   echo "=== $pkg ==="
-  awk -F'\t' '$2=="d"{print $1 "/"};$2=="f"{print $1};$2=="l"{print $1 " -> " $6}' "$SYSROOT/#/${pkg/=/-}.files"
+  awk -f "$RODENT/lib/ro/files-show.awk" "$SYSROOT/#/${pkg/=/-}.files"
 done < <(grep "^$1" "$SYSROOT/#/installed")
 
 # vim: set ft=sh ts=2 sw=2 et:
