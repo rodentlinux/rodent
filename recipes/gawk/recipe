@@ -1,15 +1,17 @@
-parts=('gawk' 'gawk-default' 'igawk' 'gawk-libs' 'gawk-devel')
+parts=('gawk' 'gawk-default' 'igawk' 'gawk-libs')
 version=4.1.3
-release=1
-sources=("ftp://ftp.gnu.org/gnu/gawk/gawk-${version}.tar.xz")
+release=2
+sources=("https://ftp.gnu.org/gnu/gawk/gawk-${version}.tar.xz")
 sha1sum=('76b0acbbdeaa0e58466675c5faf68895eedd8306')
 makedepends=('glibc-devel')
 
 config-gawk() {
   description='GNU awk'
-  depends=('glibc')
+  depends=('libm' 'libdl')
+  devdepends=('glibc-devel')
   files=('usr/bin/gawk')
   manfiles=('usr/share/man/man1/gawk.1')
+  devfiles=('usr/include/gawkapi.h')
 }
 
 config-gawk-default() {
@@ -21,7 +23,7 @@ config-gawk-default() {
 
 config-igawk() {
   description='GNU awk with include files'
-  depends=('sh' "gawk=$version-$release")
+  depends=("gawk=$version-$release" 'sh' 'expr')
   files=('usr/bin/igawk')
   manfiles=('usr/share/man/man1/igawk.1')
 }
@@ -30,24 +32,16 @@ config-gawk-libs() {
   description='GNU awk libraries'
   depends=("gawk=$version-$release")
   files=('usr/lib/gawk/**' 'usr/lib/awk/**' 'usr/share/awk/**')
-  manfiles=('usr/share/man/man3/**')
-}
-
-config-gawk-devel() {
-  description='GNU awk library development headers'
-  depends=('glibc-devel')
-  files=('usr/include/gawkapi.h')
-}
-
-prepare() {
-  cd "gawk-$version"
-  patch -Np1 -i ../has_f_format.patch
+  manfiles=('usr/share/man/man3/*.3am')
 }
 
 build() {
-  "../gawk-$version/configure" \
+  cd gawk-$version
+  patch -Np1 -i "$srcdir/has_f_format.patch"
+
+  ./configure \
     ac_cv_func_working_mktime=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --libexecdir=/usr/lib \
     --disable-nls \
@@ -58,6 +52,7 @@ build() {
 }
 
 package() {
+  cd gawk-$version
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir/usr/bin/gawk-$version"
