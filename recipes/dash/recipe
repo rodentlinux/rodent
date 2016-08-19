@@ -1,14 +1,14 @@
 parts=(dash dash-default)
-version=0.5.8
+version=0.5.9
 release=1
 sources=("http://gondor.apana.org.au/~herbert/dash/files/dash-${version}.tar.gz")
-sha1sum=('cd058935bba545427caa375337afe8a6309477d2')
+sha1sum=('b9e9fbf21d95b5317f6e876fe7086a8fe69b3806')
 makedepends=('glibc-devel')
 devdepends=('glibc-devel')
 
 config-dash() {
   description='A POSIX compliant shell that aims to be as small as possible'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/dash')
   manfiles=('usr/share/man/man1/dash.1')
 }
@@ -21,17 +21,23 @@ config-dash-default() {
 }
 
 build() {
-  "../dash-$version/configure" \
-    --host=$HOST \
+  cd dash-$version
+  patch -Np1 -i "$srcdir/default-path.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --bindir=/usr/bin \
     --mandir=/usr/share/man \
-    --exec-prefix=""
+    --enable-fnmatch \
+    --enable-glob \
+    --disable-lineno
 
   make
 }
 
 package() {
+  cd dash-$version
   make DESTDIR="$pkgdir" install
 
   ln -s dash "$pkgdir/usr/bin/sh"

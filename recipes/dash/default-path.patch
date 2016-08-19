@@ -1,0 +1,12 @@
+diff -Naur dash-0.5.9.orig/src/var.c dash-0.5.9/src/var.c
+--- dash-0.5.9.orig/src/var.c	2014-10-07 16:30:35.000000000 +0200
++++ dash-0.5.9/src/var.c	2016-08-21 14:33:22.912058818 +0200
+@@ -74,7 +74,7 @@
+ MKINIT struct localvar_list *localvar_stack;
+ 
+ const char defpathvar[] =
+-	"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
++	"PATH=/usr/local/sbin:/usr/local/bin:/usr/bin";
+ #ifdef IFS_BROKEN
+ const char defifsvar[] = "IFS= \t\n";
+ #else
