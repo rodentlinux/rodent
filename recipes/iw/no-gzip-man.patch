@@ -1,7 +1,7 @@
-diff -Naur iw-4.3.orig/Makefile iw-4.3/Makefile
---- iw-4.3.orig/Makefile	2015-09-18 10:54:53.000000000 +0200
-+++ iw-4.3/Makefile	2015-11-01 09:50:27.278132321 +0100
-@@ -114,13 +114,13 @@
+diff -Naur iw-4.7.orig/Makefile iw-4.7/Makefile
+--- iw-4.7.orig/Makefile	2016-05-31 11:52:46.000000000 +0200
++++ iw-4.7/Makefile	2016-08-19 19:20:09.175712575 +0200
+@@ -115,13 +115,13 @@
  	@$(NQ) ' GZIP' $<
  	$(Q)gzip < $< > $@
  
