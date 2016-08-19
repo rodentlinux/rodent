@@ -8,14 +8,14 @@ parts=(
   libnl-utils
 )
 version=3.2.25
-release=1
+release=2
 sources=("http://www.infradead.org/~tgr/libnl/files/libnl-${version}.tar.gz")
 sha1sum=('b7a4981f7edf7398256d35fd3c0b87bc84ae27d1')
 makedepends=('glibc-devel')
 
 config-libnl-3() {
   description='Library for dealing with netlink sockets'
-  depends=('glibc')
+  depends=('libm' 'libpthread')
   devdepends=('glibc-devel' "libnl-3=$version-$release")
   files=('usr/lib/libnl-3.so.*')
   devfiles=(
@@ -80,7 +80,7 @@ config-libnl-nf-3() {
 
 config-libnl-cli-3() {
   description='Library for dealing with netlink sockets - cli'
-  depends=("libnl-genl-3=$version-$release" "libnl-nf-3=$version-$release")
+  depends=('libdl' "libnl-genl-3=$version-$release" "libnl-nf-3=$version-$release")
   devdepends=(
     "libnl-route-3-devel=$version-$release"
     "libnl-genl-3-devel=$version-$release"
@@ -103,14 +103,12 @@ config-libnl-utils() {
   manfiles=('usr/share/man/man8/*')
 }
 
-prepare() {
-  cd "libnl-$version"
-  patch -Np1 -i ../libtool.patch
-}
-
 build() {
-  "../libnl-$version/configure" \
-    --host=$HOST \
+  cd libnl-$version
+  patch -Np1 -i "$srcdir/libtool.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --sysconfdir=/etc \
     --sbindir=/usr/bin \
@@ -121,6 +119,7 @@ build() {
 }
 
 package() {
+  cd libnl-$version
   make DESTDIR="$pkgdir" install
 
   install -dm755 "$pkgdir/usr/share/factory"
