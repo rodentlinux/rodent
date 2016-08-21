@@ -1,0 +1,12 @@
+diff -Naur gnu-efi-3.0.4.orig/Make.defaults gnu-efi-3.0.4/Make.defaults
+--- gnu-efi-3.0.4.orig/Make.defaults	2016-03-17 14:53:14.000000000 +0100
++++ gnu-efi-3.0.4/Make.defaults	2016-08-21 00:55:23.728665272 +0200
+@@ -67,7 +67,7 @@
+ 
+ # Get ARCH from the compiler if cross compiling 
+ ifneq ($(CROSS_COMPILE),)
+-  override ARCH := $(shell $(CC) -dumpmachine | cut -f1 -d-| sed s,i[3456789]86,ia32,)
++  override ARCH := $(shell $(CC) -dumpmachine | cut -f1 -d-| sed 's,i[3456789]86,ia32,;s,armv[4567].*,arm,')
+ endif
+ 
+ # FreeBSD (and possibly others) reports amd64 instead of x86_64

@@ -1,34 +1,37 @@
 parts=(gnu-efi-devel)
-version=3.0.3
+version=3.0.4
 release=1
-sources=("http://downloads.sourceforge.net/project/gnu-efi/gnu-efi-${version}.tar.bz2")
-sha1sum=('14e3c1861f3e2f7226f12d6d37ce2c2281155ce3')
+sources=("https://downloads.sourceforge.net/project/gnu-efi/gnu-efi-${version}.tar.bz2")
+sha1sum=('d016220a805e6f893bfb75e25b1d3fc99088e062')
 makedepends=('glibc-devel')
 
 config-gnu-efi-devel() {
   description='Library for building UEFI Applications using the GNU toolchain'
-  files=('**')
+  files=(
+    'usr/include/efi/**'
+    'usr/lib/**'
+  )
 }
 
 build() {
-  cd "gnu-efi-$version"
+  cd gnu-efi-$version
+  patch -Np1 -i "$srcdir/arm.patch"
 
-  make \
-    CROSS_COMPILE="$HOST-" \
-    OS=Linux \
-    PREFIX=/usr \
-    lib gnuefi inc
+  # Build system seems to be broken
+  # and rebuild itself on make install,
+  # so just do everything in fakeroot
 }
 
 package() {
-  cd "gnu-efi-$version"
+  cd gnu-efi-$version
+  unset MAKEFLAGS
 
   make \
-    CROSS_COMPILE="$HOST-" \
+    CROSS_COMPILE=${host}- \
     OS=Linux \
     INSTALLROOT="$pkgdir" \
     PREFIX=/usr \
-    install
+    lib gnuefi inc install
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
