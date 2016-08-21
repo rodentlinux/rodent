@@ -1,0 +1,19 @@
+diff -Naur crda-3.18.orig/Makefile crda-3.18/Makefile
+--- crda-3.18.orig/Makefile	2014-12-11 00:51:29.000000000 +0100
++++ crda-3.18/Makefile	2016-08-20 23:54:29.402506915 +0200
+@@ -42,13 +42,13 @@
+ CFLAGS += -DUSE_OPENSSL -DPUBKEY_DIR=\"$(RUNTIME_PUBKEY_DIR)\" `pkg-config --cflags openssl`
+ LDLIBS += `pkg-config --libs openssl`
+ 
+-$(LIBREG): keys-ssl.c
++$(LIBREG): | keys-ssl.c
+ 
+ else
+ CFLAGS += -DUSE_GCRYPT
+ LDLIBS += -lgcrypt
+ 
+-$(LIBREG): keys-gcrypt.c
++$(LIBREG): | keys-gcrypt.c
+ 
+ endif
+ MKDIR ?= mkdir -p

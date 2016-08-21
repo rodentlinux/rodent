@@ -1,49 +1,66 @@
+_openssl='USE_OPENSSL=1'
 parts=(libreg crda regdbdump)
 version=3.18
-release=1
+release=2
 sources=("https://kernel.org/pub/software/network/crda/crda-${version}.tar.xz")
 sha1sum=('16e5a1b67a168d37c28245d681512cbc46f865d9')
-makedepends=('libnl-genl-3-devel' 'libgcrypt-devel')
+if [[ $_openssl ]]; then
+  makedepends=('libnl-genl-3-devel' 'libssl-devel')
+else
+  makedepends=('libnl-genl-3-devel' 'libgcrypt-devel')
+fi
 
 config-libreg() {
   description='Wireless regulatory domain library'
-  depends=('glibc')
+  depends=('libc')
   devdepends=('glibc-devel' "libreg=$version-$release")
   files=('usr/lib/libreg.so')
-  devfiles=(
-    'usr/include/reglib/**'
-  )
+  devfiles=('usr/include/reglib/*.h')
 }
 
 config-crda() {
   description='Central regulatory domain agent'
-  depends=('libnl-genl-3' 'libgcrypt' "libreg=$version-$release" 'wireless-regdb')
+  depends=('libm' "libreg=$version-$release" 'libnl-genl-3' 'wireless-regdb')
+  if [[ $_openssl ]]; then
+    depends+=('libcrypto')
+  else
+    depends+=('libgcrypt')
+  fi
   files=('usr/bin/crda' 'usr/lib/udev/rules.d/85-regulatory.rules')
   manfiles=('usr/share/man/man8/crda.8')
 }
 
 config-regdbdump() {
   description='Dump regulatory domain database'
-  depends=('libgcrypt' "libreg=$version-$release")
+  depends=('libm' "libreg=$version-$release")
+  if [[ $_openssl ]]; then
+    depends+=('libcrypto')
+  else
+    depends+=('libgcrypt')
+  fi
   files=('usr/bin/regdbdump')
   manfiles=('usr/share/man/man8/regdbdump.8')
 }
 
-prepare() {
-  cd "crda-$version"
-  sed -e '1s/python/python2/' -i utils/key2pub.py
-  patch -Np1 -i ../Makefile.patch
-}
-
 build() {
-  cp -r --reflink ../crda-$version/* .
+  cd crda-$version
+  sed -e '1s/python/python2/' -i utils/key2pub.py
+  patch -Np1 -i "$srcdir/Makefile.patch"
+  patch -Np1 -i "$srcdir/keys-gcrypt.patch"
+  case $arch in
+  x86_64) patch -Np1 -i "$srcdir/openssl64bit.patch";;
+  *)      patch -Np1 -i "$srcdir/openssl32bit.patch";;
+  esac
 
-  make \
-    CC="$HOST-gcc" \
+  unset MAKEFLAGS
+  make V=1 \
+    $_openssl \
+    CC=${host}-gcc \
     all_noverify
 }
 
 package() {
+  cd crda-$version
   make \
     DESTDIR="$pkgdir" \
     UDEV_RULE_DIR=/usr/lib/udev/rules.d/ \

@@ -1,0 +1,15 @@
+diff -Naur crda-3.18.orig/utils/key2pub.py crda-3.18/utils/key2pub.py
+--- crda-3.18.orig/utils/key2pub.py	2014-12-11 00:51:29.000000000 +0100
++++ crda-3.18/utils/key2pub.py	2016-08-21 00:12:46.802472395 +0200
+@@ -60,10 +60,7 @@
+ def print_ssl(output, name, val):
+     import struct
+     output.write('#include <stdint.h>\n')
+-    if len(struct.pack('@L', 0)) == 8:
+-        return print_ssl_64(output, name, val)
+-    else:
+-        return print_ssl_32(output, name, val)
++    return print_ssl_64(output, name, val)
+ 
+ def print_ssl_keys(output, n):
+     output.write(r'''
