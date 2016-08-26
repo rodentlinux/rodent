@@ -14,12 +14,12 @@ function list_squash(array,n,i,list) {
   return list
 }
 
-function provides_add(map,pkg,plist,name,ver,pver,i,n,array) {
+function provides_add(pmap,pkg,plist,name,ver,pver,i,n,array) {
   i=index(pkg,"=")
   ver=substr(pkg,i+1)
   name=substr(pkg,1,i-1)
 
-  map[name]=list_append(map[name],pkg "=" ver)
+  pmap[name]=list_append(pmap[name],pkg "=" ver)
 
   n=split(plist,array," ")
   for (i=1;i<=n;i++) {
@@ -27,9 +27,9 @@ function provides_add(map,pkg,plist,name,ver,pver,i,n,array) {
     if (match(name,/=/)) {
       pver=substr(name,RSTART+1)
       name=substr(name,1,RSTART-1)
+      pmap[name]=list_append(pmap[name],pkg "=" pver)
     } else
-      pver=ver
-    map[name]=list_append(map[name],pkg "=" pver)
+      pmap[name]=list_append(pmap[name],pkg)
   }
 }
 
@@ -65,7 +65,21 @@ function verleq(v1,v2,a1,a2,n1,n2,i) {
   }
 }
 
-function dep_resolve(provides,dep,array,eq,geq,lt,i,n,m,pa,found,tmp) {
+function vermatch(ver,geq,lt,eq) {
+  if (!geq&&!lt&&!eq)
+    return 1
+  if (!ver)
+    return 0
+  if (eq && eq!=ver)
+    return 0
+  if (geq && geq!=ver && verleq(ver,geq))
+    return 0
+  if (lt && verleq(lt,ver))
+    return 0
+  return 1
+}
+
+function dep_resolve(pmap,dep,res,eq,geq,lt,i,n,m,pa,found,tmp) {
   if (match(dep,/>=/)) {
     geq=substr(dep,RSTART+2)
     dep=substr(dep,1,RSTART-1)
@@ -80,24 +94,20 @@ function dep_resolve(provides,dep,array,eq,geq,lt,i,n,m,pa,found,tmp) {
     eq=substr(dep,RSTART+1)
     dep=substr(dep,1,RSTART-1)
   }
-  n=split(provides[dep],array," ")
+  n=split(pmap[dep],res," ")
   for (i=1;i<=n;i++) {
-    split(array[i],pa,"=")
-    if (eq && eq!=pa[3])
-      continue
-    if (geq && geq!=pa[3] && verleq(pa[3],geq))
-      continue
-    if (lt && verleq(lt,pa[3]))
+    split(res[i],pa,"=")
+    if (!vermatch(pa[3],geq,lt,eq))
       continue
     tmp=found[pa[1]]
-    if (!tmp || verleq(tmp,pa[2]))
+    if (!tmp||verleq(tmp,pa[2]))
       found[pa[1]]=pa[2]
   }
   m=0
   for (tmp in found)
-    array[++m]=tmp "=" found[tmp]
+    res[++m]=tmp "=" found[tmp]
   for (i=m+1;i<=n;i++)
-    delete array[i]
+    delete res[i]
   return m
 }
 
