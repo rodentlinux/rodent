@@ -69,6 +69,14 @@ mips|mipsel)
   exit 1;;
 esac
 
+if [[ -w /dev/kvm ]]; then
+  case "$(uname -m):$arch" in
+  x86_64:x86_64) cmd+=(-enable-kvm);;
+  x86_64:quark)  cmd+=(-enable-kvm);;
+  i?86:quark)    cmd+=(-enable-kvm);;
+  esac
+fi
+
 cmd+=(
   -nographic
   -kernel "$RODENT/lib/kernel.$arch"
