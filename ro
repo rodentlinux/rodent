@@ -1,42 +1,22 @@
 #!/bin/bash
-# Copyright 2015 Emil Renner Berthing
+# This file is part of Rodent Linux
+# Copyright 2015-2016 Emil Renner Berthing
 
-ROOT="$(dirname "$(readlink -f "$0")")"
-export PATH="$ROOT/tools/bin:$PATH"
-export LD_LIBRARY_PATH="$ROOT/tools/lib"
+export RODENT="$(dirname "$(readlink -f "$0")")"
+export PATH="$RODENT/tools/bin:$PATH"
+export LD_LIBRARY_PATH="$RODENT/tools/lib"
 export LC_COLLATE=C
 
-if [[ ! -f "$ROOT/settings" ]]; then
+if [[ ! -f "$RODENT/settings" ]]; then
   echo "No settings file found."
   echo "Please copy settings.proto to settings."
   exit 1
 fi
 
-. "$ROOT/settings"
-
-# Generic defaults
-[[ -n "$CFLAGS" ]]   || CFLAGS='-O2 -pipe -ggdb'
-[[ -n "$CXXFLAGS" ]] || CXXFLAGS='-O2 -pipe -ggdb'
-[[ -n "$LDFLAGS" ]]  || LDFLAGS='-Wl,-O1,--sort-common,--as-needed,-z,relro'
-
-# Architecture specific defaults
-case "$ARCH" in
-armv7hl)
-  [[ -n "$HOST" ]] || HOST='armv7hl-unknown-linux-gnueabi'
-  [[ -n "$COMPRESSION" ]] || COMPRESSION='xz -Xbcj armthumb'
-  ;;
-quark)
-  [[ -n "$HOST" ]] || HOST='i586-quark-linux-gnu'
-  [[ -n "$COMPRESSION" ]] || COMPRESSION='xz -Xbcj x86'
-  ;;
-*)
-  echo "Unknown architecture '$ARCH'"
-  exit 1
-  ;;
-esac
+. "$RODENT/settings"
 
 usage() {
-  echo 'usage: ro <command>'
+  echo 'usage: ro [-a ARCH] <command>'
   echo
   echo '  update       - update repo information'
   echo '  install      - install package to sysroot'
@@ -46,6 +26,8 @@ usage() {
   echo '  leaves       - show packages not required by any other in sysroot'
   echo '  files        - show files in an installed packages'
   echo '  make         - build new package'
+  echo '  makerepo     - create repo metadata from packages'
+  echo '  host-make    - build new host package'
   echo '  host-install - install host package'
   echo '  squash       - build squashfs image'
   echo '  initrd       - build initramfs cpio archive'
@@ -54,44 +36,39 @@ usage() {
 }
 
 while true; do
-  case "$1" in
+  arg="$1"
+  shift
+  case "$arg" in
+  -a) ARCH="$1"; shift;;
   up|update)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/update" "$@";;
+    exec "$RODENT/lib/ro/update" "$ARCH" "$@";;
   in|install)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/install" "$@";;
+    exec "$RODENT/lib/ro/install" "${ARCH%%,*}" "$@";;
   rm|remove)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/remove" "$@";;
+    exec "$RODENT/lib/ro/remove" "${ARCH%%,*}" "$@";;
   ver|verify)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/verify" "$@";;
+    exec "$RODENT/lib/ro/verify" "${ARCH%%,*}" "$@";;
   ls|list)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/list" "$@";;
+    exec "$RODENT/lib/ro/list" "${ARCH%%,*}" "$@";;
   leaves)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/leaves" "$@";;
+    exec "$RODENT/lib/ro/leaves" "${ARCH%%,*}" "$@";;
   files)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/files" "$@";;
+    exec "$RODENT/lib/ro/files" "${ARCH%%,*}" "$@";;
   mk|make)
-    export ROOT ARCH HOST CFLAGS CXXFLAGS LDFLAGS MAKEFLAGS
-    shift; exec "$ROOT/lib/ro/make" "$@";;
+    exec "$RODENT/lib/ro/make" "$ARCH" "$@";;
+  mr|makerepo)
+    exec "$RODENT/lib/ro/makerepo" "$ARCH" "$@";;
   hin|host-install)
-    export ROOT
-    shift; exec "$ROOT/lib/ro/host-install" "$@";;
+    exec "$RODENT/lib/ro/host-install" "$@";;
+  hmk|host-make)
+    exec "$RODENT/lib/ro/host-make" "${ARCH%%,*}" "$@";;
   sq|squash)
-    export ROOT ARCH HOST COMPRESSION
-    shift; exec "$ROOT/lib/ro/squash" "$@";;
+    exec "$RODENT/lib/ro/squash" "${ARCH%%,*}" "$@";;
   initrd)
-    export ROOT ARCH HOST COMPRESSION
-    shift; exec "$ROOT/lib/ro/initrd" "$@";;
+    exec "$RODENT/lib/ro/initrd" "${ARCH%%,*}" "$@";;
   test)
-    export ROOT ARCH
-    shift; exec "$ROOT/lib/ro/test" "$@";;
-  help|-h|--help)
+    exec "$RODENT/lib/ro/test" "${ARCH%%,*}" "$@";;
+  -h|help)
     usage
     exit 0
     ;;
@@ -102,4 +79,4 @@ while true; do
   esac
 done
 
-# vim: set ts=2 sw=2 et:
+# vim: set ft=sh ts=2 sw=2 et:

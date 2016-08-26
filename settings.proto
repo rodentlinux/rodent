@@ -1,9 +1,9 @@
-ARCH=armv7hl
-#ARCH=quark
+ARCH=armv7hl,quark
 
-MAKEFLAGS=-j4
+#BUILDDIR='/tmp/rodent'
+#MAKEFLAGS='-j4'
 
 REPOS=(
-  'esmil:http://esmil.dk/rodent'
+  'rodent:http://esmil.dk/rodent'
   'local:local'
 )

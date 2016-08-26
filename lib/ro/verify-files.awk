@@ -1,12 +1,12 @@
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 BEGIN {
   FS="\t"
 }
 
 FILENAME=="-" {
-  if (!match($1,/^#\//))
+  if ($1!~/^#.*\.files$/&&$1!="#/installed")
     tag[$1]=2
 }
 

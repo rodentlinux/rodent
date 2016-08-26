@@ -1,0 +1,17 @@
+hosts:
+
+10-files               libnss_files               glibc
+20-db                  libnss_db                  glibc
+30-mdns{,4,6}_minimal  libnss_mdns{,4,6}_minimal  nss-mdns
+40-resolve             systemd-resolved           systemd
+50-dns                 libnss_dns                 glibc
+60-mdns{,4,6}          libnss_mdns{,4,6}          nss-mdns
+80-myhostname          libnss_myhostname          systemd
+
+passwd,group,shadow:
+
+10-files               libnss_files               glibc
+11-compat              libnss_compat              glibc
+
+others:
+10-files               libnss_files               glibc

@@ -1,0 +1,218 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015-2016 Emil Renner Berthing
+
+set -e
+
+readonly arch="$1"
+readonly recipe="$2"
+readonly dependencies="$3"
+readonly extract="$4"
+readonly build="$5"
+readonly pack="$6"
+
+. "$RODENT/lib/ro/make-defaults.sh"
+. "$RODENT/settings"
+
+srcdir="${recipe%/*}"
+base="${srcdir##*/}"
+cd "$srcdir"
+
+. "$recipe"
+
+if [[ "$(type -t package)" != 'function' ]]; then
+  echo 'Broken recipe: no package function'
+  exit 1
+fi
+
+[[ ${#parts[@]} -gt 0 ]] || parts=($base)
+for part in "${parts[@]}"; do
+  if [[ "$(type -t "config-$part")" != 'function' ]]; then
+    echo "Broken recipe: no 'config-$part' function"
+    exit 1
+  fi
+done
+
+base_version="$version"
+base_depends=("${depends[@]}")
+
+if [[ -n "$BUILDDIR" ]]; then
+  builddir="$BUILDDIR/$base/$arch"
+else
+  builddir="$srcdir/$arch"
+fi
+
+export CFLAGS
+export CXXFLAGS
+export CPPFLAGS
+export LDFLAGS
+[[ -z "$MAKEFLAGS" ]] || export MAKEFLAGS
+[[ -n "$SYSROOT" ]] || SYSROOT="$builddir/sysroot"
+export SYSROOT
+export PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig"
+export PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
+
+if [[ "$dependencies" -gt 0 ]]; then
+  . "$RODENT/lib/ro/deps_install.sh"
+  cd "$SYSROOT"
+  deps_install
+fi
+
+if [[ "$extract" -gt 0 ]]; then
+  cd "$builddir"
+  for url in "${sources[@]}"; do
+    [[ "${url%%:*}" != noextract ]] || continue
+
+    file="${url##*/}"
+    file="${file%%\?*}"
+    echo "Extracting ${file}.."
+    tar -xf "$srcdir/$file"
+  done
+fi
+
+if [[ "$build" -gt 0 && "$(type -t build)" = 'function' ]]; then
+  cd "$builddir"
+  echo 'Building..'
+  set -x
+  build
+  set +x
+fi
+
+[[ "$pack" -gt 0 ]] || exit 0
+
+cd "$builddir"
+rm -rf pkg
+mkdir pkg
+echo 'Entering fakeroot'
+fakeroot -- "$RODENT/lib/ro/make-fakerooted" "$arch" "$recipe" "$builddir"
+echo 'Exited fakeroot'
+
+mkfiles() {
+  local out="$1"; shift
+  if [[ -f "$out" ]]; then
+    out="${out%-*}"
+    echo "Package ${out%-*} already defined."
+    exit 1
+  fi
+
+  for i in "$@"; do
+    echo "$i"
+  done \
+    | awk -f "$RODENT/lib/ro/make-patterns.awk" - files \
+    | awk -f "$RODENT/lib/ro/prefixes.awk" - files \
+    > "$out"
+}
+
+cd "$builddir"
+install -dm755 'pkg/#'
+for part in "${parts[@]}"; do
+  version="$base_version"
+  provides=()
+  depends=()
+  mandepends=()
+  devdepends=()
+  devmandepends=()
+  description=""
+  files=()
+  manfiles=()
+  devfiles=()
+  devmanfiles=()
+
+  "config-$part"
+
+  mkfiles "pkg/#/${part}-${version}-${release}.files" "${files[@]}"
+  echo -e "${part}=${version}-${release}\t${base}=${base_version}-${release}\t${provides[*]}\t${depends[*]}\t$description" \
+    >> 'pkg/#/meta'
+
+  if [[ ${#mandepends[@]} -gt 0 || ${#manfiles[@]} -gt 0 ]]; then
+    mkfiles "pkg/#/${part}-man-${version}-${release}.files" "${manfiles[@]}"
+    echo -e "${part}-man=${version}-${release}\t${base}=${base_version}-${release}\t\t${mandepends[*]}\tManual pages for $part" \
+      >> 'pkg/#/meta'
+  fi
+
+  if [[ ${#devdepends[@]} -gt 0 || ${#devfiles[@]} -gt 0 ]]; then
+    mkfiles "pkg/#/${part}-devel-${version}-${release}.files" "${devfiles[@]}"
+    echo -e "${part}-devel=${version}-${release}\t${base}=${base_version}-${release}\t\t${devdepends[*]}\tDevelopment files for $part" \
+      >> 'pkg/#/meta'
+  fi
+
+  if [[ ${#devmandepends[@]} -gt 0 || ${#devmanfiles[@]} -gt 0 ]]; then
+    mkfiles "pkg/#/${part}-devel-man-${version}-${release}.files" "${devmanfiles[@]}"
+    echo -e "${part}-devel-man=${version}-${release}\t${base}=${base_version}-${release}\t\t${devmandepends[*]}\tManual pages for ${part}-devel" \
+      >> 'pkg/#/meta'
+  fi
+done
+
+sort -u pkg/\#/*.files \
+  | comm -23 files - \
+  | awk -f "$RODENT/lib/ro/prefixes.awk" - files \
+  > files.leftover
+
+if [[ -s files.leftover ]]; then
+  FILE="pkg/#/${base}-extra-${base_version}-${release}.files"
+  if [[ -f "$FILE" ]]; then
+    echo "Package ${base}-extra already defined, but the following files are left over:"
+    awk -F'\t' '{print "- " $1}' files.leftover
+    exit 1
+  fi
+  mv files.leftover "$FILE"
+  echo -e "${base}-extra=${base_version}-${release}\t${base}=${base_version}-${release}\t\t${base_depends[*]}\tExtra files from $base" \
+    >> 'pkg/#/meta'
+else
+  rm -f files.leftover
+fi
+
+cd "$builddir"
+{
+  awk -F'\t' '{print $1;print $3;print $4}' 'pkg/#/meta' | \
+  while read -r pkg; do
+    read -r provides
+    read -r depends
+
+    printf "$pkg (%d files %d symlinks %d dirs %d others)\n" \
+      $(awk -f "$RODENT/lib/ro/make-stats.awk" "pkg/#/${pkg/=/-}.files")
+    if [[ -n "$provides" ]]; then
+      echo '  provides:'
+      for p in $provides; do
+        echo "    $p"
+      done
+    fi
+    if [[ -n "$depends" ]]; then
+      echo '  depends:'
+      for dep in $depends; do
+        echo "    $dep"
+      done
+    fi
+    awk -F'\t' '$2=="f"&&$7=="strip"{print $1}' "pkg/#/${pkg/=/-}.files" | \
+      while read -r file; do
+        echo "  $file:"
+        objdump -p "pkg/$file" \
+          | awk '$1=="NEEDED"{print "    " $2};$1=="RPATH"{print "WARNING: rpath " $2}'
+      done
+    done
+} > "$srcdir/build.${arch}.txt"
+
+echo 'Pruning pseudo files'
+find pkg -mindepth 1 -printf '%P\n' \
+  | awk -f "$RODENT/lib/ro/make-prune.awk" files - \
+  | while read -r i; do
+  echo "+ rm -rf $i"
+  rm -rf "pkg/$i"
+done
+
+echo -n "Compressing ${base}-${base_version}-${release}.${arch}.tar.xz.. "
+mkdir -p "$RODENT/cache/local"
+cd pkg
+tar -c -f "$RODENT/cache/local/${base}-${base_version}-${release}.${arch}.tar.xz.new" \
+  -J --owner=root --group=root \
+  --null --no-recursion -T <(
+  echo -ne "./#/meta\0"
+  for i in \#/*.files; do
+    echo -ne "./$i\0"
+  done
+  awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' ../files | tr '\n' '\0'
+)
+mv -f "$RODENT/cache/local/${base}-${base_version}-${release}.${arch}.tar.xz"{.new,}
+echo 'done.'
+
+# vim: set ft=sh ts=2 sw=2 et:

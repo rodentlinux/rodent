@@ -1,0 +1,19 @@
+# Generic defaults
+unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
+CFLAGS='-O2 -pipe -ggdb'
+CXXFLAGS='-O2 -pipe -ggdb'
+LDFLAGS='-Wl,-O1,--sort-common,--as-needed,-z,relro'
+
+# Architecture specific defaults
+case $arch in
+armv7hl)
+  host='armv7hl-unknown-linux-gnueabi'
+  ;;
+quark)
+  host='i586-quark-linux-gnu'
+  ;;
+*)
+  echo "Unknown architecture '$arch'"
+  exit 1
+  ;;
+esac

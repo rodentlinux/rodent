@@ -1,0 +1,171 @@
+#!/bin/bash
+# This file is part of Rodent Linux
+# Copyright 2015-2016 Emil Renner Berthing
+
+set -e
+
+readonly arch="$1"
+shift
+
+. "$RODENT/lib/ro/make-defaults.sh"
+. "$RODENT/settings"
+
+usage() {
+  echo 'ro make [options] [recipe]'
+  echo
+  echo 'Build package from recipe'
+  echo 'If recipe is not specified try ./recipe'
+  echo
+  echo 'Options:'
+  echo ' -s SYSROOT  Use sysroot at SYSROOT'
+  echo ' -D          Skip installing dependencies'
+  echo ' -E          Skip extracting sources'
+  echo ' -B          Skip building'
+  echo ' -P          Skip packaging'
+  echo ' -r          Repackage (skip dependencies, extracting and building)'
+}
+
+dependencies=1
+extract=1
+build=1
+pack=1
+
+while getopts :s:DEBPrh opt; do
+  case "$opt" in
+  s) SYSROOT="$(readlink -f "$OPTARG")";;
+  D) dependencies=0;;
+  E) extract=0;;
+  B) build=0;;
+  P) pack=0;;
+  r) dependencies=0; extract=0; build=0;;
+  h)
+    usage
+    exit 0;;
+  \?)
+    echo "Unknown option -$OPTARG"
+    usage
+    exit 1;;
+  esac
+done
+shift $((OPTIND-1))
+
+if [[ -n "$1" ]]; then
+  if [[ -f "$1" ]]; then
+    recipe="$1"
+  elif [[ -f "$1/recipe" ]]; then
+    recipe="$1/recipe"
+  elif [[ -f "$RODENT/host-recipes/$1/recipe" ]]; then
+    recipe="$RODENT/host-recipes/$1/recipe"
+  else
+    echo "Could not find package '$1'"
+    exit 1
+  fi
+else
+  if [[ -f ./recipe ]]; then
+    recipe='./recipe'
+  else
+    echo "Could not find recipe file in current directory"
+    exit 1
+  fi
+fi
+recipe="$(readlink -f "$recipe")"
+
+srcdir="${recipe%/*}"
+base="${srcdir##*/}"
+cd "$srcdir"
+
+. "$recipe"
+if [[ -n "$BUILDDIR" ]]; then
+  builddir="$BUILDDIR/$base"
+else
+  builddir="$srcdir"
+fi
+mkdir -p "$builddir"
+
+if [[ "$(type -t package)" != 'function' ]]; then
+  echo 'Broken recipe: no package function'
+  exit 1
+fi
+
+[[ -n "$SYSROOT" ]] || SYSROOT="$builddir/sysroot"
+export SYSROOT
+
+TARGET_CFLAGS="$CFLAGS"
+unset CFLAGS
+TARGET_CXXFLAGS="$CXXFLAGS"
+unset CXXFLAGS
+TARGET_CPPFLAGS="$CPPFLAGS"
+unset CPPFLAGS
+TARGET_LDFLAGS="$LDFLAGS"
+unset LDFLAGS
+[[ -z "$MAKEFLAGS" ]] || export MAKEFLAGS
+
+. "$RODENT/lib/ro/download.sh"
+
+if [[ "$extract" -gt 0 ]]; then
+  n="${#sources[@]}"
+  for ((i=0;i<n;i++)); do
+    url="${sources[$i]}"
+    sha1="${sha1sum[$i]}"
+
+    while true; do
+      case "${url%%:*}" in
+      noextract) url="${url#*:}";;
+      *) break;;
+      esac
+    done
+
+    file="${url##*/}"
+    file="${file%%\?*}"
+    check_or_download "$srcdir" "$file" "$sha1" "$url"
+  done
+fi
+
+if [[ "$dependencies" -gt 0 ]]; then
+  . "$RODENT/lib/ro/deps_install.sh"
+  sysroot_init
+  deps_calculate "${makedepends[@]}"
+  deps_download
+  deps_install
+fi
+
+if [[ "$extract" -gt 0 ]]; then
+  cd "$builddir"
+  for url in "${sources[@]}"; do
+    [[ "${url%%:*}" != noextract ]] || continue
+
+    file="${url##*/}"
+    file="${file%%\?*}"
+    echo "Extracting ${file}.."
+    tar -xf "$srcdir/$file"
+  done
+fi
+
+if [[ "$build" -gt 0 && "$(type -t build)" = 'function' ]]; then
+  cd "$builddir"
+  echo 'Building..'
+  set -x
+  build
+  set +x
+fi
+
+[[ "$pack" -gt 0 ]] || exit 0
+
+cd "$builddir"
+rm -rf tools
+mkdir tools
+echo 'Packaging files..'
+set -x
+package
+set +x
+
+echo -n "Compressing ${base}-${version}-${release}.host.tar.xz.. "
+mkdir -p "$RODENT/cache/host"
+cd "$builddir"
+tar -c -f "$RODENT/cache/host/${base}-${version}-${release}.host.tar.xz.new" \
+  -J --owner=root --group=root ./tools
+cd "$RODENT/cache/host"
+mv -f "${base}-${version}-${release}.host.tar.xz"{.new,}
+echo 'done.'
+
+# vim: set ft=sh ts=2 sw=2 et:

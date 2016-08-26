@@ -1,10 +1,10 @@
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 if command -v curl >/dev/null 2>&1; then
   eval 'download() { echo "Downloading $1"; curl -#Lo "$2" "$1"; }'
 elif command -v wget >/dev/null 2>&1; then
-  eval "download() { wget -O "\$2" "\$1"; }"
+  eval 'download() { wget -O "$2" "$1"; }'
 else
   echo 'No download command found.'
   echo 'Please install curl or wget.'
@@ -16,11 +16,11 @@ check_or_download() {
   local file="$2"
   local sha1="$3"
   local url="$4"
-  local path="$ROOT/$prefix/$file"
+  local path="$prefix/$file"
 
   if [[ -f "$path" ]]; then
     if [[ "$sha1" != SKIP && "$sha1" != "$(sha1sum "$path" | head -c40)" ]]; then
-      echo "$file already exists in $prefix, but it's SHA1 doesn't match!"
+      echo "$file already exists in ${prefix#$RODENT/} but it's SHA1 doesn't match!"
       return 1
     fi
     #echo "$file already exists in $prefix"
@@ -28,7 +28,7 @@ check_or_download() {
   fi
   download "$url" "$path"
   if [[ "$sha1" != SKIP && "$sha1" != "$(sha1sum "$path" | head -c40)" ]]; then
-    echo "The SHA1 of downloaded file $prefix/$file doesn't match!"
+    echo "The SHA1 of downloaded file ${path#$RODENT/} doesn't match!"
     return 1
   fi
   return 0

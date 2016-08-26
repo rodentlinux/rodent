@@ -1,25 +1,34 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
+
+readonly arch="$1"
+shift
+
+. "$RODENT/settings"
 
 usage() {
   echo 'halp!'
 }
 
-if [[ "$1" == help ]]; then
-  usage
-  exit 0
-fi
+while true; do
+  case "$1" in
+  -h|help)
+    usage
+    exit 0;;
+  *) break;;
+  esac
+done
 
-[[ -z "$1" ]] || IMAGE="$1"
-[[ -n "$IMAGE" ]] || IMAGE="$ROOT/image.sqfs"
+[[ -z "$1"     ]] || IMAGE="$1"
+[[ -n "$IMAGE" ]] || IMAGE="$RODENT/image.sqfs"
 
-case "$ARCH" in
+case $arch in
 armv7hl)
   cmd=(qemu-system-arm -machine vexpress-a9 -smp 4
-    -dtb "$ROOT/lib/vexpress-v2p-ca9.dtb"
+    -dtb "$RODENT/lib/vexpress-v2p-ca9.dtb"
   )
   console='console=ttyAMA0'
   nic='model=lan9118'
@@ -28,8 +37,9 @@ armv7hl)
   ;;
 quark)
   #-cpu qemu32,+pae,+pbe,+nx,+smep,-mce,-sep,-pge,-cmov,-fxsr,-mmx,-sse,-sse2,-pni,-popcnt
-  cmd=(qemu-system-quark -machine pc -smp 1
+  cmd=(qemu-system-quark -machine pc
     -cpu pentium,+pae,+pbe,+nx,+smep,-mce,-mmx
+    -smp 1 -m 512
     -smbios type=0,uefi=on
   )
   console='console=ttyS0'
@@ -38,23 +48,22 @@ quark)
   virtio_9p='virtio-9p-pci'
   ;;
 *)
-  echo "Unknown architecture '$ARCH'."
+  echo "Unknown architecture '$arch'."
   exit 1;;
 esac
 
 cmd+=(
-  -m 512
   -nographic
-  -kernel "$ROOT/lib/kernel.$ARCH"
+  -kernel "$RODENT/lib/kernel.$arch"
   -append "$console root=/dev/sda ro rootwait"
   -net nic,$nic
   -net user,net=192.168.7.0/24,dhcpstart=192.168.7.16,hostname=guest,hostfwd=tcp::2222-:22
-  -fsdev local,id=rodent,path="$ROOT",security_model=none,readonly
+  -fsdev local,id=rodent,path="$RODENT",security_model=none,readonly
   -device $virtio_9p,fsdev=rodent,mount_tag=rodent
 )
 
-if [[ -f "$ROOT/initrd.cpio" ]]; then
-  cmd+=(-initrd "$ROOT/initrd.cpio")
+if [[ -f "$RODENT/initrd.cpio" ]]; then
+  cmd+=(-initrd "$RODENT/initrd.cpio")
 fi
 
 if [[ -f "$IMAGE" ]]; then

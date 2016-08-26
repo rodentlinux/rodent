@@ -1,0 +1,40 @@
+List of used uid/gids
+
+Type should be one of
+login
+ - should have matching user and group
+ - existing home directory
+ - working shell
+nologin
+ - should have matching user and group
+ - optional home directory
+ - no working shell
+group
+ - only group defined
+
+Number  Name              Type     Snippet              Package
+     0  root              login    00-base              libnss_files
+     5  tty               group    10-udev              systemd-shared
+     6  disk              group    10-udev              systemd-shared
+     7  lp                group    10-udev              systemd-shared
+     8  kmem              group    10-udev              systemd-shared
+    10  input             group    10-udev              systemd-shared
+    11  audio             group    10-udev              systemd-shared
+    12  video             group    10-udev              systemd-shared
+    13  cdrom             group    10-udev              systemd-shared
+    14  tape              group    10-udev              systemd-shared
+    15  dialout           group    10-udev              systemd-shared
+    20  utmp              group    00-base              libnss_files
+    74  radvd             nologin  10-radvd             radvd
+    75  dnsmasq           nologin  10-dnsmasq           dnsmasq
+    80  dbus              nologin  10-dbus              dbus-daemon
+    85  avahi-daemon      nologin  10-avahi-daemon      avahi-daemon
+    86  avahi-admin       group    10-avahi-daemon      avahi-daemon
+    87  avahi-autoipd     nologin  10-avahi-autoipd     avahi-autoipd
+   100  users             group    00-base              libnss_files
+   101  systemd-journal   nologin  10-systemd-journal   systemd-shared
+   102  systemd-resolve   nologin  10-systemd-resolve   systemd-resolved
+   103  systemd-network   nologin  10-systemd-network   systemd-networkd
+   104  systemd-timesync  nologin  10-systemd-timesync  systemd-timesyncd
+   105  systemd-coredump  nologin  10-systemd-coredump  systemd-coredump
+ 65534  nobody            nologin  00-base              libnss_files

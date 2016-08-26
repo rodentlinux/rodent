@@ -1,30 +1,40 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
+
+readonly -a archs=(${1//,/ })
+shift
+
+. "$RODENT/settings"
 
 usage() {
   echo 'halp!'
 }
 
-if [[ "$1" == help ]]; then
-  usage
-  exit 0
-fi
+while true; do
+  case "$1" in
+  -h|help)
+    usage
+    exit 0;;
+  *) break;;
+  esac
+done
 
-. "$ROOT/lib/ro/download.sh"
-. "$ROOT/settings"
+. "$RODENT/lib/ro/download.sh"
 
-for i in "${REPOS[@]}"; do
-  name="${i%%:*}"
-  url="${i#*:}"
-  proto="${url%%:*}"
+for arch in "${archs[@]}"; do
+  for i in "${REPOS[@]}"; do
+    name="${i%%:*}"
+    url="${i#*:}"
+    proto="${url%%:*}"
 
-  if [[ "$proto" = http || "$proto" = https ]]; then
-    mkdir -p "$ROOT/cache/$name"
-    download "$url/repo.${ARCH}.xz" "$ROOT/cache/$name/repo.${ARCH}.xz"
-  fi
+    if [[ "$proto" = http || "$proto" = https ]]; then
+      mkdir -p "$RODENT/cache/$name"
+      download "$url/repo.${arch}.xz" "$RODENT/cache/$name/repo.${arch}.xz"
+    fi
+  done
 done
 
 # vim: set ft=sh ts=2 sw=2 et:

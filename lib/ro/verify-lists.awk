@@ -1,12 +1,13 @@
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 BEGIN {
   FS="\t"
 }
 
 FILENAME=="-" {
-  tag[$1]=2
+  if ($1!~/\.hook\.files$/)
+    tag[$1]=2
 }
 
 FILENAME!="-" {

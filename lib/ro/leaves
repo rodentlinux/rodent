@@ -1,28 +1,35 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
 
-if [[ "$1" = 'help' ]]; then
+readonly arch="$1"
+shift
+
+. "$RODENT/settings"
+
+usage() {
   echo 'halp!'
-  exit 0
-fi
+}
 
 while true; do
   case "$1" in
   -s) SYSROOT="$2"; shift 2;;
+  -h|help)
+    usage
+    exit 0;;
   *) break;;
   esac
 done
 [[ -z "$1" ]]       || SYSROOT="$1"
-[[ -n "$SYSROOT" ]] || SYSROOT="$ROOT/sysroot.$ARCH"
+[[ -n "$SYSROOT" ]] || SYSROOT="$RODENT/sysroot.$arch"
 
 if [[ ! -d "$SYSROOT" ]]; then
   echo "Sysroot '$SYSROOT' not found."
   exit 1
 fi
 
-awk -f "$ROOT/lib/ro/graphlib.awk" -f "$ROOT/lib/ro/leaves.awk" "$SYSROOT/#/installed"
+awk -f "$RODENT/lib/ro/graphlib.awk" -f "$RODENT/lib/ro/leaves.awk" "$SYSROOT/#/installed"
 
 # vim: set ft=sh ts=2 sw=2 et:

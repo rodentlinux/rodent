@@ -1,125 +1,125 @@
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
-. "$ROOT/settings"
-. "$ROOT/lib/ro/download.sh"
-
-yesno() {
-  if [[ -n "$YES" ]]; then
-    return 0
-  fi
-  local yn
-  while true; do
-    read -p "$1 [y/n] " yn
-    case $yn in
-    [Yy]*) echo; return 0;;
-    [Nn]*) echo; return 1;;
-    *) echo "Please answer yes or no.";;
-    esac
-  done
-}
-
-deps_install() {
-  local DEPS="$*"
-  if [[ -z "$DEPS" ]]; then
-    return 0
-  fi
-
+sysroot_init() {
   if [[ ! -d "$SYSROOT" ]]; then
     install -dm755 "$SYSROOT/#"
     touch "$SYSROOT/#/installed"
   fi
+  SYSROOT="$(readlink -f "$SYSROOT")"
+  cd "$SYSROOT"
+}
 
-  local pkgs=()
-  local repo=()
-  local base=()
-  local url=()
-  local sha1=()
-  local rest=()
-  local n=0
+deps_calculate() {
+  local n=${#REPOS[@]}
   local i
+  local rep
   local file
-  while read -r line; do
-    pkgs[$n]="$line"; read -r line
-    repo[$n]="$line"; read -r line
-    base[$n]="$line"; read -r line
-    url[$n]="$line";  read -r line
-    sha1[$n]="$line"; read -r line
-    rest[$n]="$line"
-    n=$n+1
+  if ! for ((i=0;i<n;i++)); do
+    rep="${REPOS[$i]}"
+    rep="${rep%%:*}"
+    file="$RODENT/cache/$rep/repo.${arch}.xz"
+    [[ ! -f "$file" ]] || xz -cd "$file" | awk "{print \"$i\\t\" \$0}"
+  done | DEPS="$*" awk \
+    -f "$RODENT/lib/ro/graphlib.awk" \
+    -f "$RODENT/lib/ro/dependencies.awk" \
+    - '#/installed' \
+    > '#/installed.tmp'; then
+    cat '#/installed.tmp'
+    rm '#/installed.tmp'
+    return 1
+  fi
+}
+
+deps_ask() {
+  local rep
+  local pkg
+  while read -r rep; do
+    read -r pkg
+    rep="${REPOS[$rep]}"
+    rep="${rep%%:*}"
+    echo "$rep/$pkg"
+  done < <(awk -F'\t' '{print $1;print $2}' '#/installed.tmp')
+  local yn
+  while true; do
+    read -p 'Install? [y/n] ' yn
+    case $yn in
+    [Yy]*)
+      echo
+      return 0
+      ;;
+    [Nn]*)
+      echo
+      rm -f '#/installed.tmp'
+      return 1
+      ;;
+    *)
+      echo 'Please answer yes or no.'
+      ;;
+    esac
+  done
+}
+
+deps_download() {
+  local rep
+  local file
+  local sha1
+  while read -r rep; do
+    read -r file
+    read -r sha1
+    rep="${REPOS[$rep]}"
+    file="${file/=/-}.${arch}.tar.xz"
+    check_or_download "$RODENT/cache/${rep%%:*}" "$file" "$sha1" "${rep#*:}/$file"
   done < <(
-    export DEPS
-    for i in "${REPOS[@]}"; do
-      file="$ROOT/cache/${i%%:*}/repo.${ARCH}.xz"
-      [[ ! -f "$file" ]] || xz -cd "$file" | sed "s|^|${i%%:*}\\t${i#*:}\\t|"
-    done | awk \
-      -f "$ROOT/lib/ro/graphlib.awk" \
-      -f "$ROOT/lib/ro/dependencies.awk" \
-      - "$SYSROOT/#/installed"
+    awk -F'\t' \
+      '{repo[$3]=$1;sha1[$3]=$6} END{for (i in repo) {print repo[i];print i;print sha1[i]}}' \
+      '#/installed.tmp'
+  )
+}
+
+deps_install_from_tarball() {
+  local tarball="$1"
+  shift
+  local n=$#
+  local i
+  for ((i=1;i<n;i++)); do
+    echo "${!i}.."
+  done
+  echo -n "${!n}.. "
+  tar -x --no-same-owner -f "$tarball" --null --no-recursion -T <(
+    list=()
+    for i in "$@"; do
+      files="./#/${i/=/-}.files"
+      echo -ne "$files\0"
+      list+=("$files")
+    done
+    tar -x --to-stdout --occurrence=1 -f "$tarball" "${list[@]}" \
+      | awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' \
+      | sort -u | tr '\n' '\0'
+  )
+  echo 'done.'
+}
+
+deps_install() {
+  local rep
+  local file
+  local list
+
+  while read -r rep; do
+    read -r file
+    read -r list
+    rep="${REPOS[$rep]}"
+    rep="${rep%%:*}"
+    file="$RODENT/cache/$rep/${file/=/-}.${arch}.tar.xz"
+    deps_install_from_tarball "$file" $list
+  done < <(awk -F'\t' \
+    '{repo[$3]=$1;pkgs[$3]=pkgs[$3] " " $2} END {for (i in pkgs) {print repo[i];print i;print pkgs[i]}}' \
+    '#/installed.tmp'
   )
 
-  if [[ $n = 0 ]]; then
-    return 0
-  fi
-
-  if [[ "${pkgs[0]}" = 'notfound' ]]; then
-    echo "Couldn't find package providing ${repo[0]}."
-    return 1
-  fi
-
-  if [[ "${pkgs[0]}" = 'choice' ]]; then
-    echo "Which of these do you want? ${repo[0]}."
-    return 1
-  fi
-
-  for ((i=0;i<n;i++)); do
-    echo "${repo[$i]}/${pkgs[$i]}"
-  done
-
-  if ! yesno 'Install?'; then
-    return 1
-  fi
-
-  for ((i=0;i<n;i++)); do
-    file="${base[$i]}"
-    if [[ "${base[$i+1]}" != "$file" ]]; then
-      check_or_download "cache/${repo[$i]}" "${file/=/-}.${ARCH}.tar.xz" "${sha1[$i]}" "${url[$i]}/${file/=/-}.${ARCH}.tar.xz"
-    fi
-  done
-
-  cd "$SYSROOT"
-  local list=()
-  for ((i=0;i<n;i++)); do
-    file="${pkgs[$i]}"
-    file="./#/${file/=/-}.files"
-    list+=("$file")
-    file="${base[$i]}"
-    echo -n "${pkgs[$i]}.. "
-    if [[ "${base[$i+1]}" != "$file" ]]; then
-      file="$ROOT/cache/${repo[$i]}/${file/=/-}.${ARCH}.tar.xz"
-      tar -x --no-same-owner -f "$file" --null --no-recursion -T <(
-        for j in "${list[@]}"; do
-          echo -ne "$j\0"
-        done
-        tar -x --to-stdout --occurrence=1 -f "$file" "${list[@]}" \
-          | awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' \
-          | sort -u | tr '\n' '\0'
-      )
-      list=()
-      echo 'done.'
-    else
-      echo
-    fi
-  done
-
-  {
-    for ((i=0;i<n;i++)); do
-      file="${rest[$i]}"
-      printf '%s\t%s\t%s\n' "${pkgs[$i]}" "${base[$i]}" "${file#x}"
-    done
-    cat '#/installed'
-  } | sort > '#/installed.new'
-  mv '#/installed.new' '#/installed'
+  awk 'BEGIN{FS="\t";OFS="\t"} {print $2,$3,$4,$5,$6}' '#/installed.tmp' | sort '#/installed' - > '#/installed.new'
+  mv -f '#/installed.new' '#/installed'
+  rm -f '#/installed.tmp'
 }
 
 # vim: set ft=sh ts=2 sw=2 et:

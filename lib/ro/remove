@@ -1,23 +1,30 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
 
-if [[ "$1" = 'help' ]]; then
+readonly arch="$1"
+shift
+
+. "$RODENT/settings"
+
+usage() {
   echo 'halp!'
-  exit 0
-fi
+}
 
 while true; do
   case "$1" in
   -s) SYSROOT="$2"; shift 2;;
   -d) NODEPS=1; shift;;
+  -h|help)
+    usage
+    exit 0;;
   *) break;;
   esac
 done
 export PKG="$1"
-[[ -n "$SYSROOT" ]] || SYSROOT="$ROOT/sysroot.$ARCH"
+[[ -n "$SYSROOT" ]] || SYSROOT="$RODENT/sysroot.$arch"
 
 if [[ ! -d "$SYSROOT" ]]; then
   echo "Sysroot '$SYSROOT' not found."
@@ -31,7 +38,7 @@ while read -r pkg; do
   pkgs+=("$pkg")
 done < <(
   for i in "$@"; do echo "$i"; done \
-    | awk -f "$ROOT/lib/ro/graphlib.awk" -f "$ROOT/lib/ro/find-pkgs.awk" - '#/installed'
+    | awk -f "$RODENT/lib/ro/graphlib.awk" -f "$RODENT/lib/ro/find-pkgs.awk" - '#/installed'
 )
 for i in "${pkgs[@]}"; do
   case "$i" in
@@ -44,43 +51,49 @@ done
 
 if [[ -z "$NODEPS" ]]; then
   if ! for pkg in "${pkgs[@]}"; do echo "$pkg"; done \
-       | awk -f "$ROOT/lib/ro/graphlib.awk" -f "$ROOT/lib/ro/remove-deps.awk" - \#/installed
+       | awk -f "$RODENT/lib/ro/graphlib.awk" -f "$RODENT/lib/ro/remove-deps.awk" - \#/installed
   then
     echo 'Aborting.'
     exit 1
   fi
 fi
 
+remove_files() {
+  local i
+
+  awk -F'\t' '$2=="f"||$2=="d"||$2=="l"{print $1}' \#/*.files | sort -u > '#/allfiles'
+  for i in "$@"; do
+    #echo "- rm    $i"
+    rm "$i"
+  done
+  awk -F'\t' '$2=="f"||$2=="d"||$2=="l"{print $1}' \#/*.files \
+    | sort -u \
+    | comm -23 '#/allfiles' - \
+    | sort -r \
+    | while read -r i; do
+    if [[ -d "$i" ]]; then
+      #echo "- rmdir $i"
+      rmdir "$i"
+    else
+      #echo "- rm    $i"
+      rm "$i"
+    fi
+  done
+  rm '#/allfiles'
+}
+
 echo 'Removing'
+files=()
 for pkg in "${pkgs[@]}"; do
   echo "* $pkg"
+  files+=("#/${pkg/=/-}.files")
 done
 
-set +e
-
-echo 'Deleting files'
-awk -F'\t' '$2=="f"||$2=="d"||$2=="l"{print $1}' \#/*.files | sort -u > '#/allfiles'
-for pkg in "${pkgs[@]}"; do
-  file="#/${pkg/=/-}.files"
-  echo "- rm    $file"
-  rm "$file"
-done
-awk -F'\t' '$2=="f"||$2=="d"||$2=="l"{print $1}' \#/*.files \
-  | sort -u \
-  | comm -23 '#/allfiles' - \
-  | sort -r \
-  | while read -r i; do
-  if [[ -d "$i" ]]; then
-    echo "- rmdir $i"
-    rmdir "$i"
-  else
-    echo "- rm    $i"
-    rm "$i"
-  fi
-done
+echo -n 'Deleting files.. '
+remove_files "${files[@]}"
 for pkg in "${pkgs[@]}"; do echo "$pkg"; done \
-  | awk -f "$ROOT/lib/ro/remove-installed.awk" - '#/installed' > '#/installed.new'
+  | awk -f "$RODENT/lib/ro/remove-installed.awk" - '#/installed' > '#/installed.new'
 mv -f '#/installed.new' '#/installed'
-rm '#/allfiles'
+echo 'done.'
 
 # vim: set ft=sh ts=2 sw=2 et:

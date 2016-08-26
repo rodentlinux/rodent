@@ -7,9 +7,12 @@
 /settings
 /cache
 /tools
-/recipes/*/files.*
-/recipes/*/pkg.*
-/recipes/*/build.*
-/recipes/*/tools
-/recipes/*/sysroot.*
+/recipes/*/*.tar.*
+/recipes/*/build.*.txt
+/recipes/*/armv7hl
+/recipes/*/quark
+/host-recipes/*/*.tar.*
+/host-recipes/*/build.txt
+/host-recipes/*/armv7hl
+/host-recipes/*/quark
 /sysroot.*

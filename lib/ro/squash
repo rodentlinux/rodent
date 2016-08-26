@@ -1,8 +1,24 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
+
+readonly arch="$1"
+shift
+
+# Architecture specific defaults
+case $arch in
+armv7hl)     COMPRESSION='xz -Xbcj armthumb';;
+quark)       COMPRESSION='xz -Xbcj x86';;
+*)
+  echo "Unknown architecture '$arch'"
+  exit 1
+  ;;
+esac
+
+. "$RODENT/lib/ro/make-defaults.sh"
+. "$RODENT/settings"
 
 usage() {
   echo 'halp!'
@@ -12,43 +28,49 @@ while true; do
   case "$1" in
   -s) SYSROOT="$(readlink -f "$2")"; shift 2;;
   -o) OUTPUT="$(readlink -f "$2")";  shift 2;;
-  -c) COMPRESSION="$2";           shift 2;;
+  -c) COMPRESSION="$2";              shift 2;;
+  -h|help)
+    usage
+    exit 0;;
   *) break;;
   esac
 done
 
-if [[ "$1" = help ]]; then
-  usage
-  exit 0
-fi
+[[ -n "$SYSROOT" ]] || SYSROOT="$RODENT/sysroot.$arch"
+[[ -n "$OUTPUT"  ]] || OUTPUT="$(readlink -f ./image.sqfs)"
 
-[[ -n "$SYSROOT" ]] || SYSROOT="$ROOT/sysroot.$ARCH"
-[[ -n "$OUTPUT"  ]] || OUTPUT="$ROOT/image.sqfs"
-
-if ! command -v "$HOST-strip" >/dev/null 2>&1; then
-  if "$ROOT/bin/$HOST-strip" -h >/dev/null 2>&1; then
-    mkdir -p "$ROOT/tools/bin"
-    ln "$ROOT/bin/$HOST-strip" "$ROOT/tools/bin/$HOST-strip"
+if ! command -v "${host}-strip" >/dev/null 2>&1; then
+  if "$RODENT/bin/${host}-strip" -h >/dev/null 2>&1; then
+    mkdir -p "$RODENT/tools/bin"
+    ln "$RODENT/bin/${host}-strip" "$RODENT/tools/bin/${host}-strip"
   else
-    echo "Could not find suitable $HOST-strip in \$PATH."
-    echo 'Try ./ro make host-binutils'
+    echo "Could not find suitable ${host}-strip in \$PATH."
+    echo "Try ./ro host-make binutils && ./ro host-install ${arch}-binutils"
     exit 1
   fi
 fi
 
-if [[ -n "$@" ]]; then
-  . "$ROOT/lib/ro/deps_install.sh"
-  deps_install "$@"
+if [[ $# -gt 0 ]]; then
+  . "$RODENT/lib/ro/download.sh"
+  . "$RODENT/lib/ro/deps_install.sh"
+  sysroot_init
+  deps_calculate "$@"
+  deps_ask
+  deps_download
+  deps_install
 elif [[ ! -d "$SYSROOT" ]]; then
     echo "No sysroot found in '$SYSROOT'."
     exit 1
 fi
 
-sort -u "$SYSROOT/#"/*.files > "$ROOT/image.files"
+cd "$SYSROOT/#"
+awk -F'\t' '$1!~/^#/{print}' *.files \
+  | sort -u \
+  > "$RODENT/image.files"
 
 mkdir "${SYSROOT}.tmp"
 cd "${SYSROOT}.tmp"
-awk -F'\t' '{print $1;print $2;print $6;print $7}' "$ROOT/image.files" | while read -r path; do
+awk -F'\t' '{print $1;print $2;print $6;print $7}' "$RODENT/image.files" | while read -r path; do
   read -r type
   read -r extra
   read -r strip
@@ -57,7 +79,7 @@ awk -F'\t' '{print $1;print $2;print $6;print $7}' "$ROOT/image.files" | while r
   l) ln -s "$extra" "$path";;
   f)
     if [[ "$strip" = 'strip' ]]; then
-      ${HOST}-strip --strip-unneeded -o "$path" "$SYSROOT/$path"
+      ${host}-strip --strip-unneeded -o "$path" "$SYSROOT/$path"
     else
       ln "$SYSROOT/$path" "$path"
     fi
@@ -65,11 +87,11 @@ awk -F'\t' '{print $1;print $2;print $6;print $7}' "$ROOT/image.files" | while r
   esac
 done
 
-awk -f "$ROOT/lib/ro/squash-pseudofile.awk" "$ROOT/image.files" \
-  > "$ROOT/pseudofile"
+awk -f "$RODENT/lib/ro/squash-pseudofile.awk" "$RODENT/image.files" \
+  > "$RODENT/pseudofile"
 
 mksquashfs . "$OUTPUT" \
-  -pf "$ROOT/pseudofile" \
+  -pf "$RODENT/pseudofile" \
   -comp $COMPRESSION \
   -no-exports -no-xattrs -noappend
 

@@ -1,20 +1,28 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
 
-if [[ "$1" = 'help' ]]; then
+usage() {
   echo 'halp!'
-  exit 0
-fi
+}
+
+while true; do
+  case "$1" in
+  -h|help)
+    usage
+    exit 0;;
+  *) break;;
+  esac
+done
 
 if [[ -z "$1" ]]; then
   echo 'What do you want to install?'
   exit 1
 fi
 
-for i in "$ROOT/cache/host/$1"-*.host.tar.xz; do
+for i in "$RODENT/cache/host/$1"-*.host.tar.xz; do
   file="$i"
 done
 
@@ -23,7 +31,7 @@ if [[ ! -f "$file" ]]; then
   exit 1
 fi
 
-cd "$ROOT"
+cd "$RODENT"
 echo "Unpacking ${file}.."
 tar -xmvf "$file"
 

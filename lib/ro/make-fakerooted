@@ -1,22 +1,27 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
 export USER=root
 
-RECIPE="$1"
+readonly arch="$1"
+readonly recipe="$2"
+readonly builddir="$3"
 
-srcdir="$(dirname "$RECIPE")"
-pkgdir="$srcdir/pkg.$ARCH"
-base="$(basename "$srcdir")"
+. "$RODENT/lib/ro/make-defaults.sh"
+. "$RODENT/settings"
 
-. "$RECIPE"
-if [[ "${#parts}" = 0 ]]; then
-  parts=($base)
-fi
+srcdir="${recipe%/*}"
+pkgdir="$builddir/pkg"
+base="${srcdir##*/}"
+cd "$srcdir"
+
+. "$recipe"
+[[ ${#parts[@]} -gt 0 ]] || parts=($base)
 
 echo 'Packaging..'
+cd "$builddir"
 set -x
 package
 set +x
@@ -49,7 +54,7 @@ find -P . -mindepth 1 -printf '%P\n' | sort -u | while read -r path; do
     echo "What is '$path'?"
     exit 1
   fi
-done > ../files.$ARCH
+done > ../files
 echo 'done.'
 
 # vim: set ts=2 sw=2 et:

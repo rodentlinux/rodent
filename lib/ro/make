@@ -1,8 +1,13 @@
 #!/bin/bash
 # This file is part of Rodent Linux
-# Copyright 2015 Emil Renner Berthing
+# Copyright 2015-2016 Emil Renner Berthing
 
 set -e
+
+readonly -a archs=(${1//,/ })
+shift
+
+. "$RODENT/settings"
 
 usage() {
   echo 'ro make [options] [recipe]'
@@ -12,279 +17,97 @@ usage() {
   echo
   echo 'Options:'
   echo ' -s SYSROOT  Use sysroot at SYSROOT'
-  echo ' -P          Stop after extracting and preparing sources'
-  echo ' -E          Skip extracting and prepare sources'
-  echo ' -R          Skip extracting and building'
-  echo " -d          Don't check and install make dependencies"
+  echo ' -D          Skip installing dependencies'
+  echo ' -E          Skip extracting sources'
+  echo ' -B          Skip building'
+  echo ' -P          Skip packaging'
+  echo ' -r          Repackage (skip dependencies, extracting and building)'
+  echo ' -h          This help menu'
 }
 
-while true; do
-  case "$1" in
-  -s) SYSROOT="$(readlink -f "$2")"; shift 2;;
-  -P) PREPAREONLY=1; shift;;
-  -E) NOEXTRACT=1; shift;;
-  -R) NOEXTRACT=1; NOBUILD=1; shift;;
-  -d) NODEPS=1; shift;;
-  -y) YES=1; shift;;
-  *) break;;
+dependencies=1
+extract=1
+build=1
+package=1
+
+while getopts :s:DEBPrh opt; do
+  case "$opt" in
+  s) SYSROOT="$(readlink -f "$OPTARG")";;
+  D) dependencies=0;;
+  E) extract=0;;
+  B) build=0;;
+  P) package=0;;
+  r) dependencies=0; extract=0; build=0;;
+  h)
+    usage
+    exit 0;;
+  \?)
+    echo "Unknown option -$OPTARG"
+    usage
+    exit 1;;
   esac
 done
-
-if [[ "$1" = help ]]; then
-  usage
-  exit 0
-fi
+shift $((OPTIND-1))
 
 if [[ -n "$1" ]]; then
   if [[ -f "$1" ]]; then
-    RECIPE="$1"
+    recipe="$1"
   elif [[ -f "$1/recipe" ]]; then
-    RECIPE="$1/recipe"
-  elif [[ -f "$ROOT/recipes/$1/recipe" ]]; then
-    RECIPE="$ROOT/recipes/$1/recipe"
+    recipe="$1/recipe"
+  elif [[ -f "$RODENT/recipes/$1/recipe" ]]; then
+    recipe="$RODENT/recipes/$1/recipe"
   else
     echo "Could not find package '$1'"
     exit 1
   fi
 else
   if [[ -f ./recipe ]]; then
-    RECIPE='./recipe'
+    recipe='./recipe'
   else
     echo "Could not find recipe file in current directory"
     exit 1
   fi
 fi
-RECIPE="$(readlink -f "$RECIPE")"
+recipe="$(readlink -f "$recipe")"
 
-srcdir="$(dirname "$RECIPE")"
-pkgdir="$srcdir/pkg.$ARCH"
-base="$(basename "$srcdir")"
-
-. "$RECIPE"
-BASE_VERSION="$version"
-BASE_RELEASE="$release"
-BASE_DEPENDS=("${depends[@]}")
-
-if [[ "$(type -t package)" != 'function' && "$(type -t host-package)" != 'function' ]]; then
-  echo 'Broken recipe: no package function'
-  exit 1
-fi
-
-if [[ "$(type -t host-package)" != 'function' && ${#parts[@]} = 0 ]]; then
-  parts=($base)
-fi
-for part in "${parts[@]}"; do
-  if [[ "$(type -t "config-$part")" != 'function' ]]; then
-    echo "Broken recipe: no 'config-$part' function"
-    exit 1
-  fi
+for arch in "${archs[@]}"; do
+  "$RODENT/lib/ro/make-download" "$arch" "$recipe" "$dependencies" "$extract"
 done
 
-[[ -n "$SYSROOT" ]] || SYSROOT="$srcdir/sysroot.$ARCH"
-export SYSROOT
+readonly n=${#archs[@]}
+declare -a ret
 
-if [[ "$(type -t host-package)" = 'function' ]]; then
-  export TARGET_CFLAGS="$CFLAGS"
-  unset CFLAGS
-  export TARGET_CXXFLAGS="$CXXFLAGS"
-  unset CXXFLAGS
-  export TARGET_CPPFLAGS="$CPPFLAGS"
-  unset CPPFLAGS
-  export TARGET_LDFLAGS="$LDFLAGS"
-  unset LDFLAGS
-else
-  export PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig"
-  export PKG_CONFIG_SYSROOT_DIR="$SYSROOT"
-fi
-
-. "$ROOT/lib/ro/deps_install.sh"
-[[ -n $NODEPS ]] || deps_install "${makedepends[@]}"
-
-downloadall() {
-  local noextract=0
-  local url
-  local sha1
-  local file
-  local i
-  local n="${#sources[@]}"
-  if [[ "$n" = 0 ]]; then return 0; fi
-
-  local prefix="cache/sources"
-  [[ -d "$ROOT/$prefix" ]] || mkdir -p "$ROOT/$prefix"
-
-  for ((i=0;i<n;i++)); do
-    url="${sources[$i]}"
-    sha1="${sha1sum[$i]}"
-    case "${url%%:*}" in
-    noextract)
-      noextract=1
-      url="${url#*:}"
-      ;;
-    esac
-
-    file="$(basename "$url")"
-    check_or_download "$prefix" "$file" "$sha1" "$url" || return 1
-
-    if [[ "$noextract" = 0 ]]; then
-      echo "Extracting ${file}.."
-      tar -xf "$ROOT/$prefix/$file"
-    else
-      ln -sf "$ROOT/$prefix/$file"
-    fi
+killchildren() {
+  for ((i=1;i<=n;i++)); do
+    kill -s TERM %$i || true
   done
 }
-
-
-if [[ -z "$NOEXTRACT" ]]; then
-  cd "$srcdir"
-  if ! downloadall; then
-    exit 1
-  fi
-  if [[ "$(type -t prepare)" = 'function' ]]; then
-    cd "$srcdir"
-    echo 'Preparing sources..'
-    set -x
-    prepare
-    set +x
-  fi
-fi
-
-if [[ -n "$PREPAREONLY" ]]; then
-  exit 0
-fi
-
-if [[ -z "$NOBUILD" && "$(type -t build)" = 'function' ]]; then
-  cd "$srcdir"
-  rm -rf build.$ARCH
-  mkdir build.$ARCH
-  cd build.$ARCH
-  echo 'Building..'
-  set -x
-  build
-  set +x
-fi
-
-if [[ "$(type -t host-package)" = 'function' ]]; then
-  cd "$srcdir"
-  rm -rf tools
-  mkdir tools
-  cd build.$ARCH
-  echo "Packaging host files.."
-  set -x
-  host-package
-  set +x
-  echo -n "Compressing ${base}-${BASE_VERSION}-${BASE_RELEASE}.host.tar.xz.. "
-  [[ -d "$ROOT/cache/host" ]] || mkdir -p "$ROOT/cache/host"
-  cd "$srcdir"
-  tar -c -f "$ROOT/cache/host/${base}-${BASE_VERSION}-${BASE_RELEASE}.host.tar.xz" \
-    -J --owner=root --group=root ./tools
-  echo 'done.'
-fi
-
-if [[ "$(type -t package)" = 'function' ]]; then
-  cd "$srcdir"
-  rm -rf "pkg.$ARCH"
-  mkdir "pkg.$ARCH"
-  [[ ! -d build.$ARCH ]] || cd build.$ARCH
-  echo 'Entering fakeroot'
-  fakeroot -- "$ROOT/lib/ro/make-fakerooted" "$RECIPE"
-  echo 'Exited fakeroot'
-else
-  exit 0
-fi
-
-mkfiles() {
-  local out="$1"; shift
-  if [[ -f "$out" ]]; then
-    out="${out%-*}"
-    echo "Package ${out%-*} already defined."
-    exit 1
-  fi
-
-  for i in "$@"; do
-    echo "$i"
-  done \
-    | awk -f "$ROOT/lib/ro/make-patterns.awk" - files.$ARCH \
-    | awk -f "$ROOT/lib/ro/prefixes.awk" - files.$ARCH \
-    > "$out"
-}
-
-cd "$srcdir"
-install -dm755 "pkg.$ARCH/#"
-for part in "${parts[@]}"; do
-  version="$BASE_VERSION"
-  provides=()
-  depends=()
-  devdepends=()
-  mandepends=()
-  description=""
-  files=()
-  devfiles=()
-  manfiles=()
-
-  "config-$part"
-
-  mkfiles "pkg.$ARCH/#/$part-$version-${BASE_RELEASE}.files" "${files[@]}"
-  echo -e "$part=${version}-${BASE_RELEASE}\t$base=${BASE_VERSION}-${BASE_RELEASE}\t${provides[*]}\t${depends[*]}\t$description" \
-    >> "pkg.$ARCH/#/meta"
-
-  if [[ ${#devdepends[@]} != 0 || ${#devfiles[@]} != 0 ]]; then
-    mkfiles "pkg.$ARCH/#/$part-devel-$version-${BASE_RELEASE}.files" "${devfiles[@]}"
-    echo -e "$part-devel=$version-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${devdepends[*]}\tDevelopment files for $part" \
-      >> "pkg.$ARCH/#/meta"
-  fi
-
-  if [[ ${#mandepends[@]} != 0 || ${#manfiles[@]} != 0 ]]; then
-    mkfiles "pkg.$ARCH/#/$part-man-$version-${BASE_RELEASE}.files" "${manfiles[@]}"
-    echo -e "$part-man=$version-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${mandepends[*]}\tManual pages for $part" \
-      >> "pkg.$ARCH/#/meta"
-  fi
+trap -- killchildren INT TERM
+for ((i=0;i<n;i++)); do
+  "$RODENT/lib/ro/make-build" "${archs[$i]}" "$recipe" \
+    "$dependencies" "$extract" "$build" "$package" &
+  ret[$i]=1
 done
 
-sort -u "pkg.${ARCH}/#"/*.files \
-  | comm -23 files.$ARCH - \
-  | awk -f "$ROOT/lib/ro/prefixes.awk" - files.$ARCH \
-  > files.${ARCH}.leftover
-
-if [[ -s files.${ARCH}.leftover ]]; then
-  FILE="pkg.$ARCH/#/$base-extra-$BASE_VERSION-${BASE_RELEASE}.files"
-  if [[ -f "$FILE" ]]; then
-    echo "Package $base-extra already defined, but the following files are left over:"
-    awk -F'\t' '{print "- " $1}' files.${ARCH}.leftover
-    exit 1
-  fi
-  mv files.${ARCH}.leftover "$FILE"
-  echo -e "$base-extra=$BASE_VERSION-$BASE_RELEASE\t$base=$BASE_VERSION-$BASE_RELEASE\t\t${BASE_DEPENDS[*]}\tExtra files from $base" \
-    >> "pkg.$ARCH/#/meta"
-else
-  rm -f files.${ARCH}.leftover
-fi
-
-echo 'Pruning pseudo files'
-find "pkg.$ARCH" -mindepth 1 -printf '%P\n' \
-  | awk -f "$ROOT/lib/ro/make-prune.awk" files.$ARCH - \
-  | while read -r i; do
-  echo "+ rm -rf $i"
-  rm -rf "pkg.$ARCH/$i"
+set +e
+for ((i=0;i<n;i++)); do
+  wait %$((i+1))
+  ret[$i]=$?
 done
+set -e
+trap -- - INT TERM
 
-echo -n "Compressing ${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar.xz.. "
-[[ -d "$ROOT/cache/local" ]] || mkdir -p "$ROOT/cache/local"
-cd pkg.$ARCH
-tar -c -f "$ROOT/cache/local/${base}-${BASE_VERSION}-${BASE_RELEASE}.${ARCH}.tar.xz" \
-  -J --owner=root --group=root \
-  --null --no-recursion -T <(
-  echo -ne "./#/meta\0"
-  for i in \#/*.files; do
-    echo -ne "./$i\0"
-  done
-  awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' ../files.$ARCH | tr '\n' '\0'
-)
-echo 'done.'
+[[ $package -gt 0 ]] || exit 0
 
-echo -n 'Updating local repo.. '
-cd "$ROOT/cache/local"
-"$ROOT/bin/makerepo"
-echo 'done.'
+. "$RODENT/lib/ro/makerepo.sh"
+
+cd "$RODENT/cache/local"
+for ((i=0;i<n;i++)); do
+  if [[ ${ret[$i]} -eq 0 ]]; then
+    makerepo "${archs[$i]}"
+  else
+    echo "Failed to build for ${archs[$i]}: ${ret[$i]}"
+  fi
+done
 
 # vim: set ft=sh ts=2 sw=2 et:
