@@ -1,39 +1,39 @@
-version=4.2
+version=4.4.19
 release=1
 sources=("https://www.kernel.org/pub/linux/kernel/v4.x/linux-${version}.tar.xz")
-sha1sum=('5e65d0dc94298527726fcd7458b6126e60fb2a8a')
+sha1sum=('2d8e828e2780867ed9753bd93b498daa4cfda01f')
 
 config-linux-api-headers() {
   description='Linux kernel headers sanitized for use in userspace'
-  depends=('filesystem-devel')
   files=('usr/include/**')
 }
 
+case $arch in
+armv7hl) _karch=arm;;
+rpi)     _karch=arm;;
+x86_64)  _karch=x86;;
+quark)   _karch=x86;;
+mips)    _karch=mips;;
+mipsel)  _karch=mips;;
+*)
+  echo "Unknown architecture '$arch'."
+  exit 1
+  ;;
+esac
+
 build() {
-  cp -r --reflink ../linux-$version/* .
+  cd linux-$version
 
-  case "$ARCH" in
-  armv7hl) KARCH=arm;;
-  quark)   KARCH=x86;;
-  *)
-    echo "Unknown architecture '$ARCH'."
-    exit 1
-    ;;
-  esac
-
-  make ARCH=$KARCH CROSS_COMPILE=$HOST- mrproper
-  make ARCH=$KARCH CROSS_COMPILE=$HOST- headers_check
+  make ARCH=$_karch CROSS_COMPILE=${host}- mrproper
+  make ARCH=$_karch CROSS_COMPILE=${host}- headers_check
 }
 
 package() {
+  cd linux-$version
+
   unset MAKEFLAGS
 
-  case "$ARCH" in
-  armv7hl) KARCH=arm;;
-  quark)   KARCH=x86;;
-  esac
-
-  make ARCH=$KARCH CROSS_COMPILE=$HOST- INSTALL_HDR_PATH="$pkgdir/usr" headers_install
+  make ARCH=$_karch CROSS_COMPILE=${host}- INSTALL_HDR_PATH="$pkgdir/usr" headers_install
   find "$pkgdir" \( -name .install -o -name ..install.cmd \) -delete
 }
 
