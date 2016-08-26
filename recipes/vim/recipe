@@ -6,18 +6,17 @@ parts=(
   vim-docs
   vim-print
   vim-spell
-  vim-tools
   vim-extra
 )
-version=7.4.889
+version=7.4.2232
 release=1
 sources=("https://github.com/vim/vim/archive/v${version}.tar.gz")
-sha1sum=('7cb53007a49279c5627db90137dac1af4d4972d1')
+sha1sum=('351d967986bcb77376f1e78a78f7d53277383a4a')
 makedepends=('libncurses-devel')
 
 config-vim() {
   description='Vi Improved, a highly configurable, improved version of the vi text editor'
-  depends=( 'libncurses')
+  depends=('libm' 'libdl' 'libncurses')
   files=('usr/bin/vim')
   manfiles=('usr/share/man/man1/vim.1')
 }
@@ -52,7 +51,7 @@ config-vimtutor() {
 
 config-xxd() {
   description='Vim hex tool'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/xxd')
   manfiles=('usr/share/man/man1/xxd.1')
 }
@@ -73,12 +72,6 @@ config-vim-spell() {
   description='Vim spell files'
   depends=("vim=$version-$release")
   files=('usr/share/vim/vim74/spell/**')
-}
-
-config-vim-tools() {
-  description='Vim extra tools'
-  depends=("vim=$version-$release")
-  files=('usr/share/vim/vim74/tools/**')
 }
 
 config-vim-extra() {
@@ -106,11 +99,15 @@ config-vim-extra() {
     'usr/share/vim/vim74/scripts.vim'
     'usr/share/vim/vim74/synmenu.vim'
     'usr/share/vim/vim74/syntax/*'
+    'usr/share/vim/vim74/tools/**'
+    'usr/share/vim/vim74/defaults.vim'
+    'usr/share/vim/vim74/pack/**'
+    'usr/share/vim/vim74/rgb.txt'
   )
 }
 
 build() {
-  cp -r --reflink ../vim-$version/* .
+  cd vim-$version
 
   STRIP=true \
   ./configure \
@@ -120,23 +117,33 @@ build() {
     vim_cv_getcwd_broken=no \
     vim_cv_stat_ignores_slash=no \
     vim_cv_memmove_handles_overlap=yes \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
+    --enable-multibyte \
     --disable-smack \
     --disable-selinux \
     --disable-xsmp \
+    --disable-xsmp-interact \
+    --disable-workshop \
     --disable-netbeans \
+    --disable-gui \
     --disable-gtktest \
+    --disable-icon-cache-update \
     --disable-acl \
     --disable-gpm \
     --disable-sysmouse \
     --disable-nls \
-    --with-tlib=ncurses
+    --with-features=normal \
+    --with-tlib=ncurses \
+    --with-compiledby='Rodent Linux' \
+    --without-local-dir \
+    --without-x
 
   make
 }
 
 package() {
+  cd vim-$version
   unset MAKEFLAGS
   make DESTDIR="$pkgdir" VIMRCLOC=/etc install
 
