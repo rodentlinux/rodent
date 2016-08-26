@@ -1,8 +1,7 @@
-#parts=(libreg crda regdbdump)
-version=2015.04.06
+version=2016.06.10
 release=1
-sources=("http://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-${version}.tar.xz")
-sha1sum=('8135d9c68e7c66ebe1f146dfff162402cee89da2')
+sources=("https://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-${version}.tar.xz")
+sha1sum=('cd343efd6cebb205ccd24ff84b54d66119f8380e')
 makedepends=()
 
 config-wireless-regdb() {
@@ -12,7 +11,7 @@ config-wireless-regdb() {
 }
 
 package() {
-  cd "wireless-regdb-$version"
+  cd wireless-regdb-$version
 
   install -dm755 "$pkgdir/usr/lib/crda"
   install -m644 regulatory.bin "$pkgdir/usr/lib/crda/regulatory.bin"
