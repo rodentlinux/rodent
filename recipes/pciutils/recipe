@@ -1,8 +1,8 @@
 parts=(libpci lspci setpci pciutils)
-version=3.4.0
-release=3
+version=3.5.1
+release=1
 sources=("ftp://atrey.karlin.mff.cuni.cz/pub/linux/pci/pciutils-${version}.tar.gz")
-sha1sum=('71341dc741e303c1d8ba6bd457438fa8a1a96b81')
+sha1sum=('512f68df5ee6d661ebc209befdf89ecffcdcf69d')
 makedepends=('libudev-devel' 'libkmod-devel')
 
 config-libpci() {
@@ -42,9 +42,9 @@ config-pciutils() {
 }
 
 build() {
-  cd "pciutils-$version"
+  cd pciutils-$version
 
-  make HOST="$HOST" CROSS_COMPILE="$HOST-" \
+  make HOST=$host CROSS_COMPILE=${host}- \
     OPT="$CFLAGS" STRIP= \
     ZLIB=no SHARED=no \
     DESTDIR="$pkgdir" \
@@ -57,7 +57,7 @@ build() {
   cp lib/libpci.a ..
   make clean
 
-  make HOST="$HOST" CROSS_COMPILE="$HOST-" \
+  make HOST=$host CROSS_COMPILE=${host}- \
     OPT="$CFLAGS" STRIP= \
     ZLIB=no SHARED=yes \
     DESTDIR="$pkgdir" \
@@ -69,9 +69,9 @@ build() {
 }
 
 package() {
-  cd "pciutils-$version"
+  cd pciutils-$version
 
-  make HOST="$HOST" CROSS_COMPILE="$HOST-" \
+  make HOST=$host CROSS_COMPILE=${host}- \
     OPT="$CFLAGS" STRIP= \
     ZLIB=no SHARED=yes \
     DESTDIR="$pkgdir" \
