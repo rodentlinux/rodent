@@ -40,6 +40,7 @@ hooks_run() {
   local perm
   local uid
   local gid
+  local sha1
 
   for hook in \#/hooks/*; do
     [[ -f "$hook" ]] || continue
@@ -54,9 +55,8 @@ hooks_run() {
         readlink "$path" >&7
       elif [[ -f "$path" ]]; then
         [[ -n "$perm" ]] || perm='644'
-        echo -ne "${path}\tf\t${perm}\t${uid}\t${gid}\t" >&7
-        sha1sum "$path" | head -c40 >&7
-        echo >&7
+        sha1="$(sha1sum "$path")"
+        echo -e "${path}\tf\t${perm}\t${uid}\t${gid}\t${sha1%% *}" >&7
       elif [[ -d "$path" ]]; then
         [[ -n "$perm" ]] || perm='755'
         echo -e "${path}\td\t${perm}\t${uid}\t${gid}" >&7

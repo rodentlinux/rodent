@@ -33,8 +33,8 @@ find -P . -mindepth 1 -printf '%P\n' | sort -u | while read -r path; do
     stat --printf "$path\tl\t%a\t%u\t%g\t" "$path"
     readlink "$path"
   elif [[ -f "$path" ]]; then
-    stat --printf "$path\tf\t%a\t%u\t%g\t" "$path"
-    sha1sum "$path" | head -c40
+    sha1="$(sha1sum "$path")"
+    stat --printf "$path\tf\t%a\t%u\t%g\t${sha1%% *}" "$path"
     TYPE="$(file -b "$path")"
     TYPE="${TYPE#setuid }"
     TYPE="${TYPE#setuid, }"

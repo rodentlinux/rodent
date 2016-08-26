@@ -11,6 +11,12 @@ else
   exit 1
 fi
 
+check_sha1sum() {
+  [[ "$2" != 'SKIP' ]] || return 0
+  local sum="$(sha1sum "$1")"
+  [[ "${sum%% *}" = "$2" ]]
+}
+
 check_or_download() {
   local prefix="$1"
   local file="$2"
@@ -19,7 +25,7 @@ check_or_download() {
   local path="$prefix/$file"
 
   if [[ -f "$path" ]]; then
-    if [[ "$sha1" != SKIP && "$sha1" != "$(sha1sum "$path" | head -c40)" ]]; then
+    if ! check_sha1sum "$path" "$sha1"; then
       echo "$file already exists in ${prefix#$RODENT/} but it's SHA1 doesn't match!"
       return 1
     fi
@@ -27,7 +33,7 @@ check_or_download() {
     return 0
   fi
   download "$url" "$path"
-  if [[ "$sha1" != SKIP && "$sha1" != "$(sha1sum "$path" | head -c40)" ]]; then
+  if ! check_sha1sum "$path" "$sha1"; then
     echo "The SHA1 of downloaded file ${path#$RODENT/} doesn't match!"
     return 1
   fi
