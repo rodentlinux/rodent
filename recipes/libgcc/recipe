@@ -1,0 +1,63 @@
+parts=(libgcc libstdc++ libatomic)
+case $arch in
+armv7hl) parts+=(libitm);;
+rpi)     parts+=(libitm);;
+x86_64)  parts+=(libitm libquadmath libcilkrts libmpx);;
+quark)   parts+=(libitm libquadmath libcilkrts libmpx);;
+esac
+version=6.2.0
+release=1
+sources=()
+sha1sum=()
+
+hostdepends=("${arch}-gcc=$version")
+
+config-libgcc() {
+  description='Shared C library from GCC'
+  depends=('libc')
+  files=('usr/lib/libgcc_s.so.*')
+}
+
+config-libstdc++() {
+  description='libstdc++ from GCC'
+  depends=('libm' "libgcc=$version-$release")
+  files=('usr/lib/libstdc++.so.*')
+}
+
+config-libatomic() {
+  description='libatomic from GCC'
+  depends=('libpthread')
+  files=('usr/lib/libatomic.so.*')
+}
+
+config-libitm() {
+  description='libitm from GCC'
+  depends=('libpthread' "libgcc=$version-$release")
+  files=('usr/lib/libitm.so.*')
+}
+
+config-libquadmath() {
+  description='libquadmath from GCC'
+  depends=('libm')
+  files=('usr/lib/libquadmath.so.*')
+}
+
+config-libcilkrts() {
+  description='libcilkrts from GCC'
+  depends=("libstdc++=$version-$release" 'libdl' 'libpthread')
+  files=('usr/lib/libcilkrts.so.*')
+}
+
+config-libmpx() {
+  description='Intel® Memory Protection Extensions library from GCC'
+  depends=('libpthread')
+  files=('usr/lib/libmpx.so.*' 'usr/lib/libmpxwrappers.so.*')
+}
+
+package() {
+  install -dm755 "$pkgdir/usr/lib"
+  cp -a "$RODENT"/tools/$host/lib/*.so.* "$pkgdir/usr/lib"
+  rm "$pkgdir"/usr/lib/*.py
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
