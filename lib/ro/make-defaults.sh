@@ -9,6 +9,9 @@ case $arch in
 armv7hl)
   host='armv7hl-unknown-linux-gnueabi'
   ;;
+rpi)
+  host='armv6kz-rpi-linux-gnueabi'
+  ;;
 quark)
   host='i586-quark-linux-gnu'
   ;;

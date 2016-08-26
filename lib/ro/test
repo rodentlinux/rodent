@@ -26,7 +26,7 @@ done
 [[ -n "$IMAGE" ]] || IMAGE="$RODENT/image.sqfs"
 
 case $arch in
-armv7hl)
+armv7hl|rpi)
   cmd=(qemu-system-arm -machine vexpress-a9 -smp 4
     -dtb "$RODENT/lib/vexpress-v2p-ca9.dtb"
   )

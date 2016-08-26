@@ -9,9 +9,11 @@ shift
 
 # Architecture specific defaults
 case $arch in
-armv7hl)     COMPRESSION='xz -Xbcj armthumb';;
-quark)       COMPRESSION='xz -Xbcj x86';;
-mips|mipsel) COMPRESSION='xz';;
+armv7hl) COMPRESSION='xz -Xbcj armthumb';;
+rpi)     COMPRESSION='xz -Xbcj arm';;
+quark)   COMPRESSION='xz -Xbcj x86';;
+mips)    COMPRESSION='xz';;
+mipsel)  COMPRESSION='xz';;
 *)
   echo "Unknown architecture '$arch'"
   exit 1
