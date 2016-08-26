@@ -1,8 +1,8 @@
 parts=(pci-ids usb-ids)
-version=20150717
+version=20160801
 release=1
 sources=("https://github.com/gentoo/hwids/archive/hwids-${version}.tar.gz")
-sha1sum=('ff5308f4facffa184eb7b15314bf0df8b8c3d9bb')
+sha1sum=('c565e4c26f0888f2909756fa2ce1b1189d68e4da')
 makedepends=()
 
 config-pci-ids() {
@@ -16,7 +16,7 @@ config-usb-ids() {
 }
 
 package() {
-  cd "hwids-hwids-$version"
+  cd hwids-hwids-$version
 
   install -dm755 "$pkgdir/usr/share/hwdata"
   for ids in pci.ids usb.ids; do
