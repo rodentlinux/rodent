@@ -1,0 +1,73 @@
+base=${arch}-binutils
+version=2.27
+release=1
+sources=("http://ftp.gnu.org/gnu/binutils/binutils-${version}.tar.bz2")
+sha1sum=('6e472ddae565a2b1447e6f2393809bb8799982cf')
+
+description="GNU binutils for cross-compiling to $host"
+
+build() {
+  mkdir build
+  cd build
+
+  CFLAGS='-O2 -pipe -g0' \
+  CXXFLAGS='-O2 -pipe -g0' \
+  LDFLAGS='-Wl,-O1,--sort-common,-z,relro' \
+  ../binutils-$version/configure \
+    --target=$host \
+    --prefix=/tools \
+    --libexecdir=/tools/lib \
+    --enable-threads \
+    --enable-lto \
+    --enable-relro \
+    --enable-ld=default \
+    --enable-plugins \
+    --enable-deterministic-archives \
+    --enable-poison-system-directories \
+    --disable-multilib \
+    --disable-nls \
+    --disable-rpath \
+    --with-lib-path==/usr/lib \
+    --with-sysroot=/not/exist \
+    --with-gnu-ld
+
+  make configure-host
+  make
+}
+
+package() {
+  cd build
+  make prefix="$builddir/tools" install
+  cd ..
+
+  # Create wrappers to set sysroot from environment
+  mv tools/bin/${host}-ld{,.orig}
+  cat > tools/bin/${host}-ld <<EOF
+#!/bin/bash
+exec -a "\$0" ${host}-ld.orig "--sysroot=\$SYSROOT" "\$@"
+EOF
+  chmod 0755 tools/bin/${host}-ld
+  for i in tools/bin/${host}-ld.bfd \
+           tools/$host/bin/ld \
+           tools/$host/bin/ld.bfd; do
+    rm "$i"
+    ln tools/bin/${host}-ld "$i"
+  done
+
+  if [[ "$arch" = quark ]]; then
+    mv tools/bin/${host}-as{,.orig}
+    cat > tools/bin/${host}-as <<EOF
+#!/bin/bash
+exec -a "\$0" ${host}-as.orig -momit-lock-prefix=yes "\$@"
+EOF
+    chmod 0755 tools/bin/${host}-as
+    rm tools/$host/bin/as
+    ln tools/bin/${host}-as tools/$host/bin/as
+  fi
+
+  # Remove unwanted files
+  rm -r tools/share/info
+  rm tools/share/man/man1/*-{dlltool,nlmconv,windres,windmc}.1
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
