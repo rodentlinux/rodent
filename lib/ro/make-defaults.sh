@@ -12,6 +12,9 @@ armv7hl)
 quark)
   host='i586-quark-linux-gnu'
   ;;
+mips|mipsel)
+  host="${arch}-linux-gnu"
+  ;;
 *)
   echo "Unknown architecture '$arch'"
   exit 1

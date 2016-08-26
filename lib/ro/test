@@ -47,6 +47,13 @@ quark)
   virtio_scsi='virtio-scsi-pci'
   virtio_9p='virtio-9p-pci'
   ;;
+mips|mipsel)
+  cmd=(qemu-system-$arch -machine malta -cpu 24Kc -vga none)
+  console='console=ttyS0'
+  nic='model=virtio'
+  virtio_scsi='virtio-scsi-pci'
+  virtio_9p='virtio-9p-pci'
+  ;;
 *)
   echo "Unknown architecture '$arch'."
   exit 1;;

@@ -1,4 +1,4 @@
-ARCH=armv7hl,quark
+ARCH=armv7hl,quark,mips,mipsel
 
 #BUILDDIR='/tmp/rodent'
 #MAKEFLAGS='-j4'

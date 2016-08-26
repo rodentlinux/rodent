@@ -11,6 +11,7 @@ shift
 case $arch in
 armv7hl)     COMPRESSION='xz -Xbcj armthumb';;
 quark)       COMPRESSION='xz -Xbcj x86';;
+mips|mipsel) COMPRESSION='xz';;
 *)
   echo "Unknown architecture '$arch'"
   exit 1
