@@ -12,6 +12,9 @@ armv7hl)
 rpi)
   host='armv6kz-rpi-linux-gnueabi'
   ;;
+x86_64)
+  host='x86_64-rodent-linux-gnu'
+  ;;
 quark)
   host='i586-quark-linux-gnu'
   ;;

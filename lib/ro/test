@@ -35,6 +35,16 @@ armv7hl|rpi)
   virtio_scsi='virtio-scsi-device'
   virtio_9p='virtio-9p-device'
   ;;
+x86_64)
+  cmd=(qemu-system-x86_64 -machine q35 -cpu core2duo
+    -smp 2 -mem 512
+    -smbios type=0,uefi=on
+  )
+  console='console=ttyS0'
+  nic='model=virtio'
+  virtio_scsi='virtio-scsi-pci'
+  virtio_9p='virtio-9p-pci'
+  ;;
 quark)
   #-cpu qemu32,+pae,+pbe,+nx,+smep,-mce,-sep,-pge,-cmov,-fxsr,-mmx,-sse,-sse2,-pni,-popcnt
   cmd=(qemu-system-quark -machine pc

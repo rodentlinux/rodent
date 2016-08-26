@@ -11,6 +11,7 @@ shift
 case $arch in
 armv7hl) COMPRESSION='xz -Xbcj armthumb';;
 rpi)     COMPRESSION='xz -Xbcj arm';;
+x86_64)  COMPRESSION='xz -Xbcj x86';;
 quark)   COMPRESSION='xz -Xbcj x86';;
 mips)    COMPRESSION='xz';;
 mipsel)  COMPRESSION='xz';;

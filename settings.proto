@@ -1,4 +1,4 @@
-ARCH=armv7hl,rpi,quark,mips,mipsel
+ARCH=armv7hl,rpi,x86_64,quark,mips,mipsel
 
 #BUILDDIR='/tmp/rodent'
 #MAKEFLAGS='-j4'
