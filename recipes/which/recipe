@@ -1,19 +1,21 @@
 version=2.21
-release=1
-sources=("http://ftp.gnu.org/gnu/which/which-${version}.tar.gz")
+release=2
+sources=("https://ftp.gnu.org/gnu/which/which-${version}.tar.gz")
 sha1sum=('6b6bec3d2b3d4661c164feb81b9b1d22d1359ded')
 makedepends=('glibc-devel')
 
 config-which() {
   description='A utility to show the full path of commands'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/which')
   manfiles=('usr/share/man/man1/which.1')
 }
 
 build() {
-  "../which-$version/configure" \
-    --host=$HOST \
+  cd which-$version
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --disable-iberty
 
@@ -21,6 +23,7 @@ build() {
 }
 
 package() {
+  cd which-$version
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/info"
