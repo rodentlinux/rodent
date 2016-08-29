@@ -1,41 +1,46 @@
 parts=(
   fuser
   killall
-  peekfd
   prtstat
   pstree
   psmisc
 )
+case $arch in
+armv7hl) parts+=(peekfd);;
+rpi)     parts+=(peekfd);;
+x86_64)  parts+=(peekfd);;
+quark)   parts+=(peekfd);;
+esac
 version=22.21
-release=1
-sources=("http://downloads.sourceforge.net/project/psmisc/psmisc/psmisc-${version}.tar.gz")
-sha1sum=('09fabbef4539b58b6b8738a73da3d21d5daa1a58')
+release=2
+sources=("https://gitlab.com/psmisc/psmisc/repository/archive.tar.gz?ref=v$version")
+sha1sum=('c1c149d4e3e00fe432385846c55f9d1d8387d66d')
 makedepends=('libncurses-devel')
 
 config-fuser() {
   description='Identify processes using files or sockets'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/fuser')
   manfiles=('usr/share/man/man1/fuser.1')
 }
 
 config-killall() {
   description='Kill processes by name'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/killall')
   manfiles=('usr/share/man/man1/killall.1')
 }
 
 config-peekfd() {
   description='Peek at file descriptiors of running processes'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/peekfd')
   manfiles=('usr/share/man/man1/peekfd.1')
 }
 
 config-prtstat() {
   description='Print statistics of a process'
-  depends=('glibc')
+  depends=('libc')
   files=('usr/bin/prtstat')
   manfiles=('usr/share/man/man1/prtstat.1')
 }
@@ -49,22 +54,17 @@ config-pstree() {
 
 config-psmisc() {
   description='Small utilities that use the /proc filesystem'
-  depends=(
-    "fuser=$version-$release"
-    "killall=$version-$release"
-    "peekfd=$version-$release"
-    "prtstat=$version-$release"
-    "pstree=$version-$release"
-  )
-}
-
-prepare() {
-  cd "psmisc-$version"
-  patch -Np1 -i ../psmisc-fuser.patch
+  depends=()
+  for i in "${parts[@]}"; do
+    depends+=("$i=$version-$release")
+  done
 }
 
 build() {
-  "../psmisc-$version/configure" \
+  cd psmisc-v${version}-*
+  patch -Np1 -i "$srcdir/psmisc-fuser.patch"
+
+  ./autogen.sh \
     ac_cv_func_closedir_void=no \
     ac_cv_func_lstat_dereferences_slashed_symlink=yes \
     ac_cv_func_lstat_empty_string_bug=no \
@@ -72,20 +72,31 @@ build() {
     ac_cv_func_memcmp_working=yes \
     ac_cv_func_realloc_0_nonnull=yes \
     ac_cv_func_stat_empty_string_bug=no \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
+    --disable-harden-flags \
     --disable-nls \
     --disable-rpath \
-    --disable-harden-flags \
     --with-gnu-ld
 
   make
 }
 
 package() {
+  cd psmisc-v${version}-*
   make DESTDIR="$pkgdir" install
 
   rm "$pkgdir/usr/bin/pstree.x11"
+
+  case $arch in
+  armv7hl);;
+  rpi);;
+  x86_64);;
+  quark);;
+  *)
+    rm "$pkgdir/usr/share/man/man1/peekfd.1"
+    ;;
+  esac
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
