@@ -1,15 +1,24 @@
-parts=(libpcre libpcre-devel libpcre16 libpcre32 libpcreposix libpcrecpp pcregrep)
-version=8.37
+parts=(libpcre libpcre16 libpcre32 libpcreposix libpcrecpp pcregrep)
+version=8.39
 release=1
-sources=("ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${version}.tar.bz2")
-sha1sum=('4c629b3f582366fae4e8912f0d9fa3140347d6e7')
+sources=("http://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${version}.tar.bz2")
+sha1sum=('5e38289fd1b4ef3e8426f31a01e34b6924d80b90')
 makedepends=('libhistory-devel')
 
 config-libpcre() {
   description='A library that implements Perl 5-style regular expressions'
-  depends=('glibc')
+  depends=('libpthread')
+  devdepends=('glibc-devel' "libpcre=$version-$release")
   files=('usr/lib/libpcre.so.*')
-  manfiles=(
+  devfiles=(
+    'usr/bin/pcre-config'
+    'usr/include/pcre.h'
+    'usr/lib/libpcre.a'
+    'usr/lib/libpcre.so'
+    'usr/lib/pkgconfig/libpcre.pc'
+  )
+  devmanfiles=(
+    'usr/share/man/man1/pcre-config.1'
     'usr/share/man/man3/pcre.3'
     'usr/share/man/man3/pcre_*.3'
     'usr/share/man/man3/pcreapi.3'
@@ -31,22 +40,9 @@ config-libpcre() {
   )
 }
 
-config-libpcre-devel() {
-  description='Development files for libpcre'
-  depends=('glibc-devel' "libpcre=$version-$release")
-  files=(
-    'usr/bin/pcre-config'
-    'usr/include/pcre.h'
-    'usr/lib/libpcre.a'
-    'usr/lib/libpcre.so'
-    'usr/lib/pkgconfig/libpcre.pc'
-  )
-  manfiles=('usr/share/man/man1/pcre-config.1')
-}
-
 config-libpcre16() {
   description='A library that implements Perl 5-style regular expressions - 16bit version'
-  depends=('glibc')
+  depends=('libpthread')
   devdepends=("libpcre-devel=$version-$release" "libpcre16=$version-$release")
   files=('usr/lib/libpcre16.so.*')
   devfiles=(
@@ -59,7 +55,7 @@ config-libpcre16() {
 
 config-libpcre32() {
   description='A library that implements Perl 5-style regular expressions - 32bit version'
-  depends=('glibc')
+  depends=('libpthread')
   devdepends=("libpcre-devel=$version-$release" "libpcre32=$version-$release")
   files=('usr/lib/libpcre32.so.*')
   devfiles=(
@@ -108,27 +104,25 @@ config-pcregrep() {
   manfiles=('usr/share/man/man1/pcregrep.1')
 }
 
-prepare() {
-  cd "pcre-$version"
-  patch -Np0 -i ../01-svn-snapshot.patch
-  patch -Np1 -i ../libtool.patch
-}
-
 build() {
-  "../pcre-$version/configure" \
-    --host=$HOST \
+  cd pcre-$version
+  patch -Np1 -i "$srcdir/libtool.patch"
+
+  ./configure \
+    --host=$host \
     --prefix=/usr \
     --enable-unicode-properties \
     --enable-pcre16 \
     --enable-pcre32 \
     --enable-jit \
-    --with-sysroot="$SYSROOT" \
-    --with-gnu-ld
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
 
   make
 }
 
 package() {
+  cd pcre-$version
   make DESTDIR="$pkgdir" install
 
   rm -r "$pkgdir/usr/share/doc"

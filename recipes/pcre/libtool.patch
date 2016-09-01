@@ -1,6 +1,6 @@
-diff -Naur pcre-8.37.orig/ltmain.sh pcre-8.37/ltmain.sh
---- pcre-8.37.orig/ltmain.sh	2015-04-28 13:17:19.000000000 +0200
-+++ pcre-8.37/ltmain.sh	2015-10-07 23:52:58.402642582 +0200
+diff -Naur pcre-8.39.orig/ltmain.sh pcre-8.39/ltmain.sh
+--- pcre-8.39.orig/ltmain.sh	2016-06-14 11:04:39.000000000 +0200
++++ pcre-8.39/ltmain.sh	2016-09-01 22:08:12.936605035 +0200
 @@ -8361,7 +8361,7 @@
  	      fi
  	    else
