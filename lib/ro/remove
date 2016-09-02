@@ -58,30 +58,6 @@ if [[ -z "$NODEPS" ]]; then
   fi
 fi
 
-remove_files() {
-  local i
-
-  awk -F'\t' '$2=="f"||$2=="d"||$2=="l"{print $1}' \#/*.files | sort -u > '#/allfiles'
-  for i in "$@"; do
-    #echo "- rm    $i"
-    rm "$i"
-  done
-  awk -F'\t' '$2=="f"||$2=="d"||$2=="l"{print $1}' \#/*.files \
-    | sort -u \
-    | comm -23 '#/allfiles' - \
-    | sort -r \
-    | while read -r i; do
-    if [[ -d "$i" ]]; then
-      #echo "- rmdir $i"
-      rmdir "$i"
-    else
-      #echo "- rm    $i"
-      rm "$i"
-    fi
-  done
-  rm '#/allfiles'
-}
-
 echo 'Removing'
 files=()
 for pkg in "${pkgs[@]}"; do
@@ -90,10 +66,13 @@ for pkg in "${pkgs[@]}"; do
 done
 
 echo -n 'Deleting files.. '
+. "$RODENT/lib/ro/hooks.sh"
+hooks_remove_files
 remove_files "${files[@]}"
 for pkg in "${pkgs[@]}"; do echo "$pkg"; done \
   | awk -f "$RODENT/lib/ro/remove-installed.awk" - '#/installed' > '#/installed.new'
 mv -f '#/installed.new' '#/installed'
 echo 'done.'
+hooks_run
 
 # vim: set ft=sh ts=2 sw=2 et:

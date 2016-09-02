@@ -21,7 +21,8 @@ END {
     n=tag[i]
     if (n==1)
       print "+ " i
-    if (n==2)
+    # it's ok for hooks to leave untracked files in #/*
+    if (n==2&&i!~/^#\//)
       print "- " i
   }
 }

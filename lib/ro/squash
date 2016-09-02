@@ -52,12 +52,15 @@ fi
 
 if [[ $# -gt 0 ]]; then
   . "$RODENT/lib/ro/download.sh"
+  . "$RODENT/lib/ro/hooks.sh"
   . "$RODENT/lib/ro/deps_install.sh"
   sysroot_init
   deps_calculate "$@"
   deps_ask
   deps_download
+  hooks_remove_files
   deps_install
+  hooks_run
 elif [[ ! -d "$SYSROOT" ]]; then
     echo "No sysroot found in '$SYSROOT'."
     exit 1

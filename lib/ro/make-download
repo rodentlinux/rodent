@@ -48,6 +48,7 @@ mkdir -p "$builddir"
 [[ -n "$SYSROOT" ]] || SYSROOT="$builddir/sysroot"
 
 if [[ "$dependencies" -gt 0 ]]; then
+  . "$RODENT/lib/ro/hooks.sh"
   . "$RODENT/lib/ro/deps_install.sh"
   sysroot_init
   deps_calculate "${makedepends[@]}"
