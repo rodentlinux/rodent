@@ -1,0 +1,39 @@
+version=0.3.110
+release=1
+sources=("http://ftp.de.debian.org/debian/pool/main/liba/libaio/libaio_${version}.orig.tar.gz")
+sha1sum=('f8f6ed15f22e528f6f415939b07854539e3360e4')
+makedepends=('glibc-devel')
+
+config-libaio() {
+  description='Kernel Asynchronous I/O (AIO) Support for Linux'
+  depends=() # doesn't even use libc
+  devdepends=('glibc-devel' "libaio=$version-$release")
+  files=('usr/lib/libaio.so.*')
+  devfiles=(
+    'usr/include/libaio.h'
+    'usr/lib/libaio.a'
+    'usr/lib/libaio.so'
+  )
+}
+
+build() {
+  cd libaio-$version
+
+  make -C src \
+    CC=${host}-gcc \
+    AR=${host}-ar \
+    RANLIB=${host}-ranlib
+}
+
+package() {
+  cd libaio-$version
+
+  make -C src \
+    CC=${host}-gcc \
+    AR=${host}-ar \
+    RANLIB=${host}-ranlib \
+    prefix="$pkgdir/usr" \
+    install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
