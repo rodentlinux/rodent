@@ -1,0 +1,39 @@
+version=0.3
+_commit=c28be2738921bc412103b42b6ad5d7956b2487ce
+release=1
+sources=("https://github.com/esmil/lem/archive/${_commit}.tar.gz")
+sha1sum=('d4c9a1e8eb2a7509992ac028064ebdcd75219306')
+makedepends=('glibc-devel')
+
+config-lem() {
+  description='Lua Event Machine'
+  depends=('libm' 'libdl' 'libpthread')
+  devdepends=('glibc-devel' "lem=$version-$release")
+  files=(
+    'usr/bin/lem'
+    'usr/share/lua/**'
+    'usr/lib/lua/*/lem/**'
+  )
+  devfiles=(
+    'usr/include/lem/*.h'
+    'usr/lib/pkgconfig/lem.pc'
+  )
+}
+
+build() {
+  cd lem-$_commit
+
+  ./configure \
+    --host=$HOST \
+    --prefix=/usr \
+    --with-lua=builtin
+
+  make
+}
+
+package() {
+  cd lem-$_commit
+  make DESTDIR="$pkgdir" install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
