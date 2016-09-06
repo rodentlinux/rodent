@@ -1,6 +1,6 @@
-parts=(libpcre libpcre16 libpcre32 libpcreposix libpcrecpp pcregrep)
+parts=(libpcre libpcre16 libpcre32 libpcreposix libpcrecpp pcregrep pcretest)
 version=8.39
-release=1
+release=2
 sources=("http://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${version}.tar.bz2")
 sha1sum=('5e38289fd1b4ef3e8426f31a01e34b6924d80b90')
 makedepends=('libhistory-devel')
@@ -50,7 +50,7 @@ config-libpcre16() {
     'usr/lib/libpcre16.so'
     'usr/lib/pkgconfig/libpcre16.pc'
   )
-  manfiles=('usr/share/man/man3/pcre16.3' 'usr/share/man/man3/pcre16_*.3')
+  devmanfiles=('usr/share/man/man3/pcre16.3' 'usr/share/man/man3/pcre16_*.3')
 }
 
 config-libpcre32() {
@@ -63,13 +63,13 @@ config-libpcre32() {
     'usr/lib/libpcre32.so'
     'usr/lib/pkgconfig/libpcre32.pc'
   )
-  manfiles=('usr/share/man/man3/pcre32.3' 'usr/share/man/man3/pcre32_*.3')
+  devmanfiles=('usr/share/man/man3/pcre32.3' 'usr/share/man/man3/pcre32_*.3')
 }
 
 config-libpcreposix() {
   description='A library that implements Perl 5-style regular expressions - posix wrapper'
   depends=("libpcre=$version-$release")
-  devdepends=('glibc-devel' "libpcreposix=$version-$release")
+  devdepends=("libpcre-devel=$version-$release" "libpcreposix=$version-$release")
   files=('usr/lib/libpcreposix.so.*')
   devfiles=(
     'usr/include/pcreposix.h'
@@ -77,7 +77,7 @@ config-libpcreposix() {
     'usr/lib/libpcreposix.so'
     'usr/lib/pkgconfig/libpcreposix.pc'
   )
-  manfiles=('usr/share/man/man3/pcreposix.3')
+  devmanfiles=('usr/share/man/man3/pcreposix.3')
 }
 
 config-libpcrecpp() {
@@ -94,7 +94,7 @@ config-libpcrecpp() {
     'usr/lib/libpcrecpp.so'
     'usr/lib/pkgconfig/libpcrecpp.pc'
   )
-  manfiles=('usr/share/man/man3/pcrecpp.3')
+  devmanfiles=('usr/share/man/man3/pcrecpp.3')
 }
 
 config-pcregrep() {
@@ -102,6 +102,17 @@ config-pcregrep() {
   depends=("libpcre=$version-$release")
   files=('usr/bin/pcregrep')
   manfiles=('usr/share/man/man1/pcregrep.1')
+}
+
+config-pcretest() {
+  description='Test the PCRE library'
+  depends=(
+    "libpcreposix=$version-$release"
+    "libpcre16=$version-$release"
+    "libpcre32=$version-$release"
+  )
+  files=('usr/bin/pcretest')
+  manfiles=('usr/share/man/man1/pcretest.1')
 }
 
 build() {
