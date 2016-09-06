@@ -1,0 +1,27 @@
+version=0.20160905
+_commit=0490739bf369507a214c47a647246ae28dddb775
+release=1
+sources=("https://github.com/knielsen/lem-mariadb/archive/${_commit}.tar.gz")
+sha1sum=('be686a14fa53ae66e093c76bad7a2bded5a8c7c4')
+makedepends=('lem-devel' 'libmysqlclient-devel')
+
+config-lem-mariadb() {
+  description='MariaDB plugin for the Lua Event Machine'
+  depends=('lem' 'libmysqlclient')
+  files=('usr/lib/lua/*/lem/mariadb.so' 'usr/share/lua/*/lem/mariadb/queued.lua')
+}
+
+build() {
+  cd lem-mariadb-$_commit
+
+  make V=1 \
+    CC="${host}-gcc -std=gnu99" \
+    MARIADB_CONFIG="$SYSROOT/usr/bin/mysql_config"
+}
+
+package() {
+  cd lem-mariadb-$_commit
+  make DESTDIR="$pkgdir" MARIADB_CONFIG=true install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
