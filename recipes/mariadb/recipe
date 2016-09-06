@@ -1,0 +1,162 @@
+parts=(
+  libmysqlclient
+  mariadb
+  mariadb-plugins
+)
+version=10.1.17
+release=1
+sources=("https://mirror.one.com/mariadb/mariadb-${version}/source/mariadb-${version}.tar.gz")
+sha1sum=('65d3bd1c253c3b1440dc9a628986257ffb92586f')
+makedepends=(
+  glibc-devel
+  libaio-devel
+  libgcc
+  libz-devel
+  libncurses-devel
+  libsystemd-devel
+  libpcreposix-devel
+  libssl-devel
+  libpam-devel
+)
+
+config-libmysqlclient() {
+  description='MariaDB/MySQL client library'
+  depends=('libm' 'libpthread' 'libgcc' 'libz' 'libssl')
+  devdepends=(
+    'libz-devel'
+    'libssl-devel'
+    "libmysqlclient=$version-$release"
+  )
+  files=('usr/lib/libmysqlclient.so.*')
+  devfiles=(
+    'usr/bin/mysql_config'
+    'usr/include/mysql/**'
+    'usr/lib/libmysqlclient.a'
+    'usr/lib/libmysqlclient.so'
+    'usr/lib/libmysqlclient_r.a'
+    'usr/lib/libmysqlclient_r.so'
+    'usr/lib/pkgconfig/mariadb.pc'
+  )
+  devmanfiles=('usr/share/man/man1/mysql_config.1')
+}
+
+config-mariadb() {
+  description='MariaDB server'
+  depends=('libm' 'libpthread' 'libncurses' 'libssl')
+  files=(
+    'usr/bin/*'
+    'usr/share/**'
+    'usr/lib/systemd/system/mariadb.service'
+    'usr/lib/systemd/system/mariadb@.service'
+    'usr/lib/systemd/system/mariadb@bootstrap.service.d'
+    'usr/lib/systemd/system/mariadb@bootstrap.service.d/use_galera_new_cluster.conf'
+  )
+  manfiles=('usr/share/man/man1/*.1' 'usr/share/man/man8/*.8')
+}
+
+config-mariadb-plugins() {
+  description='MariaDB plugins'
+  depends=('libpthread' 'libstdc++' 'libpam')
+  devdepends=("libmysqlclient-devel=$version-$release")
+  files=('usr/lib/mysql/plugin/*.so')
+  devfiles=('usr/lib/libmysqlservices.a')
+}
+
+# Cross-compilation instructions for MariaDB taken from here:
+#   https://lists.launchpad.net/maria-discuss/msg02911.html
+#   https://mariadb.com/kb/en/mariadb/cross-compiling-mariadb/
+
+_cmakeflags=(
+  -DBUILD_CONFIG=mysql_release
+  -DCMAKE_INSTALL_PREFIX=/usr
+  -DSYSCONFDIR=/etc/mysql
+  -DMYSQL_DATADIR=/var/lib/mysql
+  -DMYSQL_UNIX_ADDR=/run/mysqld.sock
+  -DINSTALL_SCRIPTDIR=bin
+  -DINSTALL_PLUGINDIR=lib/mysql/plugin
+  -DINSTALL_SHAREDIR=share/mysql
+  -DINSTALL_DOCREADMEDIR=share/mysql/readme
+  -DINSTALL_SUPPORTFILESDIR=share/mysql/support
+  -DINSTALL_MYSQLSHAREDIR=share/mysql
+  -DINSTALL_DOCDIR=share/mysql/docs
+  -DINSTALL_MANDIR=share/man
+  -DINSTALL_SYSTEMD_UNITDIR=/usr/lib/systemd/system/
+  -DDEFAULT_CHARSET=utf8
+  -DDEFAULT_COLLATION=utf8_general_ci
+  -DWITHOUT_OQGRAPH=1
+  -DWITHOUT_SPHINX=1
+  -DWITHOUT_CASSANDRA=1
+  -DWITHOUT_SPIDER=1
+  -DWITHOUT_CONNECT=1
+  -DWITHOUT_INNOBASE=1
+  -DWITHOUT_TOKUDB=1
+  -DWITHOUT_MROONGA=1
+  -DWITHOUT_EXAMPLE_STORAGE_ENGINE=1
+  -DWITH_EMBEDDED_SERVER=OFF
+  -DWITH_UNIT_TESTS=OFF
+  -DWITH_WSREP=OFF
+  -DWITH_LIBWRAP=OFF
+  -DWITH_JEMALLOC=OFF
+)
+
+build() {
+  # First a couple tools need to be compiled host-side, used later during build.
+  mkdir native
+  cd native
+
+  cmake ../mariadb-$version \
+    -DCMAKE_C_FLAGS='-O2 -pipe -g0 -fno-strict-aliasing -fno-delete-null-pointer-checks' \
+    -DCMAKE_CXX_FLAGS='-O2 -pipe -g0 -fno-strict-aliasing -felide-constructors -fno-rtti -fno-delete-null-pointer-checks' \
+    "${_cmakeflags[@]}"
+  make import_executables
+
+  cd ..
+  mkdir build
+  cd build
+
+  cmake ../mariadb-$version \
+    -DCMAKE_SYSTEM_NAME=Linux \
+    -DCMAKE_SYSTEM_PROCESSOR=${host%%-*} \
+    -DCMAKE_C_COMPILER=${host}-gcc \
+    -DCMAKE_CXX_COMPILER=${host}-g++ \
+    -DIMPORT_EXECUTABLES="$builddir/native/import_executables.cmake" \
+    -DCMAKE_FIND_ROOT_PATH="$SYSROOT" \
+    -DSTACK_DIRECTION=-1 \
+    -DHAVE_IB_GCC_ATOMIC_BUILTINS=1 \
+    -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
+    -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
+    -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+    -DHAVE_FALLOC_PUNCH_HOLE_AND_KEEP_SIZE=1 \
+    -DWITH_SYSTEMD=yes \
+    -DWITH_READLINE=ON \
+    -DWITH_ZLIB=system \
+    -DWITH_SSL=system \
+    -DWITH_PCRE=system \
+    -DCMAKE_C_FLAGS="$CFLAGS -fno-strict-aliasing -fno-delete-null-pointer-checks" \
+    -DCMAKE_CXX_FLAGS="$CXXFLAGS -fno-strict-aliasing -felide-constructors -fno-rtti -fno-delete-null-pointer-checks" \
+    "${_cmakeflags[@]}"
+
+  make
+}
+
+package() {
+  cd build
+
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/libmysqlclient_r.*
+  echo "INPUT(-lmysqlclient.a)" > "$pkgdir/usr/lib/libmysqlclient_r.a"
+  echo "INPUT(-lmysqlclient)"   > "$pkgdir/usr/lib/libmysqlclient_r.so"
+
+  mv "$pkgdir/usr/share/mysql/pkgconfig" "$pkgdir/usr/lib"
+  mv "$pkgdir/usr/lib/mysql/plugin/daemon_example.ini" \
+     "$pkgdir/usr/share/mysql/support"
+
+
+  rm -r "$pkgdir/usr/mysql-test" \
+        "$pkgdir/usr/sql-bench" \
+        "$pkgdir/usr/data" \
+        "$pkgdir/usr/share/mysql/support/systemd"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
