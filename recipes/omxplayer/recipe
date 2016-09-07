@@ -1,0 +1,83 @@
+parts=('omxplayer' 'dbuscontrol')
+version=0.20160909
+_commit=350779b00bb7278e0d1d9025b9ed1ddb4a2d99cd
+release=1
+sources=("https://github.com/popcornmix/omxplayer/archive/${_commit}.tar.gz")
+sha1sum=('e073a49a2f597a350af688bd4f847dcc518ccb1b')
+makedepends=(
+  'libz-devel'
+  'raspberrypi-firmware-devel'
+  'boost-devel'
+  'libpcre-devel'
+  'libdbus-1-devel'
+  'libasound-devel'
+  'libfreetype-devel'
+  'libswscale-devel'
+  'libavformat-devel'
+)
+
+config-omxplayer() {
+  description='Raspberry Pi command line OMX player'
+  depends=(
+    'libstdc++'
+    'libpcre'
+    'libswscale'
+    'libavformat'
+    'libdbus-1'
+    'libasound'
+    'libfreetype'
+    'libopenmaxil'
+    'libGLESv2'
+    'libWFC'
+    'bash'
+    'dirname'
+    'which'
+    'pgrep'
+  )
+  files=('usr/bin/omxplayer' 'usr/bin/omxplayer.bin')
+  manfiles=('usr/share/man/man1/omxplayer.1')
+}
+
+config-dbuscontrol() {
+  description='OMX player DBus control'
+  depends=('bash' 'awk' 'sed' 'dbus-send')
+  files=('usr/bin/dbuscontrol')
+}
+
+build() {
+  cd omxplayer-$_commit
+  sed -e 's/^\(INCLUDES[+=]\)/#\1/' \
+      -i Makefile.include
+  sed -e '/^INCLUDES[+=]/cINCLUDES=-I. -Ilinux -I/usr/include/freetype2 -I/usr/include/dbus-1.0 -I/usr/lib/dbus-1.0/include' \
+      -i Makefile
+
+  make \
+    BUILDROOT="$SYSROOT" \
+    SDKSTAGE="$SYSROOT" \
+    TARGETFS="$SYSROOT" \
+    HOST=$host \
+    SYSROOT="$SYSROOT" \
+    LD=${host}-ld \
+    CC=${host}-gcc \
+    CXX=${host}-g++ \
+    OBJDUMP=${host}-objdump \
+    RANLIB=${host}-ranlib \
+    STRIP=${host}-strip \
+    AR=${host}-ar \
+    CXXCP="${host}-g++ -E" \
+    PATH="$PATH" \
+    omxplayer.bin omxplayer.1
+}
+
+package() {
+  cd omxplayer-$_commit
+
+  install -dm755 "$pkgdir/usr/bin"
+  install -m755 omxplayer "$pkgdir/usr/bin/"
+  install -m755 omxplayer.bin "$pkgdir/usr/bin/"
+  install -m755 dbuscontrol.sh "$pkgdir/usr/bin/dbuscontrol"
+  install -dm755 "$pkgdir/usr/share/man/man1"
+  install -m644 omxplayer.1 "$pkgdir/usr/share/man/man1"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
