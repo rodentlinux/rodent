@@ -1,0 +1,70 @@
+parts=(
+  libasound
+  aserver
+  alsa-smixer-plugins
+  alsa-conf
+)
+version=1.1.2
+release=1
+sources=("ftp://ftp.alsa-project.org/pub/lib/alsa-lib-${version}.tar.bz2")
+sha1sum=('574a0ebd4d218c81f73a0abae79f0e3cc9a6e402')
+makedepends=('glibc-devel')
+
+config-libasound() {
+  description='Advanced Linux Sound Architecture (ALSA) userspace library'
+  depends=('libm' 'libdl' 'librt')
+  devdepends=('glibc-devel' "libasound=$version-$release")
+  files=('usr/lib/libasound.so.*')
+  devfiles=(
+    'usr/include/**'
+    'usr/lib/libasound.so'
+    'usr/lib/pkgconfig/alsa.pc'
+    'usr/share/aclocal/alsa.m4'
+  )
+}
+
+config-aserver() {
+  description='Advanced Linux Sound Architecture (ALSA) server'
+  depends=("libasound=$version-$release")
+  files=('usr/bin/aserver')
+}
+
+config-alsa-smixer-plugins() {
+  description='Advanced Linux Sound Architecture (ALSA) mixer plugins'
+  depends=("libasound=$version-$release")
+  files=('usr/lib/alsa-lib/smixer/*.so')
+}
+
+config-alsa-conf() {
+  description='Advanced Linux Sound Architecture (ALSA) configuration database'
+  depends=("libasound=$version-$release")
+  files=('usr/share/alsa/**')
+}
+
+build() {
+  cd alsa-lib-$version
+  patch -Np1 -i "$srcdir/libtool.patch"
+
+  ./configure \
+    lt_cv_dlopen_self=yes \
+    lt_cv_dlopen_self_static=no \
+    --host=$host \
+    --prefix=/usr \
+    --disable-old-symbols \
+    --disable-python \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd alsa-lib-$version
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+  rm "$pkgdir"/usr/lib/alsa-lib/smixer/*.la
+  rm "$pkgdir"/usr/share/alsa/alsa.conf.d/README
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
