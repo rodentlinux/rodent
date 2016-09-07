@@ -1,0 +1,211 @@
+parts=(
+  libavutil
+  libswscale
+  libswresample
+  libpostproc
+  libavcodec
+  libavformat
+  libavfilter
+  libavdevice
+)
+version=3.1.3
+release=1
+sources=("http://ffmpeg.org/releases/ffmpeg-${version}.tar.bz2")
+sha1sum=('8a698b61ee42fb159ecc8808ea226d1cd0712a0b')
+makedepends=('libz-devel' 'libasound-devel' 'libvpx-devel')
+
+config-libavutil() {
+  description='Multimedia utility library from ffmpeg'
+  depends=('libm' 'libpthread')
+  devdepends=('glibc-devel' "libavutil=$version-$release")
+  files=('usr/lib/libavutil.so.*')
+  devfiles=(
+    'usr/include/libavutil/*.h'
+    'usr/lib/libavutil.a'
+    'usr/lib/libavutil.so'
+    'usr/lib/pkgconfig/libavutil.pc'
+  )
+}
+
+config-libswscale() {
+  description='Image scaling and colorspace conversion library from ffmpeg'
+  depends=("libavutil=$version-$release")
+  devdepends=("libavutil-devel=$version-$release" "libswscale=$version-$release")
+  files=('usr/lib/libswscale.so.*')
+  devfiles=(
+    'usr/include/libswscale/*.h'
+    'usr/lib/libswscale.a'
+    'usr/lib/libswscale.so'
+    'usr/lib/pkgconfig/libswscale.pc'
+  )
+}
+
+config-libswresample() {
+  description='Audio resampling and conversion library from ffmpeg'
+  depends=("libavutil=$version-$release")
+  devdepends=("libavutil-devel=$version-$release" "libswresample=$version-$release")
+  files=('usr/lib/libswresample.so.*')
+  devfiles=(
+    'usr/include/libswresample/*.h'
+    'usr/lib/libswresample.a'
+    'usr/lib/libswresample.so'
+    'usr/lib/pkgconfig/libswresample.pc'
+  )
+}
+
+config-libpostproc() {
+  description='Post processing library from ffmpeg'
+  depends=("libavutil=$version-$release")
+  devdepends=("libavutil-devel=$version-$release" "libpostproc=$version-$release")
+  files=('usr/lib/libpostproc.so.*')
+  devfiles=(
+    'usr/include/libpostproc/*.h'
+    'usr/lib/libpostproc.a'
+    'usr/lib/libpostproc.so'
+    'usr/lib/pkgconfig/libpostproc.pc'
+  )
+}
+
+config-libavcodec() {
+  description='Generic encoding/decoding framework from ffmpeg'
+  depends=('libz' 'libvpx' "libswresample=$version-$release")
+  devdepends=(
+    'libz-devel'
+    'libvpx-devel'
+    "libswresample-devel=$version-$release"
+    "libavcodec=$version-$release"
+  )
+  files=('usr/lib/libavcodec.so.*')
+  devfiles=(
+    'usr/include/libavcodec/*.h'
+    'usr/lib/libavcodec.a'
+    'usr/lib/libavcodec.so'
+    'usr/lib/pkgconfig/libavcodec.pc'
+  )
+}
+
+config-libavformat() {
+  description='Generic muxing/demuxing library from ffmpeg'
+  depends=("libavcodec=$version-$release")
+  devdepends=("libavcodec-devel=$version-$release" "libavformat=$version-$release")
+  files=('usr/lib/libavformat.so.*')
+  devfiles=(
+    'usr/include/libavformat/*.h'
+    'usr/lib/libavformat.a'
+    'usr/lib/libavformat.so'
+    'usr/lib/pkgconfig/libavformat.pc'
+  )
+}
+
+config-libavfilter() {
+  description='Generic audio/video filter library from ffmpeg'
+  depends=(
+    "libavcodec=$version-$release"
+    "libpostproc=$version-$release"
+    "libswscale=$version-$release"
+  )
+  devdepends=(
+    "libavcodec-devel=$version-$release"
+    "libpostproc-devel=$version-$release"
+    "libswscale-devel=$version-$release"
+    "libavfilter=$version-$release"
+  )
+  files=('usr/lib/libavfilter.so.*')
+  devfiles=(
+    'usr/include/libavfilter/*.h'
+    'usr/lib/libavfilter.a'
+    'usr/lib/libavfilter.so'
+    'usr/lib/pkgconfig/libavfilter.pc'
+  )
+}
+
+config-libavdevice() {
+  description='Generic multimedia I/O library from ffmpeg'
+  depends=(
+    'libasound'
+    "libavcodec=$version-$release"
+    "libavformat=$version-$release"
+    "libavfilter=$version-$release"
+  )
+  devdepends=(
+    'libasound-devel'
+    "libavcodec-devel=$version-$release"
+    "libavformat-devel=$version-$release"
+    "libavfilter-devel=$version-$release"
+    "libavdevice=$version-$release"
+  )
+  files=('usr/lib/libavdevice.so.*')
+  devfiles=(
+    'usr/include/libavdevice/*.h'
+    'usr/lib/libavdevice.a'
+    'usr/lib/libavdevice.so'
+    'usr/lib/pkgconfig/libavdevice.pc'
+  )
+}
+
+build() {
+  cd ffmpeg-$version
+
+  local archopts
+  case $arch in
+  armv7hl) archopts=(
+      --arch=armv7hl
+      --enable-neon
+    );;
+  rpi)     archopts=(
+      --cpu=arm1176jzf-s
+      --arch=armv6kz
+      --disable-runtime-cpudetect
+      --disable-armv6t2
+      --disable-neon
+    );;
+  x86_64)  archopts=(
+      --arch=x86_64
+    );;
+  quark)   archopts=(
+      --cpu=i586
+      --arch=i586
+      --disable-runtime-cpudetect
+    );;
+  mips|mipsel) archopts=(
+      --arch=mips32r2
+      --enable-mips32r2
+      --disable-mips32r5
+      --disable-mips32r6
+      --disable-mipsdsp
+      --disable-mipsdspr2
+      --disable-msa
+      --disable-mipsfpu
+      --disable-mmi
+    );;
+  esac
+
+  ./configure \
+    --prefix=/usr \
+    --enable-gpl \
+    --enable-shared \
+    --enable-libvpx \
+    --disable-stripping \
+    --disable-doc \
+    --disable-htmlpages \
+    --disable-podpages \
+    --disable-txtpages \
+    --enable-cross-compile \
+    --target-os=linux \
+    --cross-prefix=${host}- \
+    --pkg-config=pkg-config \
+    --sysroot="$SYSROOT" \
+    "${archopts[@]}"
+
+  make
+}
+
+package() {
+  cd ffmpeg-$version
+
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/share/ffmpeg/examples"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
