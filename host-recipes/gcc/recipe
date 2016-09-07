@@ -3,9 +3,9 @@ _bootstrap=0
 base=${arch}-gcc
 version=6.2.0
 _rversion=$version
+release=2
 sources=("https://ftp.gnu.org/gnu/gcc/gcc-$_rversion/gcc-${_rversion}.tar.bz2")
 sha1sum=('583e29c7fe69d9a1031a89752c2551ab5aeacb91')
-release=1
 hostdepends=("${arch}-binutils")
 [[ $_bootstrap -gt 1 ]] || makedepends=('glibc-devel')
 
@@ -98,14 +98,14 @@ build() {
 
   CFLAGS_FOR_TARGET="$TARGET_CFLAGS" \
   CXXFLAGS_FOR_TARGET="$TARGET_CXXFLAGS" \
-  AR_FOR_TARGET="${host}-ar" \
-  AS_FOR_TARGET="${host}-as" \
-  LD_FOR_TARGET="${host}-ld" \
-  NM_FOR_TARGET="${host}-nm" \
-  OBJDUMP_FOR_TARGET="${host}-objdump" \
-  RANLIB_FOR_TARGET="${host}-ranlib" \
-  READELF_FOR_TARGET="${host}-readelf" \
-  STRIP_FOR_TARGET="${host}-strip" \
+  AR_FOR_TARGET=${host}-ar \
+  AS_FOR_TARGET=${host}-as \
+  LD_FOR_TARGET=${host}-ld \
+  NM_FOR_TARGET=${host}-nm \
+  OBJDUMP_FOR_TARGET=${host}-objdump \
+  RANLIB_FOR_TARGET=${host}-ranlib \
+  READELF_FOR_TARGET=${host}-readelf \
+  STRIP_FOR_TARGET=${host}-strip \
   CFLAGS='-O2 -pipe -g0' \
   CXXFLAGS='-O2 -pipe -g0' \
   LDFLAGS='-Wl,-z,relro' \
@@ -131,14 +131,14 @@ build() {
     "${extraflags[@]}" \
     "${archflags[@]}"
 
-  AR_FOR_TARGET="${host}-ar" \
-  AS_FOR_TARGET="${host}-as" \
-  LD_FOR_TARGET="${host}-ld" \
-  NM_FOR_TARGET="${host}-nm" \
-  OBJDUMP_FOR_TARGET="${host}-objdump" \
-  RANLIB_FOR_TARGET="${host}-ranlib" \
-  READELF_FOR_TARGET="${host}-readelf" \
-  STRIP_FOR_TARGET="${host}-strip" \
+  AR_FOR_TARGET=${host}-ar \
+  AS_FOR_TARGET=${host}-as \
+  LD_FOR_TARGET=${host}-ld \
+  NM_FOR_TARGET=${host}-nm \
+  OBJDUMP_FOR_TARGET=${host}-objdump \
+  RANLIB_FOR_TARGET=${host}-ranlib \
+  READELF_FOR_TARGET=${host}-readelf \
+  STRIP_FOR_TARGET=${host}-strip \
   make
 }
 
@@ -179,10 +179,11 @@ EOF
   fi
 
   # Remove unwanted files
+  rm tools/$host/lib/*.la
   rm -f tools/lib/libcc1.*
   rmdir tools/include
-  rm -rf tools/share/info
-  rm -rf tools/share/man/man7
+  rm -r tools/share/info
+  rm -r tools/share/man/man7
 }
 
 # vim: set ft=sh ts=2 sw=2 et:
