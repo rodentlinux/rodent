@@ -1,0 +1,349 @@
+parts=(
+  boost-devel
+  libboost_atomic
+  libboost_container
+  libboost_date_time
+  libboost_iostreams
+  libboost_math_c99
+  libboost_math_c99f
+  libboost_math_c99l
+  libboost_math_tr1
+  libboost_math_tr1f
+  libboost_math_tr1l
+  libboost_program_options
+  libboost_regex
+  libboost_serialization
+  libboost_signals
+  libboost_system
+  libboost_wserialization
+  libboost_graph
+  libboost_chrono
+  libboost_filesystem
+  libboost_locale
+  libboost_random
+  libboost_thread
+  libboost_timer
+  libboost_prg_exec_monitor
+  libboost_unit_test_framework
+  libboost_type_erasure
+  libboost_wave
+  libboost_log
+  libboost_log_setup
+)
+version=1.61.0
+release=1
+sources=("https://sourceforge.net/projects/boost/files/boost/$version/boost_${version//./_}.tar.bz2")
+sha1sum=('f84b1a1ce764108ec3c2b7bd7704cf8dfd3c9d01')
+makedepends=('libz-devel' 'libbz2-devel')
+
+config-boost-devel() {
+  description='Boost C++ development files'
+  depends=('glibc-devel')
+  files=(
+    'usr/include/boost/**'
+    'usr/lib/libboost_exception.a'
+    'usr/lib/libboost_test_exec_monitor.a'
+  )
+}
+
+config-libboost_atomic() {
+  description='Boost atomic C++ library'
+  depends=('librt')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_atomic.so.*')
+  devfiles=('usr/lib/libboost_atomic.a' 'usr/lib/libboost_atomic.so')
+}
+
+config-libboost_container() {
+  description='Boost container C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_container.so.*')
+  devfiles=('usr/lib/libboost_container.a' 'usr/lib/libboost_container.so')
+}
+
+config-libboost_date_time() {
+  description='Boost date_time C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_date_time.so.*')
+  devfiles=('usr/lib/libboost_date_time.a' 'usr/lib/libboost_date_time.so')
+}
+
+config-libboost_iostreams() {
+  description='Boost iostreams C++ library'
+  depends=('librt' 'libstdc++' 'libz' 'libbz2')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_iostreams.so.*')
+  devfiles=('usr/lib/libboost_iostreams.a' 'usr/lib/libboost_iostreams.so')
+}
+
+config-libboost_math_c99() {
+  description='Boost math_c99 C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_math_c99.so.*')
+  devfiles=('usr/lib/libboost_math_c99.a' 'usr/lib/libboost_math_c99.so')
+}
+
+config-libboost_math_c99f() {
+  description='Boost math_c99f C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_math_c99f.so.*')
+  devfiles=('usr/lib/libboost_math_c99f.a' 'usr/lib/libboost_math_c99f.so')
+}
+
+config-libboost_math_c99l() {
+  description='Boost math_c99l C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_math_c99l.so.*')
+  devfiles=('usr/lib/libboost_math_c99l.a' 'usr/lib/libboost_math_c99l.so')
+}
+
+config-libboost_math_tr1() {
+  description='Boost math_tr1 C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_math_tr1.so.*')
+  devfiles=('usr/lib/libboost_math_tr1.a' 'usr/lib/libboost_math_tr1.so')
+}
+
+config-libboost_math_tr1f() {
+  description='Boost math_tr1f C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_math_tr1f.so.*')
+  devfiles=('usr/lib/libboost_math_tr1f.a' 'usr/lib/libboost_math_tr1f.so')
+}
+
+config-libboost_math_tr1l() {
+  description='Boost math_tr1l C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_math_tr1l.so.*')
+  devfiles=('usr/lib/libboost_math_tr1l.a' 'usr/lib/libboost_math_tr1l.so')
+}
+
+config-libboost_program_options() {
+  description='Boost program_options C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_program_options.so.*')
+  devfiles=('usr/lib/libboost_program_options.a' 'usr/lib/libboost_program_options.so')
+}
+
+config-libboost_regex() {
+  description='Boost regex C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_regex.so.*')
+  devfiles=('usr/lib/libboost_regex.a' 'usr/lib/libboost_regex.so')
+}
+
+config-libboost_serialization() {
+  description='Boost serialization C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_serialization.so.*')
+  devfiles=('usr/lib/libboost_serialization.a' 'usr/lib/libboost_serialization.so')
+}
+
+config-libboost_signals() {
+  description='Boost signals C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_signals.so.*')
+  devfiles=('usr/lib/libboost_signals.a' 'usr/lib/libboost_signals.so')
+}
+
+config-libboost_system() {
+  description='Boost system C++ library'
+  depends=('librt' 'libstdc++')
+  devdepends=("boost-devel=$version-$release")
+  files=('usr/lib/libboost_system.so.*')
+  devfiles=('usr/lib/libboost_system.a' 'usr/lib/libboost_system.so')
+}
+
+config-libboost_wserialization() {
+  description='Boost wserialization C++ library'
+  depends=("libboost_serialization=$version-$release")
+  devdepends=("libboost_serialization-devel=$version-$release" "libboost_wserialization=$version-$release")
+  files=('usr/lib/libboost_wserialization.so.*')
+  devfiles=('usr/lib/libboost_wserialization.a' 'usr/lib/libboost_wserialization.so')
+}
+
+config-libboost_graph() {
+  description='Boost graph C++ library'
+  depends=("libboost_regex=$version-$release")
+  devdepends=("libboost_regex-devel=$version-$release" "libboost_regex=$version-$release")
+  files=('usr/lib/libboost_graph.so.*')
+  devfiles=('usr/lib/libboost_graph.a' 'usr/lib/libboost_graph.so')
+}
+
+config-libboost_chrono() {
+  description='Boost chrono C++ library'
+  depends=("libboost_system=$version-$release")
+  devdepends=("libboost_system-devel=$version-$release" "libboost_chrono=$version-$release")
+  files=('usr/lib/libboost_chrono.so.*')
+  devfiles=('usr/lib/libboost_chrono.a' 'usr/lib/libboost_chrono.so')
+}
+
+config-libboost_filesystem() {
+  description='Boost filesystem C++ library'
+  depends=("libboost_system=$version-$release")
+  devdepends=("libboost_system-devel=$version-$release" "libboost_filesystem=$version-$release")
+  files=('usr/lib/libboost_filesystem.so.*')
+  devfiles=('usr/lib/libboost_filesystem.a' 'usr/lib/libboost_filesystem.so')
+}
+
+config-libboost_locale() {
+  description='Boost locale C++ library'
+  depends=("libboost_system=$version-$release")
+  devdepends=("libboost_system-devel=$version-$release" "libboost_locale=$version-$release")
+  files=('usr/lib/libboost_locale.so.*')
+  devfiles=('usr/lib/libboost_locale.a' 'usr/lib/libboost_locale.so')
+}
+
+config-libboost_random() {
+  description='Boost random C++ library'
+  depends=("libboost_system=$version-$release")
+  devdepends=("libboost_system-devel=$version-$release" "libboost_random=$version-$release")
+  files=('usr/lib/libboost_random.so.*')
+  devfiles=('usr/lib/libboost_random.a' 'usr/lib/libboost_random.so')
+}
+
+config-libboost_thread() {
+  description='Boost thread C++ library'
+  depends=("libboost_system=$version-$release")
+  devdepends=("libboost_system-devel=$version-$release" "libboost_thread=$version-$release")
+  files=('usr/lib/libboost_thread.so.*')
+  devfiles=('usr/lib/libboost_thread.a' 'usr/lib/libboost_thread.so')
+}
+
+config-libboost_timer() {
+  description='Boost timer C++ library'
+  depends=("libboost_chrono=$version-$release")
+  devdepends=("libboost_chrono-devel=$version-$release" "libboost_timer=$version-$release")
+  files=('usr/lib/libboost_timer.so.*')
+  devfiles=('usr/lib/libboost_timer.a' 'usr/lib/libboost_timer.so')
+}
+
+config-libboost_prg_exec_monitor() {
+  description='Boost prg_exec_monitor C++ library'
+  depends=("libboost_timer=$version-$release")
+  devdepends=("libboost_timer-devel=$version-$release" "libboost_prg_exec_monitor=$version-$release")
+  files=('usr/lib/libboost_prg_exec_monitor.so.*')
+  devfiles=('usr/lib/libboost_prg_exec_monitor.a' 'usr/lib/libboost_prg_exec_monitor.so')
+}
+
+config-libboost_unit_test_framework() {
+  description='Boost unit_test_framework C++ library'
+  depends=("libboost_timer=$version-$release")
+  devdepends=("libboost_timer-devel=$version-$release" "libboost_unit_test_framework=$version-$release")
+  files=('usr/lib/libboost_unit_test_framework.so.*')
+  devfiles=('usr/lib/libboost_unit_test_framework.a' 'usr/lib/libboost_unit_test_framework.so')
+}
+
+config-libboost_type_erasure() {
+  description='Boost type_erasure C++ library'
+  depends=(
+    "libboost_chrono=$version-$release"
+    "libboost_thread=$version-$release"
+  )
+  devdepends=(
+    "libboost_chrono-devel=$version-$release"
+    "libboost_thread-devel=$version-$release"
+    "libboost_type_erasure=$version-$release"
+  )
+  files=('usr/lib/libboost_type_erasure.so.*')
+  devfiles=('usr/lib/libboost_type_erasure.a' 'usr/lib/libboost_type_erasure.so')
+}
+
+config-libboost_wave() {
+  description='Boost wave C++ library'
+  depends=(
+    "libboost_chrono=$version-$release"
+    "libboost_date_time=$version-$release"
+    "libboost_filesystem=$version-$release"
+    "libboost_thread=$version-$release"
+  )
+  devdepends=(
+    "libboost_chrono-devel=$version-$release"
+    "libboost_date_time-devel=$version-$release"
+    "libboost_filesystem-devel=$version-$release"
+    "libboost_thread-devel=$version-$release"
+    "libboost_wave=$version-$release"
+  )
+  files=('usr/lib/libboost_wave.so.*')
+  devfiles=('usr/lib/libboost_wave.a' 'usr/lib/libboost_wave.so')
+}
+
+config-libboost_log() {
+  description='Boost log C++ library'
+  depends=(
+    "libboost_atomic=$version-$release"
+    "libboost_chrono=$version-$release"
+    "libboost_date_time=$version-$release"
+    "libboost_filesystem=$version-$release"
+    "libboost_regex=$version-$release"
+    "libboost_thread=$version-$release"
+  )
+  devdepends=(
+    "libboost_atomic-devel=$version-$release"
+    "libboost_chrono-devel=$version-$release"
+    "libboost_date_time-devel=$version-$release"
+    "libboost_filesystem-devel=$version-$release"
+    "libboost_regex-devel=$version-$release"
+    "libboost_thread-devel=$version-$release"
+    "libboost_log=$version-$release"
+  )
+  files=('usr/lib/libboost_log.so.*')
+  devfiles=('usr/lib/libboost_log.a' 'usr/lib/libboost_log.so')
+}
+
+config-libboost_log_setup() {
+  description='Boost log_setup C++ library'
+  depends=("libboost_log=$version-$release")
+  devdepends=("libboost_log-devel=$version-$release" "libboost_log_setup=$version-$release")
+  files=('usr/lib/libboost_log_setup.so.*')
+  devfiles=('usr/lib/libboost_log_setup.a' 'usr/lib/libboost_log_setup.so')
+}
+
+build() {
+  cd boost_${version//./_}
+
+  ./bootstrap.sh \
+    --prefix=/usr \
+    --with-toolset=gcc \
+    --without-icu
+
+  sed -e "s/using gcc/using gcc : : ${host}-g++/" \
+      -i project-config.jam
+
+  ./b2 \
+    variant=release \
+    threading=multi \
+    runtime-link=shared \
+    link=shared,static \
+    toolset=gcc \
+    cflags="$CPPFLAGS $CFLAGS -O3" \
+    cxxflags="$CPPFLAGS $CXXFLAGS -std=c++14 -O3" \
+    linkflags="$LDFLAGS" \
+    --prefix="$builddir/output" \
+    --layout=system \
+    --without-python \
+    --without-context \
+    --without-coroutine \
+    --without-coroutine2 \
+    --disable-icu \
+    -j $jobs \
+    install
+}
+
+package() {
+  cp -r output "$pkgdir/usr"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
