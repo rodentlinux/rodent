@@ -1,0 +1,87 @@
+version=1.6.0
+release=1
+sources=("https://github.com/webmproject/libvpx/archive/v${version}.tar.gz")
+sha1sum=('959e4e8f28819e38fb1593cf3d294ef89f083b87')
+makedepends=('glibc-devel')
+
+config-libvpx() {
+  description='VP8/VP9 codec library'
+  depends=('libm' 'libpthread' 'libgcc')
+  devdepends=('glibc-devel' "libvpx=$version-$release")
+  files=('usr/lib/libvpx.so.*')
+  devfiles=(
+    'usr/include/vpx/*.h'
+    'usr/lib/libvpx.a'
+    'usr/lib/libvpx.so'
+    'usr/lib/pkgconfig/vpx.pc'
+  )
+}
+
+build() {
+  cd libvpx-$version
+
+  # install simply copies files so set umask here
+  local oldmask=$(umask)
+  umask 0022
+
+  local -a archopts
+  case $arch in
+  armv7hl) archopts=(
+      --target=armv7-linux-gcc
+      --enable-thumb
+    );;
+  rpi) archopts=(
+      --target=armv6-linux-gcc
+      --cpu=arm1176jzf-s
+    );;
+  x86_64) archopts=(
+      --target=x86_64-linux-gcc
+      --as=yasm
+    );;
+  quark) archopts=(
+      --target=x86-linux-gcc
+      --as=yasm
+      --disable-runtime_cpu_detect
+      --disable-mmx
+      --disable-sse
+      --disable-sse2
+      --disable-sse3
+      --disable-ssse3
+      --disable-sse4_1
+      --disable-avx
+      --disable-avx2
+    );;
+  mips|mipsel) archopts=(
+      --target=mips32-linux-gcc
+    );;
+  esac
+
+  STRIP=true \
+  AS=${host}-as \
+  CC=${host}-gcc \
+  CXX=${host}-g++ \
+  LD=${host}-ld \
+  ./configure \
+    --prefix=/usr \
+    --enable-shared \
+    --enable-pic \
+    --enable-vp8 \
+    --enable-vp9 \
+    --enable-vp9-highbitdepth \
+    --enable-postproc \
+    --disable-examples \
+    --disable-docs \
+    --disable-unit-tests \
+    "${archopts[@]}"
+
+  make V=1
+  umask $oldmask
+}
+
+package() {
+  cd libvpx-$version
+
+  make DESTDIR="$pkgdir" install
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
