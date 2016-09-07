@@ -1,0 +1,52 @@
+parts=(libfreetype)
+version=2.6.5
+release=1
+sources=("http://download.savannah.gnu.org/releases/freetype/freetype-${version}.tar.bz2")
+sha1sum=('5db38ae2308c5a2c519c8e071e98b70d61585201')
+makedepends=('libz-devel')
+
+config-libfreetype() {
+  description='Software library to render fonts'
+  depends=('libz')
+  devdepends=('glibc-devel' "libfreetype=$version-$release")
+  files=('usr/lib/libfreetype.so.*')
+  devfiles=(
+    'usr/bin/freetype-config'
+    'usr/include/freetype2/freetype/*.h'
+    'usr/include/freetype2/freetype/config/*.h'
+    'usr/include/freetype2/ft2build.h'
+    'usr/lib/libfreetype.a'
+    'usr/lib/libfreetype.so'
+    'usr/lib/pkgconfig/freetype2.pc'
+    'usr/share/aclocal/freetype2.m4'
+  )
+  devmanfiles=('usr/share/man/man1/freetype-config.1')
+}
+
+build() {
+  cd freetype-$version
+
+  ./configure \
+    ac_cv_func_mmap_fixed_mapped=yes \
+    ac_cv_have_decl_munmap=yes \
+    --host=$host \
+    --prefix=/usr \
+    --with-zlib=yes \
+    --with-bzip2=no \
+    --with-png=no \
+    --with-harfbuzz=no \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd freetype-$version
+
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
