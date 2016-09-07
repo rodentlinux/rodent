@@ -1,0 +1,67 @@
+parts=(
+  alsamixer
+  amixer
+  aplay
+  alsactl
+)
+version=1.1.2
+release=1
+sources=("ftp://ftp.alsa-project.org/pub/utils/alsa-utils-${version}.tar.bz2")
+sha1sum=('b8678946beb99efeb9998e718eafc5f6d26504d8')
+makedepends=('libform-devel' 'libmenu-devel' 'libpanel-devel' 'libasound-devel')
+
+config-alsamixer() {
+  description='ALSA console mixer'
+  depends=('libform' 'libmenu' 'libpanel' 'alsa-conf')
+  files=('usr/bin/alsamixer')
+  manfiles=('usr/share/man/man1/alsamixer.1')
+}
+
+config-amixer() {
+  description='ALSA command line mixer'
+  depends=('alsa-conf')
+  files=('usr/bin/amixer')
+  manfiles=('usr/share/man/man1/amixer.1')
+}
+
+config-aplay() {
+  description='ALSA command line audio player'
+  depends=('alsa-conf')
+  files=('usr/bin/aplay')
+  manfiles=('usr/share/man/man1/aplay.1')
+}
+
+config-alsactl() {
+  description='Advanced controls for the ALSA driver'
+  depends=('alsa-conf')
+  files=('usr/bin/alsactl' 'usr/share/alsa/init/*')
+  manfiles=('usr/share/man/man1/alsactl.1' 'usr/share/man/man7/alsactl_init.7')
+}
+
+build() {
+  cd alsa-utils-$version
+
+  ./configure \
+    --host=$host \
+    --prefix=/usr \
+    --sbindir=/usr/bin \
+    --disable-rpath \
+    --disable-nls \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd alsa-utils-$version
+  make DESTDIR="$pkgdir" install
+
+  # I thought I said disable-nls..
+  rm -r "$pkgdir/usr/share/man/fr"
+
+  rmdir "$pkgdir/var/lib/alsa"
+  rmdir "$pkgdir/var/lib"
+  rmdir "$pkgdir/var"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
