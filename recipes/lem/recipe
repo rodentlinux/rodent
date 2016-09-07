@@ -1,6 +1,6 @@
 version=0.3
 _commit=c28be2738921bc412103b42b6ad5d7956b2487ce
-release=1
+release=2
 sources=("https://github.com/esmil/lem/archive/${_commit}.tar.gz")
 sha1sum=('d4c9a1e8eb2a7509992ac028064ebdcd75219306')
 makedepends=('glibc-devel')
@@ -24,7 +24,7 @@ build() {
   cd lem-$_commit
 
   ./configure \
-    --host=$HOST \
+    --host=$host \
     --prefix=/usr \
     --with-lua=builtin
 
