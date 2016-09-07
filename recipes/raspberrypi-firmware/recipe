@@ -1,0 +1,208 @@
+_libs=(
+  libdebug_sym
+  libdtovl
+  libvcos
+  libvchiq_arm
+  libvcsm
+  libcontainers
+  libbcm_host
+  libmmal_core
+  libmmal_util
+  libmmal_components
+  libmmal_vc_client
+  libmmal
+  raspberrypi-libEGL
+  raspberrypi-libGLESv2
+  raspberrypi-libGLESv1_CM
+  raspberrypi-libOpenVG
+  raspberrypi-libWFC
+  libopenmaxil
+)
+_plugins=(
+  reader_asf
+  reader_avi
+  reader_binary
+  reader_flv
+  reader_metadata_id3
+  reader_mkv
+  reader_mp4
+  reader_mpga
+  reader_ps
+  reader_qsynth
+  reader_raw_video
+  reader_rcv
+  reader_rtp
+  reader_rtsp
+  reader_rv9
+  reader_simple
+  reader_wav
+  writer_avi
+  writer_binary
+  writer_dummy
+  writer_mp4
+  writer_raw_video
+  writer_simple
+)
+parts=(
+  raspberrypi-firmware-devel
+  "${_libs[@]}"
+)
+for i in "${_plugins[@]}"; do
+  parts+=("raspberrypi-firmware-plugin-$i")
+done
+version=1.20160620
+release=1
+sources=("https://github.com/raspberrypi/firmware/archive/${version}.tar.gz")
+sha1sum=('ab41cc8f62fdfc7b29f9473170df9c401c5ad354')
+makedepends=()
+
+config-raspberrypi-firmware-devel() {
+  description='Raspberry Pi firmware headers and static libraries'
+  depends=()
+  for i in "${_libs[@]}"; do
+    depends+=("$i=$version-$release")
+  done
+  files=(
+    'usr/include/**'
+    'usr/lib/*.a'
+    'usr/lib/pkgconfig/*.pc'
+  )
+}
+
+config-libdebug_sym() {
+  description=''
+  depends=('libc')
+  files=('usr/lib/libdebug_sym.so')
+}
+
+config-libdtovl() {
+  description=''
+  depends=('libc')
+  files=('usr/lib/libdtovl.so')
+}
+
+config-libvcos() {
+  description=''
+  depends=('libdl' 'librt')
+  files=('usr/lib/libvcos.so')
+}
+
+config-libvchiq_arm() {
+  description=''
+  depends=("libvcos=$version-$release")
+  files=('usr/lib/libvchiq_arm.so')
+}
+
+config-libvcsm() {
+  description=''
+  depends=("libvcos=$version-$release")
+  files=('usr/lib/libvcsm.so')
+}
+
+config-libcontainers() {
+  description=''
+  depends=("libvcos=$version-$release")
+  files=('usr/lib/libcontainers.so')
+}
+
+config-libbcm_host() {
+  description=''
+  depends=("libvchiq_arm=$version-$release")
+  files=('usr/lib/libbcm_host.so')
+}
+
+config-libmmal_core() {
+  description=''
+  depends=("libvcos=$version-$release")
+  files=('usr/lib/libmmal_core.so')
+}
+
+config-libmmal_util() {
+  description=''
+  depends=("libvcos=$version-$release")
+  files=('usr/lib/libmmal_util.so')
+}
+
+config-libmmal_components() {
+  description=''
+  depends=(
+    "libmmal_core=$version-$release"
+    "libmmal_util=$version-$release"
+    "libcontainers=$version-$release"
+  )
+  files=('usr/lib/libmmal_components.so')
+}
+
+config-libmmal_vc_client() {
+  description=''
+  depends=(
+    "libvcsm=$version-$release"
+    "libvchiq_arm=$version-$release"
+  )
+  files=('usr/lib/libmmal_vc_client.so')
+}
+
+config-libmmal() {
+  description=''
+  depends=(
+    "libmmal_components=$version-$release"
+    "libmmal_vc_client=$version-$release"
+  )
+  files=('usr/lib/libmmal.so')
+}
+
+config-raspberrypi-libEGL() {
+  description=''
+  provides=('libEGL')
+  depends=('libm' "libbcm_host=$version-$release")
+  files=('usr/lib/libEGL.so')
+}
+
+config-raspberrypi-libGLESv2() {
+  description=''
+  provides=('libGLESv2')
+  depends=("raspberrypi-libEGL=$version-$release")
+  files=('usr/lib/libGLESv2.so')
+}
+
+config-raspberrypi-libGLESv1_CM() {
+  description=''
+  provides=('libGLESv1_CM')
+  depends=("raspberrypi-libGLESv2=$version-$release")
+  files=('usr/lib/libGLESv1_CM.so')
+}
+
+config-raspberrypi-libOpenVG() {
+  description=''
+  provides=('libOpenVG')
+  depends=("raspberrypi-libEGL=$version-$release")
+  files=('usr/lib/libOpenVG.so')
+}
+
+config-raspberrypi-libWFC() {
+  description=''
+  provides=('libWFC')
+  depends=("raspberrypi-libEGL=$version-$release")
+  files=('usr/lib/libWFC.so')
+}
+
+config-libopenmaxil() {
+  description=''
+  depends=("raspberrypi-libGLESv2=$version-$release")
+  files=('usr/lib/libopenmaxil.so')
+}
+
+for i in "${_plugins[@]}"; do
+  eval "config-raspberrypi-firmware-plugin-${i}() { description=''; depends=(\"libcontainers=\$version-\$release\"); files=('usr/lib/plugins/${i}.so'); }"
+done
+
+package() {
+  cd firmware-$version
+
+  cd hardfp/opt/vc
+  install -dm755 "$pkgdir/usr"
+  cp -r include lib bin "$pkgdir/usr/"
+  cp sbin/* "$pkgdir/usr/bin/"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
