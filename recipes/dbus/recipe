@@ -1,6 +1,6 @@
-parts=(libdbus-1 dbus-daemon dbus-utils dbus-test-tool dbus)
+parts=(libdbus-1 dbus-daemon dbus-send dbus-utils dbus-test-tool dbus)
 version=1.11.2
-release=1
+release=2
 sources=("https://dbus.freedesktop.org/releases/dbus/dbus-${version}.tar.gz")
 sha1sum=('e1d3dedd1d2b7305464d6892579fee3ad9639355')
 makedepends=('libexpat-devel' 'libsystemd-devel')
@@ -31,9 +31,15 @@ config-dbus-daemon() {
   )
 }
 
+config-dbus-send() {
+  description='Freedesktop.org DBus command line client'
+  depends=("libdbus-1=$version-$release")
+  files=('usr/bin/dbus-send')
+}
+
 config-dbus-utils() {
   description='Freedesktop.org DBus utilities'
-  depends=("libdbus-1=$version-$release")
+  depends=("libdbus-1=$version-$release" "dbus-send=$version-$release")
   files=(
     'usr/bin/dbus-cleanup-sockets'
     'usr/bin/dbus-launch'
@@ -41,7 +47,6 @@ config-dbus-utils() {
     'usr/bin/dbus-uuidgen'
     'usr/bin/dbus-update-activation-environment'
     'usr/bin/dbus-monitor'
-    'usr/bin/dbus-send'
   )
 }
 
@@ -75,6 +80,7 @@ build() {
     --with-systemdsystemunitdir=/usr/lib/systemd/system \
     --with-systemduserunitdir=/usr/lib/systemd/user \
     --enable-inotify \
+    --enable-systemd \
     --enable-epoll \
     --enable-user-session \
     --disable-verbose-mode \
