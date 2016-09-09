@@ -22,9 +22,12 @@ cd "$srcdir"
 
 echo 'Packaging..'
 cd "$builddir"
+saved_umask=$(umask)
+umask 0022
 set -x
 package
 set +x
+umask $saved_umask
 
 cd "$pkgdir"
 echo -n 'Recording metadata.. '
