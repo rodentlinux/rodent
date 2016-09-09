@@ -7,6 +7,7 @@ set -e
 readonly -a archs=(${1//,/ })
 shift
 
+JOBS=1
 . "$RODENT/settings"
 
 usage() {
@@ -75,6 +76,8 @@ for arch in "${archs[@]}"; do
 done
 
 readonly n=${#archs[@]}
+jobs=$(( (JOBS + n - 1) / n ))
+
 declare -a ret
 
 killchildren() {
@@ -85,7 +88,7 @@ killchildren() {
 trap -- killchildren INT TERM
 for ((i=0;i<n;i++)); do
   "$RODENT/lib/ro/make-build" "${archs[$i]}" "$recipe" \
-    "$dependencies" "$extract" "$build" "$package" &
+    "$jobs" "$dependencies" "$extract" "$build" "$package" &
   ret[$i]=1
 done
 

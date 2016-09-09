@@ -6,10 +6,11 @@ set -e
 
 readonly arch="$1"
 readonly recipe="$2"
-readonly dependencies="$3"
-readonly extract="$4"
-readonly build="$5"
-readonly pack="$6"
+readonly jobs="$3"
+readonly dependencies="$4"
+readonly extract="$5"
+readonly build="$6"
+readonly pack="$7"
 
 . "$RODENT/lib/ro/make-defaults.sh"
 . "$RODENT/settings"
@@ -46,7 +47,8 @@ export CFLAGS
 export CXXFLAGS
 export CPPFLAGS
 export LDFLAGS
-[[ -z "$MAKEFLAGS" ]] || export MAKEFLAGS
+[[ -n "$MAKEFLAGS" ]] || MAKEFLAGS="-j$jobs"
+export MAKEFLAGS
 [[ -n "$SYSROOT" ]] || SYSROOT="$builddir/sysroot"
 export SYSROOT
 export PKG_CONFIG_PATH="$SYSROOT/usr/lib/pkgconfig"

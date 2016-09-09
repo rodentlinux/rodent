@@ -7,6 +7,7 @@ set -e
 readonly arch="$1"
 shift
 
+JOBS=1
 . "$RODENT/lib/ro/make-defaults.sh"
 . "$RODENT/settings"
 
@@ -87,6 +88,8 @@ if [[ "$(type -t package)" != 'function' ]]; then
   exit 1
 fi
 
+jobs="$JOBS"
+
 [[ -n "$SYSROOT" ]] || SYSROOT="$builddir/sysroot"
 export SYSROOT
 
@@ -98,7 +101,8 @@ TARGET_CPPFLAGS="$CPPFLAGS"
 unset CPPFLAGS
 TARGET_LDFLAGS="$LDFLAGS"
 unset LDFLAGS
-[[ -z "$MAKEFLAGS" ]] || export MAKEFLAGS
+[[ -n "$MAKEFLAGS" ]] || MAKEFLAGS="-j$jobs"
+export MAKEFLAGS
 
 . "$RODENT/lib/ro/download.sh"
 
