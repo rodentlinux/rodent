@@ -1,0 +1,38 @@
+version=0.7.1
+release=1
+sources=("http://sourceforge.net/projects/netcat/files/netcat/$version/netcat-${version}.tar.bz2")
+sha1sum=('b761d70fe9e3e8b3fe33a329b9bc31300dc04d11')
+makedepends=('glibc-devel')
+
+config-gnu-netcat() {
+  description='GNU Netcat'
+  provides=('netcat')
+  depends=('libc')
+  files=('usr/bin/nc' 'usr/bin/netcat')
+  manfiles=('usr/share/man/man1/netcat.1')
+}
+
+build() {
+  cd netcat-$version
+
+  ./configure \
+    ac_cv_func_mmap_fixed_mapped=yes \
+    gt_cv_int_divbyzero_sigfpe=yes \
+    --host=$host \
+    --prefix=/usr \
+    --mandir=/usr/share/man \
+    --disable-rpath \
+    --disable-nls \
+    --with-gnu-ld
+
+  make
+}
+
+package() {
+  cd netcat-$version
+  make DESTDIR="$pkgdir" install
+
+  rm -r "$pkgdir/usr/info"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
