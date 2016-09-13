@@ -1,0 +1,88 @@
+parts=(
+  libfuse
+  libulockmgr
+  mount.fuse
+  fusermount
+  ulockmgr_server
+)
+version=2.9.7
+release=1
+sources=("https://github.com/libfuse/libfuse/releases/download/fuse-$version/fuse-${version}.tar.gz")
+sha1sum=('cd174e3d37995a42fad32fac92f76cd18e24174f')
+makedepends=('glibc-devel')
+
+config-libfuse() {
+  description='The Linux FUSE (Filesystem in Userspace) library'
+  depends=('libdl' 'libpthread')
+  devdepends=('glibc-devel' "libfuse=$version-$release")
+  files=('usr/lib/libfuse.so.*')
+  devfiles=(
+    'usr/include/fuse.h'
+    'usr/include/fuse/*.h'
+    'usr/lib/libfuse.a'
+    'usr/lib/libfuse.so'
+    'usr/lib/pkgconfig/fuse.pc'
+  )
+}
+
+config-libulockmgr() {
+  description='Userspace lock manager library'
+  depends=('libpthread')
+  files=('usr/lib/libulockmgr.so.*')
+  devdepends=('glibc-devel' "libulockmgr=$version-$release")
+  devfiles=('usr/include/ulockmgr.h' 'usr/lib/libulockmgr.a' 'usr/lib/libulockmgr.so')
+}
+
+config-mount.fuse() {
+  description='Mount FUSE filesystems'
+  depends=('libc')
+  files=('usr/bin/mount.fuse')
+  manfiles=('usr/share/man/man8/mount.fuse.8')
+}
+
+config-fusermount() {
+  description='Mount and unmount FUSE filesystems'
+  depends=('libc')
+  files=('usr/bin/fusermount')
+  manfiles=('usr/share/man/man1/fusermount.1')
+}
+
+config-ulockmgr_server() {
+  description='Lock Manager Server for FUSE filesystems'
+  depends=('libpthread')
+  files=('usr/bin/ulockmgr_server')
+  manfiles=('usr/share/man/man1/ulockmgr_server.1')
+}
+
+build() {
+  cd fuse-$version
+
+  MOUNT_FUSE_PATH=/usr/bin \
+  UDEV_RULES_PATH=/usr/lib/udev/rules.d \
+  INIT_D_PATH=/init.d \
+  ./configure \
+    --host=$host \
+    --prefix=/usr \
+    --enable-lib \
+    --disable-mtab \
+    --disable-rpath
+
+  make
+}
+
+package() {
+  cd fuse-$version
+  make DESTDIR="$pkgdir" install
+
+  # remove libtool files
+  rm "$pkgdir"/usr/lib/*.la
+  # let devtmpfs create und udev manage /dev/fuse
+  rm "$pkgdir/dev/fuse"
+  rmdir "$pkgdir/dev"
+  # udev already has rules for /dev/fuse
+  rm -r "$pkgdir/usr/lib/udev"
+  # remove sysv init files
+  rm -r "$pkgdir/init.d"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
