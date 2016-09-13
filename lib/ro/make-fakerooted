@@ -50,11 +50,25 @@ find -P . -mindepth 1 -printf '%P\n' | sort -u | while read -r path; do
   elif [[ -d "$path" ]]; then
     stat --printf "$path\td\t%a\t%u\t%g\n" "$path"
   elif [[ -c "$path" ]]; then
-    stat --printf "$path\tc\t%a\t%u\t%g\t%t\t%T\n" "$path"
+    stat --printf "%a\n%u\n%g\n0x%t\n0x%T\n" "$path" | {
+      read -r perm
+      read -r owner
+      read -r group
+      read -r major
+      read -r minor
+      printf "%s\tc\t%s\t%d\t%d\t%d\t%d\n" "$path" "$perm" "$owner" "$group" "$major" "$minor"
+    }
   elif [[ -b "$path" ]]; then
-    stat --printf "$path\tb\t%a\t%u\t%g\t%t\t%T\n" "$path"
+    stat --printf "%a\n%u\n%g\n0x%t\n0x%T\n" "$path" | {
+      read -r perm
+      read -r owner
+      read -r group
+      read -r major
+      read -r minor
+      printf "%s\tb\t%s\t%d\t%d\t%d\t%d\n" "$path" "$perm" "$owner" "$group" "$major" "$minor"
+    }
   else
-    echo "What is '$path'?"
+    echo "What is '$path'?" >&2
     exit 1
   fi
 done > ../files
