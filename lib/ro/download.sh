@@ -2,7 +2,7 @@
 # Copyright 2015-2016 Emil Renner Berthing
 
 if command -v curl >/dev/null 2>&1; then
-  eval 'download() { echo "Downloading $1"; curl -#Lo "$2" "$1"; }'
+  eval 'download() { echo "Downloading $1"; curl -#Lfo "$2" "$1"; }'
 elif command -v wget >/dev/null 2>&1; then
   eval 'download() { wget -O "$2" "$1"; }'
 else
