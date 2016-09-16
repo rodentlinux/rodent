@@ -4,6 +4,6 @@ ARCH=armv7hl,rpi,x86_64,quark,mips,mipsel
 #JOBS=4
 
 REPOS=(
-  'rodent:http://esmil.dk/rodent'
+  'rodent:https://rodentlinux.org/rodent'
   'local:local'
 )
