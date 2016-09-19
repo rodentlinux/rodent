@@ -1,0 +1,45 @@
+version=4.4.0
+release=1
+sources=("https://ftp.gnu.org/gnu/screen/screen-${version}.tar.gz")
+sha1sum=('f37f99ec57be1063c471c86511eab20a3afd39ff')
+makedepends=('libncurses-devel' 'libpam-devel')
+
+config-screen() {
+  description='GNU screen'
+  depends=('libutil' 'libcrypt' 'libncurses' 'libpam')
+  files=('usr/bin/screen' 'usr/share/screen/utf8encodings/*')
+  manfiles=('usr/share/man/man1/screen.1')
+}
+
+build() {
+  cd screen-$version
+  # cross-compile patches from http://savannah.gnu.org/bugs/?43223
+  patch -Np1 -i "$srcdir/Remove-redundant-compiler-sanity-checks.patch"
+  patch -Np1 -i "$srcdir/Provide-cross-compile-alternatives-for-AC_TRY_RUN.patch"
+  patch -Np1 -i "$srcdir/Skip-host-file-system-checks-when-cross-compiling.patch"
+  patch -Np1 -i "$srcdir/Avoid-mis-identifying-systems-as-SVR4.patch"
+
+  ./autogen.sh
+
+  ./configure \
+    --host=$host \
+    --prefix=/usr \
+    --enable-pam \
+    --enable-telnet \
+    --with-socket-dir=/run/screen \
+    --with-pty-group=5 \
+    --with-sys-screenrc=/etc/screenrc
+
+  make
+}
+
+package() {
+  cd screen-$version
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir/usr/bin/screen"
+  mv "$pkgdir/usr/bin/screen-$version" "$pkgdir/usr/bin/screen"
+  rm -r "$pkgdir/usr/share/info"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
