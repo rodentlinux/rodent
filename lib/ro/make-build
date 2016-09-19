@@ -194,6 +194,10 @@ cd "$builddir"
     done
 } > "$srcdir/build.${arch}.txt"
 
+cd pkg
+awk -f "$RODENT/lib/ro/path-conflicts.awk" '#/meta'
+cd ..
+
 echo 'Pruning pseudo files'
 find pkg -mindepth 1 -printf '%P\n' \
   | awk -f "$RODENT/lib/ro/make-prune.awk" files - \

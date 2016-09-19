@@ -13,12 +13,11 @@ sysroot_init() {
 deps_calculate() {
   local n=${#REPOS[@]}
   local i
-  local rep
+  local repo
   local file
   if ! for ((i=0;i<n;i++)); do
-    rep="${REPOS[$i]}"
-    rep="${rep%%:*}"
-    file="$RODENT/cache/$rep/repo.${arch}.xz"
+    repo="${REPOS[$i]}"
+    file="$RODENT/cache/${repo%%:*}/repo.${arch}.xz"
     [[ ! -f "$file" ]] || xz -cd "$file" | awk "{print \"$i\\t\" \$0}"
   done | DEPS="$*" awk \
     -f "$RODENT/lib/ro/graphlib.awk" \
@@ -32,13 +31,12 @@ deps_calculate() {
 }
 
 deps_ask() {
-  local rep
+  local repo
   local pkg
-  while read -r rep; do
+  while read -r repo; do
     read -r pkg
-    rep="${REPOS[$rep]}"
-    rep="${rep%%:*}"
-    echo "$rep/$pkg"
+    repo="${REPOS[$repo]}"
+    echo "${repo%%:*}/$pkg"
   done < <(awk -F'\t' '{print $1;print $2}' '#/installed.tmp')
   local yn
   while true; do
@@ -61,15 +59,15 @@ deps_ask() {
 }
 
 deps_download() {
-  local rep
-  local file
+  local repo
+  local base
   local sha1
-  while read -r rep; do
-    read -r file
+  while read -r repo; do
+    read -r base
     read -r sha1
-    rep="${REPOS[$rep]}"
-    file="${file/=/-}.${arch}.tar.xz"
-    check_or_download "$RODENT/cache/${rep%%:*}" "$file" "$sha1" "${rep#*:}/$file"
+    repo="${REPOS[$repo]}"
+    base="${base/=/-}.${arch}.tar.xz"
+    check_or_download "$RODENT/cache/${repo%%:*}" "$base" "$sha1" "${repo#*:}/$base"
   done < <(
     awk -F'\t' \
       '{repo[$3]=$1;sha1[$3]=$6} END{for (i in repo) {print repo[i];print i;print sha1[i]}}' \
@@ -77,47 +75,43 @@ deps_download() {
   )
 }
 
-deps_install_from_tarball() {
-  local tarball="$1"
-  shift
-  local n=$#
-  local i
-  for ((i=1;i<n;i++)); do
-    echo "${!i}.."
-  done
-  echo -n "${!n}.. "
-  tar -x --no-same-owner -f "$tarball" --null --no-recursion -T <(
-    list=()
-    for i in "$@"; do
-      files="./#/${i/=/-}.files"
-      echo -ne "$files\0"
-      list+=("$files")
-    done
-    tar -x --to-stdout --occurrence=1 -f "$tarball" "${list[@]}" \
-      | awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{print "./" $1}' \
-      | sort -u | tr '\n' '\0'
-  )
-  echo 'done.'
-}
-
 deps_install() {
-  local rep
-  local file
-  local list
+  local repo
+  local base
+  local -a pkgs
 
-  while read -r rep; do
-    read -r file
-    read -r list
-    rep="${REPOS[$rep]}"
-    rep="${rep%%:*}"
-    file="$RODENT/cache/$rep/${file/=/-}.${arch}.tar.xz"
-    deps_install_from_tarball "$file" $list
-  done < <(awk -F'\t' \
-    '{repo[$3]=$1;pkgs[$3]=pkgs[$3] " " $2} END {for (i in pkgs) {print repo[i];print i;print pkgs[i]}}' \
-    '#/installed.tmp'
-  )
+  while read -r repo; do
+    read -r base
+    read -a pkgs
+    repo="${REPOS[$repo]}"
+    base="$RODENT/cache/${repo%%:*}/${base/=/-}.${arch}.tar.xz"
+    tar -xf "$base" --no-same-owner --occurrence=1 "${pkgs[@]}"
+  done < <(awk -f "$RODENT/lib/ro/install-baseparts.awk" '#/installed.tmp')
 
-  awk 'BEGIN{FS="\t";OFS="\t"} {print $2,$3,$4,$5,$6}' '#/installed.tmp' | sort '#/installed' - > '#/installed.new'
+  awk 'BEGIN{FS="\t";OFS="\t"} {print $2,$3,$4,$5,$6}' '#/installed.tmp' \
+    | sort '#/installed' - \
+    > '#/installed.new'
+  if ! awk -f "$RODENT/lib/ro/path-conflicts.awk" '#/installed.new'; then
+    echo 'Aborting.' >&2
+    while read -r base; do
+      rm "#/${base/=/-}.files"
+    done < <(awk -F'\t' '{print $2}' '#/installed.tmp')
+    rm '#/installed.new' '#/installed.tmp'
+    return 1
+  fi
+
+  while read -r repo; do
+    read -r base
+    read -a pkgs
+    repo="${REPOS[$repo]}"
+    base="${repo%%:*}/${base/=/-}.${arch}.tar.xz"
+    echo -n "Extracting from ${base}.. "
+    tar -xf "$RODENT/cache/$base" --no-same-owner --no-recursion --null -T <(
+      awk -F'\t' '$2=="d"||$2=="f"||$2=="l"{printf "./%s%c",$1,0}' "${pkgs[@]}" | sort -zu
+    )
+    echo
+  done < <(awk -f "$RODENT/lib/ro/install-baseparts.awk" '#/installed.tmp')
+
   mv -f '#/installed.new' '#/installed'
   rm -f '#/installed.tmp'
 }

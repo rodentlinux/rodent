@@ -38,6 +38,9 @@ echo 'Checking file lists'
 find '#' -mindepth 1 -maxdepth 1 -name '*.files' -printf '%P\n' \
   | awk -f "$RODENT/lib/ro/verify-lists.awk" - \#/installed
 
+echo 'Checking path conflicts'
+awk -f "$RODENT/lib/ro/path-conflicts.awk" \#/installed || true
+
 echo 'Checking new/removed files'
 find . -mindepth 1 -printf '%P\n' \
   | awk -f "$RODENT/lib/ro/verify-files.awk" - \#/*.files
