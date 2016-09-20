@@ -1,0 +1,55 @@
+parts=(libcheck checkmk)
+version=0.10.0
+release=1
+sources=("https://github.com/libcheck/check/releases/download/$version/check-${version}.tar.gz")
+sha1sum=('35d3a53446aea7b21a770faedb358d0fc7cba76d')
+makedepends=('glibc-devel')
+
+config-libcheck() {
+  description='Unit testing framework for C'
+  depends=('libm' 'librt')
+  devdepends=('glibc-devel' "libcheck=$version-$release")
+  files=('usr/lib/libcheck.so.*')
+  devfiles=(
+    'usr/include/*.h'
+    'usr/lib/libcheck.a'
+    'usr/lib/libcheck.so'
+    'usr/lib/pkgconfig/check.pc'
+    'usr/share/aclocal/check.m4'
+  )
+}
+
+config-checkmk() {
+  description='Awk script to generate C unit tests for the Check framework'
+  depends=('gawk')
+  files=('usr/bin/checkmk')
+  manfiles=('usr/share/man/man1/checkmk.1')
+}
+
+build() {
+  cd check-$version
+
+  ./configure \
+    ac_cv_func_malloc_0_nonnull=yes \
+    ac_cv_func_realloc_0_nonnull=yes \
+    hw_cv_func_snprintf_c99=yes \
+    hw_cv_func_vsnprintf_c99=yes \
+    hw_cv_librt_timers_posix=yes \
+    --host=$host \
+    --prefix=/usr \
+    --with-gnu-ld \
+    --with-sysroot="$SYSROOT"
+
+  make
+}
+
+package() {
+  cd check-$version
+  make DESTDIR="$pkgdir" install
+
+  rm "$pkgdir"/usr/lib/*.la
+  rm -r "$pkgdir/usr/share/doc"
+  rm -r "$pkgdir/usr/share/info"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:
