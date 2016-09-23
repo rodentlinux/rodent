@@ -1,8 +1,8 @@
 parts=(libcrypto libssl openssl-engines openssl c_rehash)
-version=1.0.2h
+version=1.0.2i
 release=1
 sources=("https://www.openssl.org/source/openssl-${version}.tar.gz")
-sha1sum=('577585f5f5d299c44dd3c993d3c0ac7a219e4949')
+sha1sum=('25a92574ebad029dcf2fa26c02e10400a0882111')
 makedepends=('libz-devel')
 
 config-libcrypto() {
