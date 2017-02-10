@@ -1,0 +1,23 @@
+commit 64baec4176d1b0906b1d744a50ed085a0424f04f
+Author: Emil Renner Berthing <esmil@mailme.dk>
+Date:   Sat Feb 11 18:01:22 2017 +0100
+
+    wg-quick: avoid grep -P
+
+diff --git a/src/tools/wg-quick.bash b/src/tools/wg-quick.bash
+index 275594e..ea39f34 100755
+--- a/src/tools/wg-quick.bash
++++ b/src/tools/wg-quick.bash
+@@ -194,7 +194,11 @@ cmd_up() {
+ 		add_addr "$i"
+ 	done
+ 	up_if
+-	for i in $(wg show "$INTERFACE" allowed-ips | grep -Po '(?<=[\t ])[0-9.:/a-f]+' | sort -nr -k 2 -t /); do
++	wg show "$INTERFACE" allowed-ips | while read -r line; do
++		for i in ${line##*	}; do
++			echo "$i"
++		done
++	done | sort -nr -k 2 -t / | while read -r i; do
+ 		[[ $(ip route get "$i" 2>/dev/null) == *dev\ $INTERFACE\ * ]] || add_route "$i"
+ 	done
+ 	execute_hook "$POST_UP"

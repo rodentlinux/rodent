@@ -1,0 +1,47 @@
+parts=(wg wg-quick)
+version=0.0.20170214
+release=1
+sources=("https://git.zx2c4.com/WireGuard/snapshot/WireGuard-${version}.tar.xz")
+sha1sum=('013779d0fdf50859ed52ccf25919f661f55032b4')
+makedepends=('libmnl-devel')
+
+config-wg() {
+  description='Set and retrieve configuration of WireGuard interfaces'
+  depends=('libresolv' 'libmnl')
+  files=('usr/bin/wg')
+  manfiles=('usr/share/man/man8/wg.8')
+}
+
+config-wg-quick() {
+  description='Set up WireGuard interfaces simply'
+  depends=('bash' 'stat' 'readlink' 'rm' 'sort' 'ip' "wg=$version-$release")
+  files=('usr/bin/wg-quick' 'usr/lib/systemd/system/wg-quick@.service')
+  manfiles=('usr/share/man/man8/wg-quick.8')
+}
+
+build() {
+  cd WireGuard-$version
+  patch -Np1 -i "$srcdir/nogrep.patch"
+  patch -Np1 -i "$srcdir/wg-quick-service.patch"
+
+  cd src/tools
+  make \
+    CC=$host-gcc \
+    RUNSTATEDIR=/run \
+    WITH_SYSTEMDUNITS=yes \
+    WITH_WGQUICK=yes
+}
+
+package() {
+  cd WireGuard-$version/src/tools
+
+  make DESTDIR="$pkgdir" \
+    RUNSTATEDIR=/run \
+    WITH_SYSTEMDUNITS=yes \
+    WITH_WGQUICK=yes \
+    install
+
+  rm -rf "$pkgdir/etc"
+}
+
+# vim: set ft=sh ts=2 sw=2 et:

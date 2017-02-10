@@ -1,0 +1,20 @@
+commit 36af2cb20ea480411f3af471e18a23729aab4d50 (HEAD -> stable)
+Author: Emil Renner Berthing <esmil@mailme.dk>
+Date:   Mon Feb 13 11:00:48 2017 +0100
+
+    wg-quick@.service: run before network.target
+
+diff --git a/src/tools/wg-quick@.service b/src/tools/wg-quick@.service
+index f5f4e8f..6b79f18 100644
+--- a/src/tools/wg-quick@.service
++++ b/src/tools/wg-quick@.service
+@@ -1,7 +1,7 @@
+ [Unit]
+ Description=WireGuard via wg-quick(8) for %I
+-After=network-online.target
+-Wants=network-online.target
++Before=network.target
++Wants=network.target
+ Documentation=man:wg-quick(8)
+ Documentation=man:wg(8)
+ Documentation=https://www.wireguard.io/
