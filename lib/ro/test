@@ -37,7 +37,7 @@ armv7hl|rpi)
   ;;
 x86_64)
   cmd=(qemu-system-x86_64 -machine q35 -cpu core2duo
-    -smp 2 -mem 512
+    -smp 2 -m 512
     -smbios type=0,uefi=on
   )
   console='console=ttyS0'
